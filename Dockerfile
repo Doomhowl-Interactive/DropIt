@@ -10,6 +10,9 @@ RUN go mod download
 
 COPY . .
 
+ENV CGO_ENABLED=1
+ENV GIN_MODE=release
+
 RUN go build -o app ./cmd/server
 
 FROM alpine:latest
