@@ -142,3 +142,31 @@ func (h *Handler) AdminForceDelete(c *gin.Context) {
 
 	c.Redirect(301, "/admin")
 }
+
+func (h *Handler) Import(c *gin.Context) {
+	var records []ImportFileRecord
+
+	if err := c.ShouldBindJSON(&records); err != nil {
+		c.JSON(400, gin.H{"error": "invalid JSON"})
+		return
+	}
+
+	if err := h.service.ImportFiles(records); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"imported": len(records),
+	})
+}
+
+func (h *Handler) Export(c *gin.Context) {
+	records, err := h.service.GetAllFiles()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, records)
+}

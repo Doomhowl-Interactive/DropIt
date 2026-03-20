@@ -14,15 +14,18 @@ func RegisterRoutes(r *gin.RouterGroup, h *Handler) {
 
 	files.GET("/delete/:del_id", h.Delete)
 
-	adminRoutes := files.Group("/")
+	adminRoutes := files.Group("/admin")
 	adminRoutes.Use(middleware.AuthMiddleware())
 	adminRoutes.Use(middleware.RequireRole("admin"))
 
-	adminRoutes.GET("/admin", h.AdminList)
-	adminRoutes.GET("/admin/:id", h.AdminGet)
+	adminRoutes.GET("/", h.AdminList)
+	adminRoutes.GET("/:id", h.AdminGet)
 
-	adminRoutes.GET("/admin/download/:id", h.AdminGet)
+	adminRoutes.GET("/download/:id", h.AdminGet)
 
-	adminRoutes.GET("/admin/delete/:id", h.AdminDelete)
-	adminRoutes.GET("/admin/delete/fr/:id", h.AdminForceDelete)
+	adminRoutes.GET("/delete/:id", h.AdminDelete)
+	adminRoutes.GET("/delete/fr/:id", h.AdminForceDelete)
+
+	adminRoutes.POST("/import", h.Import)
+	adminRoutes.GET("/export", h.Export)
 }

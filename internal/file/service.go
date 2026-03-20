@@ -142,3 +142,40 @@ func (s *Service) GetFileByID(id string) (*FileRecord, error) {
 func (s *Service) GetFileByDeletionID(delID string) (*FileRecord, error) {
 	return s.repo.GetByDeletionID(delID)
 }
+
+func (s *Service) ImportFiles(records []ImportFileRecord) error {
+	for _, r := range records {
+
+		existing, _ := s.repo.GetByID(r.ID)
+		if existing != nil {
+			continue
+		}
+
+		record := &FileRecord{
+			ID:                  r.ID,
+			DeletionID:          r.DeletionID,
+			Filename:            r.Filename,
+			Path:                s.buildPath(r.ID, r.Filename),
+			ExpiresAt:           r.ExpiresAt,
+			DeleteAfterDownload: r.DeleteAfterDownload,
+			Size:                r.Size,
+			DownloadCount:       r.DownloadCount,
+			Deleted:             r.Deleted,
+			CreatedAt:           r.CreatedAt,
+		}
+
+		if err := s.repo.Create(record); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Service) buildPath(id, filename string) string {
+	return s.storageDir + "/" + id + "/" + filename
+}
+
+func (s *Service) GetAllFiles() ([]FileRecord, error) {
+	return s.repo.GetAll()
+}
