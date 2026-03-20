@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login // System_Access</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        * { border-radius: 0 !important; transition: none !important; }
+
+        body {
+            font-family: ui-monospace, 'Cascadia Code', monospace;
+            background: #fff;
+            color: #000;
+            padding: 40px 20px;
+        }
+
+        .box {
+            border: 3px solid #000;
+            background: #fff;
+            box-shadow: 6px 6px 0px #000;
+        }
+
+        input {
+            border: 2px solid #000;
+            padding: 8px;
+            font-size: 14px;
+            width: 100%;
+            background: #fff;
+            font-weight: bold;
+        }
+
+        input:focus {
+            outline: none;
+            background: #ffff00; /* Yellow highlight on focus */
+        }
+
+        button {
+            border: 2px solid #000;
+            background: #fff;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+            box-shadow: 4px 4px 0px #000;
+        }
+
+        button:hover {
+            background: #00ff00; /* Neon green hover */
+            transform: translate(-1px, -1px);
+            box-shadow: 5px 5px 0px #000;
+        }
+
+        button:active {
+            background: #000;
+            color: #fff;
+            transform: translate(2px, 2px);
+            box-shadow: none;
+        }
+
+        .nav-link {
+            font-weight: 900;
+            text-decoration: underline;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .nav-link:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        .label {
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .error {
+            border: 3px solid #000;
+            background: #ff0000;
+            color: #fff;
+            font-size: 12px;
+            padding: 8px;
+            margin-bottom: 15px;
+            font-weight: 900;
+            text-align: center;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center">
+
+<div class="w-full max-w-[400px]">
+
+    <header class="mb-6 border-b-8 border-black pb-2 flex justify-between items-end">
+        <h1 class="text-3xl font-black uppercase tracking-tighter italic">
+            Access
+        </h1>
+
+        <a href="/" class="nav-link mb-1">
+            ← RETREAT
+        </a>
+    </header>
+
+
+    <div class="box p-6">
+
+        <div id="error-container">
+            {{if .Error}}
+            <div class="error">
+                CRITICAL_AUTH_FAILURE
+            </div>
+            {{end}}
+        </div>
+
+        <form id="login-form" class="space-y-5">
+
+            <div>
+                <div class="label">User_Identity</div>
+                <input id="username" required autocomplete="username" placeholder="ID_01">
+            </div>
+
+            <div>
+                <div class="label">Secure_Passphrase</div>
+                <input id="password" type="password" required autocomplete="current-password" placeholder="********">
+            </div>
+
+            <div class="pt-2">
+                <button type="submit" class="w-full">
+                    INITIALIZE_AUTHENTICATION
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+    <p class="mt-6 text-[10px] uppercase font-black text-gray-400 text-center tracking-widest">
+        Session_Log: 0.0.0.0 // Node: Auth_Main
+    </p>
+</div>
+
+<script>
+    const form = document.getElementById("login-form");
+    const errorContainer = document.getElementById("error-container");
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        // Visual feedback
+        const btn = form.querySelector('button');
+        btn.innerText = "VERIFYING...";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
+
+            if (!res.ok) {
+                showError();
+                btn.innerText = "AUTHENTICATE";
+                btn.disabled = false;
+                return;
+            }
+
+            window.location.href = "/admin";
+
+        } catch (err) {
+            showError();
+            btn.innerText = "AUTHENTICATE";
+            btn.disabled = false;
+        }
+    });
+
+    function showError() {
+        errorContainer.innerHTML = `<div class="error">ACCESS_DENIED_BY_SYSTEM</div>`;
+        // Shake the box for UX effect
+        const box = document.querySelector('.box');
+        box.style.transform = "translateX(5px)";
+        setTimeout(() => box.style.transform = "translateX(-5px)", 50);
+        setTimeout(() => box.style.transform = "translateX(0)", 100);
+    }
+</script>
+
+</body>
+</html>

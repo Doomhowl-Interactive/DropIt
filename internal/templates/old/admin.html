@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { border-radius: 0 !important; }
+        body { font-family: sans-serif; background: #fff; color: #000; padding: 20px; }
+        .box { border: 2px solid #000; background: #fff; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #000; color: #fff; text-align: left; padding: 8px; font-size: 12px; text-transform: uppercase; }
+        td { border-bottom: 1px solid #000; padding: 8px; font-size: 13px; }
+        tr:hover { background: #f9f9f9; }
+        .status-tag { font-weight: bold; font-size: 10px; padding: 2px 4px; border: 1px solid #000; }
+        .status-deleted { background: #ffcccc; text-decoration: line-through; }
+        .status-no{ background: #ffcccc; }
+        .status-active { background: #ccffcc; }
+        button, .button { border: 1px solid #000; background: #eee; padding: 2px 8px; cursor: pointer; font-size: 11px; font-weight: bold; text-decoration: none; }
+        button:hover, .button:hover { background: #000; color: #fff; }
+        .nav-link { font-weight: bold; text-decoration: underline; margin-bottom: 20px; display: inline-block; }
+        .pagination a { margin: 0 2px; }
+    </style>
+</head>
+<body>
+
+<div class="max-w-6xl mx-auto">
+    <header class="mb-8 border-b-4 border-black pb-2 flex justify-between items-end">
+        <h1 class="text-3xl font-black uppercase tracking-tighter">System Console</h1>
+        <div>
+            <a href="/" class="nav-link text-xs">← BACK TO UPLOADER</a>
+            <a href="/logout" class="nav-link text-xs">LOGOUT</a>
+        </div>
+    </header>
+
+    <div class="box overflow-x-auto">
+        <table>
+            <thead>
+            <tr>
+                <th>Filename</th>
+                <th>Size</th>
+                <th>Created</th>
+                <th>Expires</th>
+                <th>Hits</th>
+                <th>Burn after</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{if not .Files}}
+            <tr><td colspan="8">No files found</td></tr>
+            {{end}}
+            {{range .Files}}
+            <tr>
+                <td class="font-mono">
+                    <a href="/api/files/admin/download/{{.ID}}" target="_blank">{{.Filename}}</a>
+                </td>
+
+                <td>{{humanSize .Size}}</td>
+
+                <td>{{.CreatedAt.Format "Jan 02, 2006 15:04"}}</td>
+
+                <td>{{.ExpiresAt.Format "Jan 02, 2006 15:04"}}</td>
+
+                <td>{{.DownloadCount}}</td>
+
+                <td>
+                    {{if .DeleteAfterDownload}}
+                    <span class="status-tag status-active">YES</span>
+                    {{else}}
+                    <span class="status-tag status-no">NO</span>
+                    {{end}}
+                </td>
+
+                <td>
+                    {{if .Deleted}}
+                    <span class="status-tag status-deleted">REMOVED</span>
+                    {{else}}
+                    <span class="status-tag status-active">LIVE</span>
+                    {{end}}
+                </td>
+
+                <td>
+                    {{if not .Deleted}}
+                    <form action="/api/files/admin/delete/{{.ID}}" method="GET" onsubmit="return confirm('Kill this file?')">
+                        <button type="submit">TERMINATE</button>
+                    </form>
+                    {{end}}
+                    <form action="/api/files/admin/delete/fr/{{.ID}}" method="GET" onsubmit="return confirm('Kill this file and the record?')">
+                        <button type="submit">TERMINATE RECORD</button>
+                    </form>
+                </td>
+            </tr>
+            {{end}}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4 flex justify-between items-center">
+        <div class="space-x-2">
+            {{if gt .Page 1}}
+            <a href="?page={{sub .Page 1}}" class="button">← Prev</a>
+            {{end}}
+            {{if lt .Page .TotalPages}}
+            <a href="?page={{add .Page 1}}" class="button">Next →</a>
+            {{end}}
+        </div>
+    </div>
+
+    <footer class="mt-4 text-[10px] text-gray-500 uppercase font-bold">
+        Showing {{len .Files}} records — Page {{.Page}} of {{.TotalPages}} — Total Pages: {{.TotalPages}}
+    </footer>
+</div>
+
+</body>
+</html>

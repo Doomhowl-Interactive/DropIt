@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  sendit:
+    build: .
+    container_name: sendit
+    ports:
+      - "8000:8000"
+
+    environment:
+      JWT_SECRET: supersecretkey
+
+    volumes:
+      - ./uploads:/app/uploads
+      - ./data:/app/data
+
+    restart: unless-stopped
