@@ -15,8 +15,8 @@ services:
       DB_TYPE: sqlite
       DATABASE_URL: ./data/database.db
 
-      DOMAIN:
-      USE_HTTPS: false
+      DOMAIN: ""
+      USE_HTTPS: "false"
 
     volumes:
       - ./uploads:/app/uploads
