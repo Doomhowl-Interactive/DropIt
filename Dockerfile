@@ -21,6 +21,7 @@ RUN apk add --no-cache ca-certificates tzdata
 COPY --from=builder /app/app .
 COPY --from=builder /app/templates ./templates
 COPY --from=builder /app/static ./static
+COPY --from=builder /app/.env ./
 
 RUN mkdir -p /app/uploads
 
