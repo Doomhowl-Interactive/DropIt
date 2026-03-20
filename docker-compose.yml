@@ -9,6 +9,14 @@ services:
 
     environment:
       JWT_SECRET: supersecretkey
+      PORT: 8000
+      ADMIN_PASSWORD: ""
+
+      DB_TYPE: sqlite
+      DATABASE_URL: ./data/database.db
+
+      DOMAIN:
+      USE_HTTPS: false
 
     volumes:
       - ./uploads:/app/uploads

@@ -20,7 +20,7 @@ import (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		fmt.Printf("Error loading .env file")
+		fmt.Printf("Error loading .env file\n")
 	}
 
 	dbCon, err := db.Connect()
