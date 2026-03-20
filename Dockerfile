@@ -3,12 +3,15 @@ FROM golang:1.26-alpine AS builder
 
 WORKDIR /app
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git gcc musl-dev bash
 
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+
+ENV CGO_ENABLED=1
+ENV GIN_MODE=release
 
 RUN go build -o app ./cmd/server
 
