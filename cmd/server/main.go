@@ -43,9 +43,9 @@ func main() {
 		"humanSize": util.HumanSize,
 	})
 
-	r.LoadHTMLGlob("internal/templates/*.html")
+	r.LoadHTMLGlob("templates/*.html")
 	//r.LoadHTMLGlob("internal/templates/new/*.html")
-	r.Static("/static", "./internal/static")
+	r.Static("/static", "/static")
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
