@@ -3,6 +3,7 @@ package file
 import (
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/google/uuid"
@@ -29,7 +30,8 @@ func (s *Service) UploadFile(filename string, data io.Reader, deleteAfterDownloa
 		return nil, err
 	}
 
-	path := folderPath + "/" + filename
+	safeName := uuid.NewString() + filepath.Ext(filename)
+	path := filepath.Join(folderPath, safeName)
 
 	out, err := os.Create(path)
 	if err != nil {

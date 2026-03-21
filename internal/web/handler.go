@@ -64,3 +64,7 @@ func (h *Handler) Logout(c *gin.Context) {
 	c.SetCookie("auth_token", "", -1, "/", "", false, true)
 	c.Redirect(302, "/")
 }
+
+func (h *Handler) ChangePasswordPage(c *gin.Context) {
+	c.HTML(200, "changePassword.html", nil)
+}

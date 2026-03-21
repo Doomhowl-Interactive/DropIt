@@ -22,13 +22,11 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		var tokenString string
 
-		// 🔥 1. Try cookie first (NEW)
 		cookie, err := c.Cookie("auth_token")
 		if err == nil && cookie != "" {
 			tokenString = cookie
 		}
 
-		// 🔥 2. Fallback to Authorization header (for API tools / future SPA)
 		if tokenString == "" {
 			authHeader := c.GetHeader("Authorization")
 
@@ -40,13 +38,11 @@ func AuthMiddleware() gin.HandlerFunc {
 			}
 		}
 
-		// ❌ No token at all
 		if tokenString == "" {
 			abortUnauthorized(c)
 			return
 		}
 
-		// 🔐 Parse JWT
 		claims := &Claims{}
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

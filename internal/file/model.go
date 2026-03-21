@@ -7,6 +7,7 @@ import (
 type FileRecord struct {
 	ID                  string    `gorm:"primaryKey" json:"id"`
 	DeletionID          string    `json:"deletion_id"`
+	ViewID              string    `json:"view_id"`
 	Filename            string    `json:"filename"`
 	Path                string    `json:"-"` // file path on disk (not exposed via JSON)
 	ExpiresAt           time.Time `json:"expires_at"`

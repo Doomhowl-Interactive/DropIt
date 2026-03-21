@@ -28,6 +28,9 @@ COPY --from=builder /app/.env ./
 
 RUN mkdir -p /app/uploads
 
+RUN adduser -D appuser
+USER appuser
+
 ENV GIN_MODE=release
 
 EXPOSE 8000

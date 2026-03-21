@@ -7,6 +7,8 @@ import (
 	"ResendIt/internal/user"
 	"ResendIt/internal/util"
 	"ResendIt/internal/web"
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"html/template"
@@ -45,7 +47,7 @@ func main() {
 
 	r.LoadHTMLGlob("templates/*.html")
 	//r.LoadHTMLGlob("internal/templates/new/*.html")
-	r.Static("/static", "/static")
+	r.Static("/static", "./static")
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -78,36 +80,54 @@ func main() {
 	file.RegisterRoutes(apiRoute, fileHandler)
 
 	webHandler := web.NewHandler(fileService)
-	web.RegisterRoutes(r, webHandler)
+	web.RegisterRoutes(r, webHandler, userService)
 
-	err = r.Run(":" + os.Getenv("PORT"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	err = r.Run(":" + port)
 	if err != nil {
 		return
 	}
 }
 
+func generateRandomPassword(length int) string {
+	b := make([]byte, length)
+	if _, err := rand.Read(b); err != nil {
+		panic(err)
+	}
+	return base64.URLEncoding.EncodeToString(b)[:length]
+}
+
 func createAdminUser(service *user.Service) {
-	//Check if admin user already exists
 	_, err := service.FindByUsername("admin")
+
 	if err == nil {
 		fmt.Println("Admin user already exists, skipping creation")
 		return
-	} else if !errors.Is(err, user.ErrUserNotFound) {
-		fmt.Printf("Error checking for admin user: %v\n", err)
+	} else if errors.Is(err, user.ErrUserNotFound) {
+		fmt.Println("Admin user not found, creating new admin user")
+
+		password := generateRandomPassword(16)
+		adminUser, err := service.CreateUser("admin", password, "admin")
+		if err != nil {
+			fmt.Printf("Error creating admin user: %v\n", err)
+			return
+		}
+
+		adminUser.ForceChangePassword = true
+		_, err = service.UpdateUser(adminUser)
+
+		if err != nil {
+			fmt.Printf("Error creating admin user: %v\n", err)
+		} else {
+			fmt.Printf("Admin user created with random password: %s\n", password)
+		}
 		return
 	}
 
-	adminPassword, exists := os.LookupEnv("ADMIN_PASSWORD")
-	if !exists || adminPassword == "" {
-		fmt.Println("ADMIN_PASSWORD not set in environment variables")
-		fmt.Println("NO ADMIN ACCOUNT WILL BE CREATED")
-		return
-	}
-
-	_, err = service.CreateUser("admin", adminPassword, "admin")
-	if err != nil {
-		fmt.Printf("Error creating admin user: %v\n", err)
-	} else {
-		fmt.Println("Admin user created successfully")
-	}
+	fmt.Printf("Error checking for admin user: %v\n", err)
+	return
 }

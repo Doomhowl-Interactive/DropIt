@@ -13,7 +13,13 @@ import (
 
 func Connect() (*gorm.DB, error) {
 	dbType := os.Getenv("DB_TYPE")
+	if dbType == "" {
+		dbType = "sqlite"
+	}
 	dsn := os.Getenv("DATABASE_URL")
+	if dbType == "sqlite" && dsn == "" {
+		dsn = "./data/database.db"
+	}
 
 	switch dbType {
 	case "sqlite":

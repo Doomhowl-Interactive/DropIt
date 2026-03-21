@@ -25,6 +25,17 @@ func (r *Repository) FindByUsername(username string) (*User, error) {
 	return &u, nil
 }
 
+func (r *Repository) FindByID(id string) (*User, error) {
+	var u User
+	if err := r.db.First(&u, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+	return &u, nil
+}
+
 func (r *Repository) Create(u *User) error {
 	return r.db.Create(u).Error
 }
@@ -35,6 +46,10 @@ func (r *Repository) GetAll() ([]User, error) {
 		return nil, err
 	}
 	return users, nil
+}
+
+func (r *Repository) Update(u *User) error {
+	return r.db.Save(u).Error
 }
 
 func (r *Repository) Delete(id uint) error {
