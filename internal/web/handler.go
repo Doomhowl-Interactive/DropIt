@@ -33,6 +33,25 @@ func (h *Handler) LoginPage(c *gin.Context) {
 	c.HTML(200, "login.html", nil)
 }
 
+func (h *Handler) FileView(c *gin.Context) {
+	id := c.Param("id")
+
+	fileRecord, err := h.fileService.GetFileByViewID(id)
+	if err != nil {
+		c.HTML(404, "fileNotFound.html", nil)
+		return
+	}
+
+	downloadKey := fileRecord.ID
+	deleteKey := fileRecord.DeletionID
+
+	c.HTML(200, "complete.html", gin.H{
+		"Filename":   fileRecord.Filename,
+		"DownloadID": downloadKey,
+		"DeleteID":   deleteKey,
+	})
+}
+
 func (h *Handler) AdminPage(c *gin.Context) {
 	pageStr := c.Query("page")
 	page, err := strconv.Atoi(pageStr)

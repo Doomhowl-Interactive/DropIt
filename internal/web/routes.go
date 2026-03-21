@@ -12,6 +12,8 @@ func RegisterRoutes(r *gin.Engine, h *Handler, userService *user.Service) {
 	//r.GET("/upload", h.UploadPage)
 	r.GET("/login", h.LoginPage)
 
+	r.GET("/f/:id", h.FileView)
+
 	adminRoutes := r.Group("/")
 	adminRoutes.Use(middleware.AuthMiddleware())
 	adminRoutes.Use(middleware.RequireRole("admin"))

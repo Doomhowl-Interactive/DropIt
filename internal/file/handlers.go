@@ -3,6 +3,7 @@ package file
 import (
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -64,7 +65,47 @@ func (h *Handler) Upload(c *gin.Context) {
 		"filename":    record.Filename,
 		"size":        record.Size,
 		"expires_at":  record.ExpiresAt,
+		"view_key":    record.ViewID,
 	})
+}
+
+func (h *Handler) View(c *gin.Context) {
+	id := c.Param("id")
+
+	record, err := h.service.DownloadFile(id)
+	if err != nil {
+		c.HTML(http.StatusOK, "fileNotFound.html", nil)
+		return
+	}
+
+	c.Header("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, record.Filename))
+	c.Header("X-Content-Type-Options", "nosniff")
+	c.File(record.Path)
+}
+
+func safeFilename(name string) string {
+	// keep it simple: drop control chars and quotes
+	out := make([]rune, 0, len(name))
+	for _, r := range name {
+		if r < 32 || r == 127 || r == '"' || r == '\\' {
+			continue
+		}
+		out = append(out, r)
+	}
+	if len(out) == 0 {
+		return "file"
+	}
+	return string(out)
+}
+
+func isXSSRisk(filename string) bool {
+	ext := filepath.Ext(filename)
+	switch ext {
+	case ".html", ".htm", ".js", ".css", ".svg":
+		return true
+	default:
+		return false
+	}
 }
 
 func (h *Handler) Download(c *gin.Context) {
@@ -75,7 +116,11 @@ func (h *Handler) Download(c *gin.Context) {
 		c.HTML(http.StatusOK, "fileNotFound.html", nil)
 		return
 	}
+
 	c.Header("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, record.Filename))
+	c.Header("X-Content-Type-Options", "nosniff")
+	//c.Header("Content-Security-Policy", "default-src 'none'; img-src 'self'; media-src 'self'; script-src 'none'; style-src 'none';")
+	//c.Header("Content-Type", "application/octet-stream")
 	c.File(record.Path)
 }
 

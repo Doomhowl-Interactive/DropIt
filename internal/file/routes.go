@@ -10,8 +10,9 @@ func RegisterRoutes(r *gin.RouterGroup, h *Handler) {
 	files := r.Group("/files")
 
 	files.POST("/upload", h.Upload)
-	files.GET("/download/:id", h.Download)
+	//files.GET("/download/:id", h.Download)
 
+	files.GET("/view/:id", h.View)
 	files.GET("/delete/:del_id", h.Delete)
 
 	adminRoutes := files.Group("/admin")

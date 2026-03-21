@@ -69,6 +69,21 @@ func (r *Repository) GetByDeletionID(delID string) (*FileRecord, error) {
 	return &f, nil
 }
 
+func (r *Repository) Update(f *FileRecord) error {
+	return r.db.Save(f).Error
+}
+
+func (r *Repository) GetFileByViewID(viewID string) (*FileRecord, error) {
+	var f FileRecord
+	if err := r.db.First(&f, "view_id = ?", viewID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrFileNotFound
+		}
+		return nil, err
+	}
+	return &f, nil
+}
+
 func (r *Repository) IncrementDownload(f *FileRecord) error {
 	f.DownloadCount++
 	return r.db.Save(f).Error

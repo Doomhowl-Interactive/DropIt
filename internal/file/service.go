@@ -47,6 +47,7 @@ func (s *Service) UploadFile(filename string, data io.Reader, deleteAfterDownloa
 	f := &FileRecord{
 		ID:                  folderID,
 		DeletionID:          uuid.NewString(),
+		ViewID:              uuid.NewString(),
 		Filename:            filename,
 		Path:                path,
 		Size:                size,
@@ -143,6 +144,10 @@ func (s *Service) GetFileByID(id string) (*FileRecord, error) {
 
 func (s *Service) GetFileByDeletionID(delID string) (*FileRecord, error) {
 	return s.repo.GetByDeletionID(delID)
+}
+
+func (s *Service) GetFileByViewID(viewID string) (*FileRecord, error) {
+	return s.repo.GetFileByViewID(viewID)
 }
 
 func (s *Service) ImportFiles(records []ImportFileRecord) error {
