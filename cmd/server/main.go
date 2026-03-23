@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ResendIt/internal/api/middleware"
 	"ResendIt/internal/auth"
 	"ResendIt/internal/db"
 	"ResendIt/internal/file"
@@ -38,6 +39,9 @@ func main() {
 
 	r := gin.Default()
 
+	// CSRF: set a token cookie for browsers and enforce it on unsafe /api calls.
+	r.Use(middleware.EnsureCSRFCookie())
+
 	r.MaxMultipartMemory = 10 << 30
 	r.SetFuncMap(template.FuncMap{
 		"add":       func(a, b int) int { return a + b },
@@ -74,6 +78,7 @@ func main() {
 	createAdminUser(userService)
 
 	apiRoute := r.Group("/api")
+	apiRoute.Use(middleware.CSRFMiddleware())
 
 	auth.RegisterRoutes(apiRoute, authHandler)
 	user.RegisterRoutes(apiRoute, userHandler)

@@ -24,8 +24,8 @@ func RegisterRoutes(r *gin.RouterGroup, h *Handler) {
 
 	adminRoutes.GET("/download/:id", h.AdminGet)
 
-	adminRoutes.GET("/delete/:id", h.AdminDelete)
-	adminRoutes.GET("/delete/fr/:id", h.AdminForceDelete)
+	adminRoutes.POST("/delete/:id", h.AdminDelete)
+	adminRoutes.POST("/delete/fr/:id", h.AdminForceDelete)
 
 	adminRoutes.POST("/import", h.Import)
 	adminRoutes.GET("/export", h.Export)

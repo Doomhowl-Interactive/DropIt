@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -49,15 +50,17 @@ func (h *Handler) Login(c *gin.Context) {
 
 	isSecure := os.Getenv("USE_HTTPS") == "true"
 
-	c.SetCookie(
-		"auth_token",
-		token,
-		3600*24,
-		"/",
-		os.Getenv("DOMAIN"),
-		isSecure,
-		true, // httpOnly (IMPORTANT)
-	)
+	// Use http.SetCookie so we can set SameSite.
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "auth_token",
+		Value:    token,
+		Path:     "/",
+		Domain:   os.Getenv("DOMAIN"),
+		MaxAge:   3600 * 24,
+		Secure:   isSecure,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
 
 	c.JSON(200, gin.H{"token": token})
 }

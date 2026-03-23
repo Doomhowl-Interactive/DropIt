@@ -150,11 +150,13 @@
                 <td>
                     <div class="btn-group">
                         {{if not .Deleted}}
-                        <form action="/api/files/admin/delete/{{.ID}}" method="GET" onsubmit="return openConfirm(event, 'TERMINATE', 'Kill this file? It will be removed from active storage.')">
+                        <form action="/api/files/admin/delete/{{.ID}}" method="POST" onsubmit="return openConfirm(event, 'TERMINATE', 'Kill this file? It will be removed from active storage.')">
+                            <input type="hidden" name="_csrf" class="csrf-field">
                             <button type="submit" style="background: #ffcccc;">Terminate</button>
                         </form>
                         {{end}}
-                        <form action="/api/files/admin/delete/fr/{{.ID}}" method="GET" onsubmit="return openConfirm(event, 'FULL_WIPE', 'Wiping file and purging record? This is a permanent database scrub.')">
+                        <form action="/api/files/admin/delete/fr/{{.ID}}" method="POST" onsubmit="return openConfirm(event, 'FULL_WIPE', 'Wiping file and purging record? This is a permanent database scrub.')">
+                            <input type="hidden" name="_csrf" class="csrf-field">
                             <button type="submit">Full_Wipe</button>
                         </form>
                     </div>
@@ -201,6 +203,13 @@
         document.getElementById('modal-overlay').style.display = 'none';
         currentForm = null;
     }
+
+    // Fill CSRF hidden inputs from cookie (double-submit pattern)
+    (function fillCSRF() {
+        const m = document.cookie.match('(^|;)\\s*csrf_token\\s*=\\s*([^;]+)');
+        const tok = m ? m.pop() : '';
+        document.querySelectorAll('.csrf-field').forEach(el => el.value = tok);
+    })();
 
     document.getElementById('modal-confirm-btn').addEventListener('click', () => {
         if (currentForm) {

@@ -168,7 +168,7 @@ func (h *Handler) AdminDelete(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(301, "/admin")
+	c.Redirect(303, "/admin")
 }
 
 func (h *Handler) AdminForceDelete(c *gin.Context) {
@@ -185,7 +185,7 @@ func (h *Handler) AdminForceDelete(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(301, "/admin")
+	c.Redirect(303, "/admin")
 }
 
 func (h *Handler) Import(c *gin.Context) {
