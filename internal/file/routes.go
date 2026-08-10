@@ -12,13 +12,15 @@ func RegisterRoutes(r *gin.RouterGroup, h *Handler) {
 	files.GET("/download/:id", h.Download)
 	files.GET("/view/:id", h.View)
 
-	uploadRoute := files.POST("/upload", h.Upload)
-	uploadRoute.Use(middleware.AuthMiddleware())
-	uploadRoute.Use(middleware.RequireRole("admin"))
+	files.POST("/upload",
+		middleware.AuthMiddleware(),
+		middleware.RequireRole("admin"),
+		h.Upload)
 
-	deleteRoute := files.GET("/delete/:del_id", h.Delete)
-	deleteRoute.Use(middleware.AuthMiddleware())
-	deleteRoute.Use(middleware.RequireRole("admin"))
+	files.GET("/delete/:del_id",
+		middleware.AuthMiddleware(),
+		middleware.RequireRole("admin"),
+		h.Delete)
 
 	adminRoutes := files.Group("/admin")
 	adminRoutes.Use(middleware.AuthMiddleware())
