@@ -1,5 +1,5 @@
 .idea/**
-
+app
 data/**
 uploads/**
 .env
