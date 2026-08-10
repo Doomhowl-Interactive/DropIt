@@ -126,16 +126,8 @@
                 <div class="flex items-center justify-between border-b border-black pb-2">
                     <label class="text-xs font-bold uppercase">Expire In:</label>
                     <select id="duration" class="border border-black text-xs p-1">
-                        <option value="1">1 Hour</option>
-                        <option value="24">24 Hours</option>
-                        <option value="168">7 Days</option>
-                        <option value="730" selected>1 Month</option>
+                        <option value="-1">Heat death of the universe</option>
                     </select>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" id="once" class="w-4 h-4 border-black">
-                    <label for="once" class="burn-option uppercase">Burn after</label>
                 </div>
 
                 <button id="uploadBtn" class="w-full" disabled>UPLOAD</button>
@@ -332,7 +324,6 @@
     }
 </script>
 <a href="/admin" class="fixed bottom-1 right-1 text-[10px] underline">SUDO</a>
-<a href="/static/TOS.txt" class="fixed bottom-1 left-1 text-[10px] underline">TOS</a>
 
 </body>
 </html>
