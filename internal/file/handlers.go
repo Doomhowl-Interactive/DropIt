@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
-	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -38,21 +36,9 @@ func (h *Handler) Upload(c *gin.Context) {
 	}
 	defer f.Close()
 
-	once := c.PostForm("once") == "true"
-
-	durationStr := c.PostForm("duration")
-	hours, err := strconv.Atoi(durationStr)
-	if err != nil || hours <= 0 {
-		hours = 24 // default
-	}
-
-	duration := time.Duration(hours) * time.Hour
-
 	record, err := h.service.UploadFile(
 		file.Filename,
 		f,
-		once,
-		duration,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -64,7 +50,6 @@ func (h *Handler) Upload(c *gin.Context) {
 		"deletion_id": record.DeletionID,
 		"filename":    record.Filename,
 		"size":        record.Size,
-		"expires_at":  record.ExpiresAt,
 		"view_key":    record.ViewID,
 	})
 }

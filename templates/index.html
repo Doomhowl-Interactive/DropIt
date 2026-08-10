@@ -261,9 +261,6 @@
 
         const fd = new FormData();
         fd.append("file", file);
-        fd.append("once", document.getElementById("once").checked ? "true" : "false");
-        const hours = parseInt(document.getElementById("duration").value, 10);
-        fd.append("duration", hours);
 
         const xhr = new XMLHttpRequest();
         currentXhr = xhr;
@@ -302,13 +299,13 @@
                     alert("Server error");
                 }
             } else {
-                alert("Upload failed");
+                alert(`Upload failed`);
             }
         };
 
         xhr.onerror = () => {
             if (xhr.statusText !== "abort") {
-                alert("Upload failed");
+                alert(`Upload failed: ${xhr.responseText}`);
                 location.reload();
             }
         };

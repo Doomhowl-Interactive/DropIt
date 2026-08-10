@@ -22,7 +22,7 @@ func NewService(r *Repository, storageDir string) *Service {
 	return &Service{repo: r, storageDir: storageDir}
 }
 
-func (s *Service) UploadFile(filename string, data io.Reader, deleteAfterDownload bool, expiresAfter time.Duration) (*FileRecord, error) {
+func (s *Service) UploadFile(filename string, data io.Reader) (*FileRecord, error) {
 	folderID := uuid.NewString()
 	folderPath := s.storageDir + "/" + folderID
 
@@ -45,15 +45,13 @@ func (s *Service) UploadFile(filename string, data io.Reader, deleteAfterDownloa
 	}
 
 	f := &FileRecord{
-		ID:                  folderID,
-		DeletionID:          uuid.NewString(),
-		ViewID:              uuid.NewString(),
-		Filename:            filename,
-		Path:                path,
-		Size:                size,
-		CreatedAt:           time.Now(),
-		ExpiresAt:           time.Now().Add(expiresAfter),
-		DeleteAfterDownload: deleteAfterDownload,
+		ID:         folderID,
+		DeletionID: uuid.NewString(),
+		ViewID:     uuid.NewString(),
+		Filename:   filename,
+		Path:       path,
+		Size:       size,
+		CreatedAt:  time.Now(),
 	}
 
 	if err := s.repo.Create(f); err != nil {
@@ -70,15 +68,11 @@ func (s *Service) DownloadFile(id string) (*FileRecord, error) {
 		return nil, err
 	}
 
-	if f.Deleted || time.Now().After(f.ExpiresAt) {
+	if f.Deleted {
 		return nil, ErrFileNotFound
 	}
 
 	_ = s.repo.IncrementDownload(f)
-
-	if f.DeleteAfterDownload {
-		_ = s.repo.MarkDeleted(f)
-	}
 
 	return f, nil
 }
@@ -159,16 +153,14 @@ func (s *Service) ImportFiles(records []ImportFileRecord) error {
 		}
 
 		record := &FileRecord{
-			ID:                  r.ID,
-			DeletionID:          r.DeletionID,
-			Filename:            r.Filename,
-			Path:                s.buildPath(r.ID, r.Filename),
-			ExpiresAt:           r.ExpiresAt,
-			DeleteAfterDownload: r.DeleteAfterDownload,
-			Size:                r.Size,
-			DownloadCount:       r.DownloadCount,
-			Deleted:             r.Deleted,
-			CreatedAt:           r.CreatedAt,
+			ID:            r.ID,
+			DeletionID:    r.DeletionID,
+			Filename:      r.Filename,
+			Path:          s.buildPath(r.ID, r.Filename),
+			Size:          r.Size,
+			DownloadCount: r.DownloadCount,
+			Deleted:       r.Deleted,
+			CreatedAt:     r.CreatedAt,
 		}
 
 		if err := s.repo.Create(record); err != nil {

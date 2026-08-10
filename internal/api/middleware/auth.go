@@ -19,7 +19,6 @@ type Claims struct {
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		var tokenString string
 
 		cookie, err := c.Cookie("auth_token")

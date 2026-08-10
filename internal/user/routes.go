@@ -11,7 +11,5 @@ func RegisterRoutes(r *gin.RouterGroup, h *Handler) {
 	auth.Use(middleware.AuthMiddleware())
 	auth.Use(middleware.RequireRole("admin"))
 
-	auth.POST("/change-password", h.ChangePassword)
-
 	//auth.POST("/register", h.Register)
 }

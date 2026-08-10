@@ -17,9 +17,7 @@ func RegisterRoutes(r *gin.Engine, h *Handler, userService *user.Service) {
 	adminRoutes := r.Group("/")
 	adminRoutes.Use(middleware.AuthMiddleware())
 	adminRoutes.Use(middleware.RequireRole("admin"))
-	adminRoutes.Use(user.ForcePasswordChangeMiddleware(userService))
 
 	adminRoutes.GET("/admin", h.AdminPage)
 	adminRoutes.GET("/logout", h.Logout)
-	adminRoutes.GET("/change-password", h.ChangePasswordPage)
 }

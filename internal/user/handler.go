@@ -61,28 +61,3 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 
 	c.JSON(200, gin.H{"message": "password changed successfully"})
 }
-
-func ForcePasswordChangeMiddleware(userService *Service) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userID, exists := c.Get("user_id")
-		if !exists {
-			c.Next()
-			return
-		}
-
-		user, err := userService.FindByID(userID.(string))
-		if err != nil {
-			c.AbortWithStatus(500)
-			return
-		}
-
-		// Allow access to change password page itself
-		if user.ForceChangePassword && c.Request.URL.Path != "/change-password" {
-			c.Redirect(302, "/change-password")
-			c.Abort()
-			return
-		}
-
-		c.Next()
-	}
-}
