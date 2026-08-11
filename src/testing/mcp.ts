@@ -2,17 +2,17 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 
 import type { FileService } from '../server/files/service';
-import type { McpToken } from '../server/mcp/tokens/service';
+import type { ApiToken } from '../server/tokens/service';
 import type { McpTool, McpToolContext } from '../server/mcp/types';
 
 export const TEST_ORIGIN = 'https://drop.test';
 
-export function testToken(overrides: Partial<McpToken> = {}): McpToken {
+export function testToken(overrides: Partial<ApiToken> = {}): ApiToken {
   return {
     id: 'token-1',
     name: 'test',
     tokenHash: 'hash',
-    prefix: 'dropit_mcp_ab',
+    prefix: 'dropit_api_ab',
     userId: 1,
     createdAt: new Date(),
     lastUsedAt: null,

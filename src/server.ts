@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 
 import { authRoutes } from './server/api/auth.routes';
 import { fileRoutes } from './server/api/files.routes';
-import { mcpTokenRoutes } from './server/api/mcp-tokens.routes';
+import { tokenRoutes } from './server/api/tokens.routes';
 import { AuthService } from './server/auth/service';
 import { createAdminUser } from './server/bootstrap';
 import { config } from './server/config';
@@ -16,10 +16,10 @@ import { migrate } from './server/db/migrate';
 import { FileRepository } from './server/files/repository';
 import { FileService } from './server/files/service';
 import { mcpRoutes } from './server/mcp/routes';
-import { McpTokenRepository } from './server/mcp/tokens/repository';
-import { McpTokenService } from './server/mcp/tokens/service';
 import { csrfMiddleware, ensureCsrfCookie } from './server/middleware/csrf';
 import { createRenderer } from './server/render';
+import { ApiTokenRepository } from './server/tokens/repository';
+import { ApiTokenService } from './server/tokens/service';
 import { UserRepository } from './server/users/repository';
 import { UserService } from './server/users/service';
 import { webRoutes } from './server/web.routes';
@@ -57,7 +57,8 @@ async function createApp(): Promise<Express> {
   const users = new UserService(new UserRepository(db));
   const auth = new AuthService(users);
   const files = new FileService(new FileRepository(db), config.storageDir);
-  const mcpTokens = new McpTokenService(new McpTokenRepository(db));
+  const apiTokens = new ApiTokenService(new ApiTokenRepository(db));
+  const authDeps = { tokens: apiTokens, users };
 
   await createAdminUser(users);
 
@@ -74,7 +75,7 @@ async function createApp(): Promise<Express> {
    * token rather than a cookie, so the CSRF check does not apply to them.
    */
   if (config.mcpEnabled) {
-    app.use('/mcp', mcpRoutes({ files, tokens: mcpTokens }));
+    app.use('/mcp', mcpRoutes({ files, tokens: apiTokens }));
   }
 
   // Uploads are streamed to disk by multer, so only small bodies land here.
@@ -98,12 +99,12 @@ async function createApp(): Promise<Express> {
 
   const api = express.Router();
   api.use(csrfMiddleware());
-  api.use('/auth', authRoutes(auth));
-  api.use('/files', fileRoutes(files, render));
-  api.use('/mcp-tokens', mcpTokenRoutes(mcpTokens));
+  api.use('/auth', authRoutes(auth, authDeps));
+  api.use('/files', fileRoutes(files, render, authDeps));
+  api.use('/tokens', tokenRoutes(apiTokens, authDeps));
   app.use('/api', api);
 
-  app.use(webRoutes(files, mcpTokens, render));
+  app.use(webRoutes(files, apiTokens, render, authDeps));
 
   /** Anything left over is "nothing to see here". */
   app.use((req: Request, res: Response, next: NextFunction) => {

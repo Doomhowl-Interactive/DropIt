@@ -1,5 +1,7 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { verifyJwt, type Claims } from '../auth/jwt';
+import type { ApiToken, ApiTokenService } from '../tokens/service';
+import type { UserService } from '../users/service';
 
 export interface AuthInfo {
   userId: string;
@@ -7,31 +9,87 @@ export interface AuthInfo {
   role: string;
 }
 
+/** Optional services that unlock long-lived API token bearer auth. */
+export interface AuthDeps {
+  tokens?: Pick<ApiTokenService, 'verify'>;
+  users?: Pick<UserService, 'findById'>;
+}
+
 declare module 'express-serve-static-core' {
   interface Request {
     auth?: AuthInfo;
+    /** Set when the caller authenticated with a long-lived API token. */
+    apiToken?: ApiToken;
   }
 }
 
 /**
- * Reads the JWT from an `Authorization: Bearer` header, falling back to the
+ * Reads credentials from an `Authorization: Bearer` header, falling back to the
  * auth_token cookie.
  *
- * An explicitly presented API token takes precedence: a stale or expired
- * browser cookie must not mask it. Either source may still fall through to the
- * other if it fails to verify.
+ * An explicitly presented bearer credential takes precedence: a stale or expired
+ * browser cookie must not mask it. Bearer values are tried as a session JWT
+ * first, then (when `deps` is wired) as a long-lived API token. Either source
+ * may still fall through to the other if it fails to verify.
  */
-export function authMiddleware(): RequestHandler {
+export function authMiddleware(deps: AuthDeps = {}): RequestHandler {
   return (req: Request, res: Response, next: NextFunction) => {
-    const claims = verify(bearerToken(req)) ?? verify(req.cookies?.['auth_token']);
-    if (!claims) return abortUnauthorized(req, res);
+    void authenticate(req, deps)
+      .then((ok) => {
+        if (!ok) return abortUnauthorized(req, res);
+        next();
+      })
+      .catch(next);
+  };
+}
 
+async function authenticate(req: Request, deps: AuthDeps): Promise<boolean> {
+  const bearer = bearerToken(req);
+
+  if (bearer) {
+    const claims = verify(bearer);
+    if (claims) {
+      setAuthFromClaims(req, claims);
+      return true;
+    }
+
+    if (await tryApiToken(req, bearer, deps)) return true;
+  }
+
+  const cookieClaims = verify(req.cookies?.['auth_token']);
+  if (cookieClaims) {
+    setAuthFromClaims(req, cookieClaims);
+    return true;
+  }
+
+  return false;
+}
+
+async function tryApiToken(req: Request, secret: string, deps: AuthDeps): Promise<boolean> {
+  if (!deps.tokens || !deps.users) return false;
+
+  const token = await deps.tokens.verify(secret);
+  if (!token) return false;
+
+  try {
+    const user = await deps.users.findById(token.userId);
     req.auth = {
-      userId: claims.user_id ?? '',
-      username: claims.username ?? '',
-      role: claims.role ?? '',
+      userId: String(user.id),
+      username: user.username,
+      role: user.role,
     };
-    next();
+    req.apiToken = token;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function setAuthFromClaims(req: Request, claims: Claims): void {
+  req.auth = {
+    userId: claims.user_id ?? '',
+    username: claims.username ?? '',
+    role: claims.role ?? '',
   };
 }
 

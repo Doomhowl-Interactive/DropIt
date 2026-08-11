@@ -24,15 +24,15 @@ export const users = pgTable(
 );
 
 /**
- * Long-lived bearer tokens for the MCP endpoint. MCP clients run unattended and
- * cannot re-do a browser login, so they get their own credential rather than
- * the 24h session JWT — one can be revoked without logging anyone out.
+ * Long-lived bearer API tokens. Agents and scripts cannot re-do a browser login,
+ * so they get their own credential rather than the 24h session JWT — one can be
+ * revoked without logging anyone out. Accepted on normal /api routes and /mcp.
  *
  * Only the sha-256 of the secret is stored; `prefix` exists purely so the admin
  * UI can tell two tokens apart after the plaintext is gone.
  */
-export const mcpTokens = pgTable(
-  'mcp_tokens',
+export const apiTokens = pgTable(
+  'api_tokens',
   {
     id: text('id').primaryKey(),
     name: text('name').notNull(),
@@ -45,8 +45,8 @@ export const mcpTokens = pgTable(
     revokedAt: text('revoked_at'),
   },
   (table) => [
-    uniqueIndex('idx_mcp_tokens_token_hash').on(table.tokenHash),
-    index('idx_mcp_tokens_revoked_at').on(table.revokedAt),
+    uniqueIndex('idx_api_tokens_token_hash').on(table.tokenHash),
+    index('idx_api_tokens_revoked_at').on(table.revokedAt),
   ],
 );
 

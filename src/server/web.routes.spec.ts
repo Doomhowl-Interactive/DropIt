@@ -10,8 +10,8 @@ import { fakeRenderer } from '../testing/render';
 import { generateJwt } from './auth/jwt';
 import { FileRepository, type FileRecord } from './files/repository';
 import { FileService } from './files/service';
-import { McpTokenRepository } from './mcp/tokens/repository';
-import { McpTokenService } from './mcp/tokens/service';
+import { ApiTokenRepository } from './tokens/repository';
+import { ApiTokenService } from './tokens/service';
 import type { DashboardPageData, PageContext } from '../app/utils/page-context';
 import { webRoutes } from './web.routes';
 
@@ -50,15 +50,14 @@ describe('web routes', () => {
     delete process.env['DOMAIN'];
 
     storageDir = join(mkdtempSync(join(tmpdir(), 'dropit-web-')), 'uploads');
-    repo = new FileRepository(await createTestDb());
+    const db = await createTestDb();
+    repo = new FileRepository(db);
     files = new FileService(repo, storageDir);
     render = fakeRenderer();
 
     const app = express();
     app.use(cookieParser());
-    app.use(
-      webRoutes(files, new McpTokenService(new McpTokenRepository(await createTestDb())), render),
-    );
+    app.use(webRoutes(files, new ApiTokenService(new ApiTokenRepository(db)), render));
     server = await listen(app);
   });
 
@@ -258,7 +257,7 @@ describe('web routes', () => {
       app.use(
         webRoutes(
           broken,
-          new McpTokenService(new McpTokenRepository(await createTestDb())),
+          new ApiTokenService(new ApiTokenRepository(await createTestDb())),
           render,
         ),
       );

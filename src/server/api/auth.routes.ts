@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { config } from '../config';
-import { authMiddleware, requireRole } from '../middleware/auth';
+import { authMiddleware, requireRole, type AuthDeps } from '../middleware/auth';
 import type { AuthService } from '../auth/service';
 
-export function authRoutes(auth: AuthService): Router {
+export function authRoutes(auth: AuthService, authDeps: AuthDeps = {}): Router {
   const router = Router();
 
   router.post('/login', async (req, res) => {
@@ -35,7 +35,7 @@ export function authRoutes(auth: AuthService): Router {
   });
 
   const protectedRoutes = Router();
-  protectedRoutes.use(authMiddleware());
+  protectedRoutes.use(authMiddleware(authDeps));
 
   protectedRoutes.get('/me', (req, res) => {
     res.json({ user_id: req.auth?.userId, role: req.auth?.role });

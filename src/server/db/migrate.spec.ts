@@ -38,10 +38,10 @@ describe('migrate', () => {
     await migrate(db);
 
     const tables = await tableNames(db);
-    expect(tables).toEqual(expect.arrayContaining(['users', 'file_records', 'mcp_tokens']));
+    expect(tables).toEqual(expect.arrayContaining(['users', 'file_records', 'api_tokens']));
   });
 
-  it('creates the users and mcp_tokens indexes', async () => {
+  it('creates the users and api_tokens indexes', async () => {
     const db = emptyDb();
     await migrate(db);
 
@@ -50,8 +50,8 @@ describe('migrate', () => {
       expect.arrayContaining([
         'idx_users_username',
         'idx_users_deleted_at',
-        'idx_mcp_tokens_token_hash',
-        'idx_mcp_tokens_revoked_at',
+        'idx_api_tokens_token_hash',
+        'idx_api_tokens_revoked_at',
       ]),
     );
   });

@@ -9,14 +9,14 @@ import { TagModule } from 'primeng/tag';
 
 import { TokenSecretDialog } from '../components/token-secret-dialog/token-secret-dialog';
 import { PageDataService, usePage } from '../utils/page';
-import { McpTokenApi } from '../services/mcp-token-api';
-import type { McpTokenRow, McpTokensPageData } from '../utils/page-context';
+import { ApiTokenApi } from '../services/api-token-api';
+import type { ApiTokenRow, ApiTokensPageData } from '../utils/page-context';
 
-const EMPTY: McpTokensPageData = { tokens: [], endpoint: '' };
+const EMPTY: ApiTokensPageData = { tokens: [], endpoint: '' };
 
 @Component({
-  selector: 'app-mcp-tokens-page',
-  templateUrl: './mcp-tokens-page.html',
+  selector: 'app-api-tokens-page',
+  templateUrl: './api-tokens-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: 'display: contents' },
   imports: [
@@ -30,16 +30,16 @@ const EMPTY: McpTokensPageData = { tokens: [], endpoint: '' };
     TokenSecretDialog,
   ],
 })
-export class McpTokensPage {
-  private readonly api = inject(McpTokenApi);
+export class ApiTokensPage {
+  private readonly api = inject(ApiTokenApi);
   private readonly context = inject(PageDataService).context;
 
-  private readonly data = computed<McpTokensPageData>(() =>
-    this.context?.page === 'mcp-tokens' ? this.context.data : EMPTY,
+  private readonly data = computed<ApiTokensPageData>(() =>
+    this.context?.page === 'api-tokens' ? this.context.data : EMPTY,
   );
 
   /** Seeded from the server render, then kept up to date locally. */
-  protected readonly tokens = signal<McpTokenRow[]>(this.data().tokens);
+  protected readonly tokens = signal<ApiTokenRow[]>(this.data().tokens);
   protected readonly endpoint = computed(() => this.data().endpoint);
 
   protected readonly newName = signal('');
@@ -51,7 +51,7 @@ export class McpTokensPage {
   protected readonly issuedSecret = signal<string | null>(null);
 
   constructor() {
-    usePage({ title: 'MCP Tokens', bodyClass: 'min-h-screen p-4' });
+    usePage({ title: 'API Tokens', bodyClass: 'min-h-screen p-4' });
   }
 
   protected async create(): Promise<void> {
@@ -75,7 +75,7 @@ export class McpTokensPage {
     }
   }
 
-  protected async revoke(token: McpTokenRow): Promise<void> {
+  protected async revoke(token: ApiTokenRow): Promise<void> {
     if (token.revoked || this.busy()) return;
 
     this.busy.set(true);

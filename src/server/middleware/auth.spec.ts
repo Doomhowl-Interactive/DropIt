@@ -2,9 +2,14 @@ import cookieParser from 'cookie-parser';
 import express, { type Express } from 'express';
 import jwt from 'jsonwebtoken';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { createTestDb } from '../../testing/db';
 import { listen, type TestServer } from '../../testing/http';
 import { generateJwt } from '../auth/jwt';
-import { authMiddleware, requireRole } from './auth';
+import { ApiTokenRepository } from '../tokens/repository';
+import { ApiTokenService } from '../tokens/service';
+import { UserRepository } from '../users/repository';
+import { UserService } from '../users/service';
+import { authMiddleware, requireRole, type AuthDeps } from './auth';
 
 const HTML = { accept: 'text/html' };
 
@@ -84,10 +89,14 @@ describe('auth middleware', () => {
     });
 
     it('lets a valid API token through despite an expired cookie', async () => {
-      const expired = jwt.sign({ user_id: '1', username: 'cookie-user', role: 'admin' }, 'test-secret', {
-        algorithm: 'HS256',
-        expiresIn: '-1h',
-      });
+      const expired = jwt.sign(
+        { user_id: '1', username: 'cookie-user', role: 'admin' },
+        'test-secret',
+        {
+          algorithm: 'HS256',
+          expiresIn: '-1h',
+        },
+      );
 
       const response = await server.fetch('/protected', {
         headers: {
@@ -148,6 +157,79 @@ describe('auth middleware', () => {
 
       expect(response.status).toBe(302);
       expect(response.headers.get('location')).toBe('/login');
+    });
+  });
+
+  describe('authMiddleware with API tokens', () => {
+    let tokens: ApiTokenService;
+    let authDeps: AuthDeps;
+
+    beforeEach(async () => {
+      const db = await createTestDb();
+      tokens = new ApiTokenService(new ApiTokenRepository(db));
+      const users = new UserService(new UserRepository(db));
+      await users.createUser('admin', 'Adminpass1', 'admin');
+      authDeps = { tokens, users };
+
+      await start((app) => {
+        app.get('/protected', authMiddleware(authDeps), (req, res) =>
+          res.json({ auth: req.auth, tokenName: req.apiToken?.name ?? null }),
+        );
+        app.get('/admin', authMiddleware(authDeps), requireRole('admin'), (_req, res) =>
+          res.json({ ok: true }),
+        );
+      });
+    });
+
+    it('accepts a long-lived API token and loads the owning user', async () => {
+      const { secret } = await tokens.issue({ name: 'agent', userId: 1 });
+
+      const response = await server.fetch('/protected', {
+        headers: { authorization: `Bearer ${secret}` },
+      });
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual({
+        auth: { userId: '1', username: 'admin', role: 'admin' },
+        tokenName: 'agent',
+      });
+    });
+
+    it('honours the role of the owning user for requireRole', async () => {
+      const { secret } = await tokens.issue({ name: 'agent', userId: 1 });
+
+      await expect(
+        server.fetch('/admin', { headers: { authorization: `Bearer ${secret}` } }),
+      ).resolves.toMatchObject({ status: 200 });
+    });
+
+    it('rejects revoked and unknown API tokens', async () => {
+      await expect(
+        server.fetch('/protected', { headers: { authorization: 'Bearer dropit_api_nope' } }),
+      ).resolves.toMatchObject({ status: 401 });
+
+      const { token, secret } = await tokens.issue({ name: 'doomed', userId: 1 });
+      await tokens.revoke(token.id);
+
+      await expect(
+        server.fetch('/protected', { headers: { authorization: `Bearer ${secret}` } }),
+      ).resolves.toMatchObject({ status: 401 });
+    });
+
+    it('prefers a bearer API token over a session cookie', async () => {
+      const { secret } = await tokens.issue({ name: 'agent', userId: 1 });
+
+      const response = await server.fetch('/protected', {
+        headers: {
+          cookie: `auth_token=${generateJwt('99', 'cookie-user', 'user')}`,
+          authorization: `Bearer ${secret}`,
+        },
+      });
+
+      await expect(response.json()).resolves.toMatchObject({
+        auth: { username: 'admin', role: 'admin' },
+        tokenName: 'agent',
+      });
     });
   });
 

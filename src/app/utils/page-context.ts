@@ -35,10 +35,10 @@ export interface DashboardPageData {
 }
 
 /**
- * An MCP access token as the server is willing to describe it. The secret is
- * shown exactly once, when the token is created, and never lives here.
+ * An API token as the server is willing to describe it. The secret is shown
+ * exactly once, when the token is created, and never lives here.
  */
-export interface McpTokenRow {
+export interface ApiTokenRow {
   id: string;
   name: string;
   /** Leading characters of the secret, so two tokens can be told apart. */
@@ -49,16 +49,16 @@ export interface McpTokenRow {
   revoked: boolean;
 }
 
-export interface McpTokensPageData {
-  tokens: McpTokenRow[];
+export interface ApiTokensPageData {
+  tokens: ApiTokenRow[];
   /** Absolute URL of the MCP endpoint, ready to paste into a client config. */
   endpoint: string;
   error?: string;
 }
 
 /** Response to a token creation — the one and only sighting of `secret`. */
-export interface CreatedMcpToken {
-  token: McpTokenRow;
+export interface CreatedApiToken {
+  token: ApiTokenRow;
   secret: string;
 }
 
@@ -69,7 +69,7 @@ export type PageContext =
   | { page: 'file-not-found' }
   | { page: 'deleted' }
   | { page: 'dashboard'; data: DashboardPageData }
-  | { page: 'mcp-tokens'; data: McpTokensPageData }
+  | { page: 'api-tokens'; data: ApiTokensPageData }
   | { page: 'error' };
 
 export const PAGE_CONTEXT_KEY = 'dropit.pageContext';

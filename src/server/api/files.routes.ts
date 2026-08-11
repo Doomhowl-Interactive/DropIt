@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { extname, resolve } from 'node:path';
 import { Router, type Request, type Response } from 'express';
 import multer from 'multer';
-import { authMiddleware, requireRole } from '../middleware/auth';
+import { authMiddleware, requireRole, type AuthDeps } from '../middleware/auth';
 import { param, safeFilename } from '../util';
 import type { FileService } from '../files/service';
 import type { FileRecord } from '../files/repository';
@@ -12,7 +12,7 @@ interface UploadRequest extends Request {
   uploadFolderId?: string;
 }
 
-export function fileRoutes(files: FileService, render: RenderPage): Router {
+export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDeps = {}): Router {
   const router = Router();
 
   const storage = multer.diskStorage({
@@ -57,7 +57,7 @@ export function fileRoutes(files: FileService, render: RenderPage): Router {
 
   router.post(
     '/upload',
-    authMiddleware(),
+    authMiddleware(auth),
     requireRole('admin'),
     upload.single('file'),
     async (req: Request, res: Response) => {
@@ -98,7 +98,7 @@ export function fileRoutes(files: FileService, render: RenderPage): Router {
   // Public-facing deletion link: renders a page rather than JSON.
   router.get(
     '/delete/:del_id',
-    authMiddleware(),
+    authMiddleware(auth),
     requireRole('admin'),
     async (req: Request, res: Response) => {
       try {
@@ -111,7 +111,7 @@ export function fileRoutes(files: FileService, render: RenderPage): Router {
   );
 
   const dashboard = Router();
-  dashboard.use(authMiddleware(), requireRole('admin'));
+  dashboard.use(authMiddleware(auth), requireRole('admin'));
 
   dashboard.get('/', async (_req, res) => {
     try {

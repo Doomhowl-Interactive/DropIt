@@ -4,7 +4,7 @@ import { NotFoundPage } from './pages/not-found-page/not-found.page';
 import { FileViewPage } from './pages/file-view-page';
 import { IndexPage } from './pages/index-page/index.page';
 import { LoginPage } from './pages/login-page/login.page';
-import { McpTokensPage } from './pages/mcp-tokens-page';
+import { ApiTokensPage } from './pages/api-tokens-page';
 
 /**
  * The `api/...` entries exist because those endpoints answer with a page rather
@@ -15,7 +15,7 @@ export const routes: Routes = [
   { path: '', component: IndexPage },
   { path: 'login', component: LoginPage },
   { path: 'dashboard', component: DashboardPage },
-  { path: 'dashboard/mcp', component: McpTokensPage },
+  { path: 'dashboard/tokens', component: ApiTokensPage },
   { path: 'f/:id', component: FileViewPage },
   { path: 'api/files/view/:id', component: NotFoundPage },
   { path: 'api/files/download/:id', component: NotFoundPage },

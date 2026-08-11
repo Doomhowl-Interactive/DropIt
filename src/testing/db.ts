@@ -39,7 +39,7 @@ export async function createTestDb(): Promise<Db> {
     );
     CREATE UNIQUE INDEX idx_users_username ON users (username);
     CREATE INDEX idx_users_deleted_at ON users (deleted_at);
-    CREATE TABLE mcp_tokens (
+    CREATE TABLE api_tokens (
       id text PRIMARY KEY NOT NULL,
       name text NOT NULL,
       token_hash text NOT NULL,
@@ -50,8 +50,8 @@ export async function createTestDb(): Promise<Db> {
       expires_at text,
       revoked_at text
     );
-    CREATE UNIQUE INDEX idx_mcp_tokens_token_hash ON mcp_tokens (token_hash);
-    CREATE INDEX idx_mcp_tokens_revoked_at ON mcp_tokens (revoked_at);
+    CREATE UNIQUE INDEX idx_api_tokens_token_hash ON api_tokens (token_hash);
+    CREATE INDEX idx_api_tokens_revoked_at ON api_tokens (revoked_at);
   `);
 
   return drizzle(client, { schema }) as unknown as Db;

@@ -8,7 +8,7 @@ import type { Variables } from '@modelcontextprotocol/sdk/shared/uriTemplate.js'
 import type { z, ZodRawShape } from 'zod';
 
 import type { FileService } from '../files/service';
-import type { McpToken } from './tokens/service';
+import type { ApiToken } from '../tokens/service';
 
 /**
  * Everything a tool or resource handler is allowed to reach. New dependencies
@@ -19,8 +19,8 @@ export interface McpToolContext {
   files: FileService;
   /** Absolute origin the MCP request arrived on, for building share links. */
   origin: string;
-  /** The token the caller authenticated with. */
-  token: McpToken;
+  /** The API token the caller authenticated with. */
+  token: ApiToken;
 }
 
 /**

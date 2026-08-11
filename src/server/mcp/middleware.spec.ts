@@ -3,20 +3,20 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createTestDb } from '../../testing/db';
 import { listen, type TestServer } from '../../testing/http';
-import { McpTokenRepository } from './tokens/repository';
-import { McpTokenService } from './tokens/service';
+import { ApiTokenRepository } from '../tokens/repository';
+import { ApiTokenService } from '../tokens/service';
 import { mcpTokenAuth } from './middleware';
 
 describe('mcpTokenAuth', () => {
   let server: TestServer;
-  let tokens: McpTokenService;
+  let tokens: ApiTokenService;
 
   beforeEach(async () => {
-    tokens = new McpTokenService(new McpTokenRepository(await createTestDb()));
+    tokens = new ApiTokenService(new ApiTokenRepository(await createTestDb()));
 
     const app = express();
     app.use(mcpTokenAuth(tokens));
-    app.get('/', (req, res) => res.json({ token: req.mcpToken?.name }));
+    app.get('/', (req, res) => res.json({ token: req.apiToken?.name }));
 
     server = await listen(app);
   });
@@ -48,7 +48,7 @@ describe('mcpTokenAuth', () => {
   });
 
   it('rejects unknown and revoked tokens', async () => {
-    await expect(get({ authorization: 'Bearer dropit_mcp_nope' })).resolves.toMatchObject({
+    await expect(get({ authorization: 'Bearer dropit_api_nope' })).resolves.toMatchObject({
       status: 401,
     });
 

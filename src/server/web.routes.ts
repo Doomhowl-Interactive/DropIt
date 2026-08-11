@@ -1,17 +1,22 @@
 import { Router } from 'express';
 import { config } from './config';
-import { authMiddleware, requireRole } from './middleware/auth';
-import { listTokenRows } from './mcp/tokens/view';
+import { authMiddleware, requireRole, type AuthDeps } from './middleware/auth';
+import { listTokenRows } from './tokens/view';
 import { formatTimestamp, humanSize, param, requestOrigin } from './util';
 import type { FileService } from './files/service';
-import type { McpTokenService } from './mcp/tokens/service';
+import type { ApiTokenService } from './tokens/service';
 import type { RenderPage } from './render';
 import type { DashboardFileRow } from '../app/utils/page-context';
 
 const PAGE_SIZE = 10;
 
 /** The HTML pages, all rendered by Angular on the server. */
-export function webRoutes(files: FileService, tokens: McpTokenService, render: RenderPage): Router {
+export function webRoutes(
+  files: FileService,
+  tokens: ApiTokenService,
+  render: RenderPage,
+  auth: AuthDeps = {},
+): Router {
   const router = Router();
 
   router.get('/', (req, res) => render(req, res, { page: 'index' }));
@@ -39,7 +44,7 @@ export function webRoutes(files: FileService, tokens: McpTokenService, render: R
 
   // Guards are attached per route: a `router.use(...)` here would also cover
   // every request that merely passes through on its way to the static files.
-  const adminOnly = [authMiddleware(), requireRole('admin')];
+  const adminOnly = [authMiddleware(auth), requireRole('admin')];
 
   router.get('/dashboard', ...adminOnly, async (req, res) => {
     const page = Math.max(1, Number.parseInt(String(req.query['page'] ?? ''), 10) || 1);
@@ -82,19 +87,19 @@ export function webRoutes(files: FileService, tokens: McpTokenService, render: R
     }
   });
 
-  router.get('/dashboard/mcp', ...adminOnly, async (req, res) => {
+  router.get('/dashboard/tokens', ...adminOnly, async (req, res) => {
     const endpoint = `${requestOrigin(req)}/mcp`;
 
     try {
       await render(req, res, {
-        page: 'mcp-tokens',
+        page: 'api-tokens',
         data: { tokens: await listTokenRows(tokens), endpoint },
       });
     } catch (err) {
       await render(
         req,
         res,
-        { page: 'mcp-tokens', data: { tokens: [], endpoint, error: (err as Error).message } },
+        { page: 'api-tokens', data: { tokens: [], endpoint, error: (err as Error).message } },
         500,
       );
     }

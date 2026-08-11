@@ -1,17 +1,17 @@
 import { Router, type Request, type Response } from 'express';
 
-import { authMiddleware, requireRole } from '../middleware/auth';
-import { McpTokenNotFoundError, type McpTokenService } from '../mcp/tokens/service';
-import { listTokenRows, toMcpTokenRow } from '../mcp/tokens/view';
+import { authMiddleware, requireRole, type AuthDeps } from '../middleware/auth';
+import { ApiTokenNotFoundError, type ApiTokenService } from '../tokens/service';
+import { listTokenRows, toApiTokenRow } from '../tokens/view';
 import { param } from '../util';
 
 const MAX_NAME_LENGTH = 60;
 const MAX_EXPIRY_DAYS = 3650;
 
-/** Admin-only management of the bearer tokens that unlock /mcp. */
-export function mcpTokenRoutes(tokens: McpTokenService): Router {
+/** Admin-only management of long-lived API bearer tokens. */
+export function tokenRoutes(tokens: ApiTokenService, auth: AuthDeps = {}): Router {
   const router = Router();
-  router.use(authMiddleware(), requireRole('admin'));
+  router.use(authMiddleware(auth), requireRole('admin'));
 
   router.get('/', async (_req: Request, res: Response) => {
     try {
@@ -43,7 +43,7 @@ export function mcpTokenRoutes(tokens: McpTokenService): Router {
       });
 
       // The only response that ever carries the plaintext secret.
-      res.status(201).json({ token: toMcpTokenRow(token), secret });
+      res.status(201).json({ token: toApiTokenRow(token), secret });
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }
@@ -52,9 +52,9 @@ export function mcpTokenRoutes(tokens: McpTokenService): Router {
   router.post('/:id/revoke', async (req: Request, res: Response) => {
     try {
       const token = await tokens.revoke(param(req, 'id'));
-      res.json(toMcpTokenRow(token));
+      res.json(toApiTokenRow(token));
     } catch (err) {
-      if (err instanceof McpTokenNotFoundError) {
+      if (err instanceof ApiTokenNotFoundError) {
         res.status(404).json({ error: 'token not found' });
         return;
       }

@@ -4,24 +4,24 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTestDb } from '../../testing/db';
 import { listen, type TestServer } from '../../testing/http';
 import { generateJwt } from '../auth/jwt';
-import { McpTokenRepository } from '../mcp/tokens/repository';
-import { McpTokenService } from '../mcp/tokens/service';
-import { mcpTokenRoutes } from './mcp-tokens.routes';
+import { ApiTokenRepository } from '../tokens/repository';
+import { ApiTokenService } from '../tokens/service';
+import { tokenRoutes } from './tokens.routes';
 
-describe('mcp token routes', () => {
+describe('token routes', () => {
   let server: TestServer;
-  let tokens: McpTokenService;
+  let tokens: ApiTokenService;
   let adminAuth: Record<string, string>;
   let userAuth: Record<string, string>;
 
   beforeEach(async () => {
     process.env['JWT_SECRET'] = 'test-secret';
 
-    tokens = new McpTokenService(new McpTokenRepository(await createTestDb()));
+    tokens = new ApiTokenService(new ApiTokenRepository(await createTestDb()));
 
     const app = express();
     app.use(express.json());
-    app.use('/api/mcp-tokens', mcpTokenRoutes(tokens));
+    app.use('/api/tokens', tokenRoutes(tokens));
     server = await listen(app);
 
     adminAuth = { authorization: `Bearer ${generateJwt('1', 'admin', 'admin')}` };
@@ -34,7 +34,7 @@ describe('mcp token routes', () => {
   });
 
   const create = (body: unknown, headers = adminAuth) =>
-    server.fetch('/api/mcp-tokens', {
+    server.fetch('/api/tokens', {
       method: 'POST',
       headers: { 'content-type': 'application/json', ...headers },
       body: JSON.stringify(body),
@@ -45,11 +45,11 @@ describe('mcp token routes', () => {
     expect(response.status).toBe(201);
 
     const created = (await response.json()) as { token: Record<string, unknown>; secret: string };
-    expect(created.secret).toMatch(/^dropit_mcp_/);
+    expect(created.secret).toMatch(/^dropit_api_/);
     expect(created.token['name']).toBe('agent');
     expect(created.token).not.toHaveProperty('tokenHash');
 
-    const listed = await (await server.fetch('/api/mcp-tokens', { headers: adminAuth })).json();
+    const listed = await (await server.fetch('/api/tokens', { headers: adminAuth })).json();
     expect(listed).toHaveLength(1);
     expect(JSON.stringify(listed)).not.toContain(created.secret);
   });
@@ -76,7 +76,7 @@ describe('mcp token routes', () => {
       secret: string;
     };
 
-    const response = await server.fetch(`/api/mcp-tokens/${created.token.id}/revoke`, {
+    const response = await server.fetch(`/api/tokens/${created.token.id}/revoke`, {
       method: 'POST',
       headers: adminAuth,
     });
@@ -87,7 +87,7 @@ describe('mcp token routes', () => {
   });
 
   it('404s when revoking a token that does not exist', async () => {
-    const response = await server.fetch('/api/mcp-tokens/nope/revoke', {
+    const response = await server.fetch('/api/tokens/nope/revoke', {
       method: 'POST',
       headers: adminAuth,
     });
@@ -96,10 +96,10 @@ describe('mcp token routes', () => {
   });
 
   it('is admin-only', async () => {
-    await expect(server.fetch('/api/mcp-tokens')).resolves.toMatchObject({ status: 401 });
-    await expect(
-      server.fetch('/api/mcp-tokens', { headers: userAuth }),
-    ).resolves.toMatchObject({ status: 403 });
+    await expect(server.fetch('/api/tokens')).resolves.toMatchObject({ status: 401 });
+    await expect(server.fetch('/api/tokens', { headers: userAuth })).resolves.toMatchObject({
+      status: 403,
+    });
     await expect(create({ name: 'agent' }, userAuth)).resolves.toMatchObject({ status: 403 });
   });
 });

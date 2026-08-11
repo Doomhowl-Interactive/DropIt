@@ -5,13 +5,13 @@ import type { IncomingMessage } from 'node:http';
 import { config } from '../config';
 import { requestOrigin } from '../util';
 import type { FileService } from '../files/service';
+import type { ApiTokenService } from '../tokens/service';
 import { mcpTokenAuth } from './middleware';
 import { createMcpServer } from './server';
-import type { McpTokenService } from './tokens/service';
 
 export interface McpRouteDeps {
   files: FileService;
-  tokens: McpTokenService;
+  tokens: ApiTokenService;
 }
 
 /**
@@ -36,7 +36,7 @@ export function mcpRoutes(deps: McpRouteDeps): Router {
     const server = createMcpServer({
       files: deps.files,
       origin: requestOrigin(req),
-      token: req.mcpToken!,
+      token: req.apiToken!,
     });
 
     const transport = new StreamableHTTPServerTransport({

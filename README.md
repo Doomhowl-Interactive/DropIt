@@ -96,11 +96,11 @@ render the same markup without a second round trip. See
 | POST | `/api/files/dashboard/delete/fr/:id` | Permanently deletes a file and redirects to `/dashboard` |
 | GET  | `/api/files/dashboard/download/:id`  | Streams an admin file by database ID (admin)             |
 | GET  | `/api/files/dashboard/:id`           | Streams an admin file by database ID (admin)             |
-| GET  | `/dashboard/mcp`                     | MCP token console (admin)                                |
-| GET  | `/api/mcp-tokens`                    | Lists the MCP access tokens (admin)                      |
-| POST | `/api/mcp-tokens`                    | Issues an MCP access token, returning it once (admin)    |
-| POST | `/api/mcp-tokens/:id/revoke`         | Revokes an MCP access token (admin)                      |
-| POST | `/mcp`                               | MCP endpoint, Streamable HTTP (bearer token)             |
+| GET  | `/dashboard/tokens`                  | API token console (admin)                                |
+| GET  | `/api/tokens`                        | Lists API tokens (admin)                                 |
+| POST | `/api/tokens`                        | Issues an API token, returning it once (admin)           |
+| POST | `/api/tokens/:id/revoke`             | Revokes an API token (admin)                             |
+| POST | `/mcp`                               | MCP endpoint, Streamable HTTP (API bearer token)         |
 | GET  | `/ping`                              | Health check                                             |
 
 Forked off [ReSendit](https://git.brammie15.dev/brammie15/ReSendit).
