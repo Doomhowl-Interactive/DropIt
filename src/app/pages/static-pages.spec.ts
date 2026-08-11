@@ -54,7 +54,7 @@ describe('IndexPage content', () => {
     fixture.detectChanges();
   });
 
-  it('links to the admin console', () => {
-    expect(fixture.nativeElement.querySelector('a[href="/admin"]')).toBeTruthy();
+  it('links to the dashboard', () => {
+    expect(fixture.nativeElement.querySelector('a[href="/dashboard"]')).toBeTruthy();
   });
 });

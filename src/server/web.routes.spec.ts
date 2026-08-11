@@ -12,7 +12,7 @@ import { FileRepository, type FileRecord } from './files/repository';
 import { FileService } from './files/service';
 import { McpTokenRepository } from './mcp/tokens/repository';
 import { McpTokenService } from './mcp/tokens/service';
-import type { AdminPageData, PageContext } from '../app/utils/page-context';
+import type { DashboardPageData, PageContext } from '../app/utils/page-context';
 import { webRoutes } from './web.routes';
 
 const ENV = ['JWT_SECRET', 'DOMAIN'] as const;
@@ -146,18 +146,18 @@ describe('web routes', () => {
     });
   });
 
-  describe('GET /admin', () => {
-    const adminData = async (response: Response) =>
-      ((await context(response)) as Extract<PageContext, { page: 'admin' }>).data;
+  describe('GET /dashboard', () => {
+    const dashboardData = async (response: Response) =>
+      ((await context(response)) as Extract<PageContext, { page: 'dashboard' }>).data;
 
     it('requires authentication', async () => {
-      const response = await server.fetch('/admin');
+      const response = await server.fetch('/dashboard');
       expect(response.status).toBe(401);
       expect(render).not.toHaveBeenCalled();
     });
 
     it('accepts an API token in the Authorization header', async () => {
-      const response = await server.fetch('/admin', {
+      const response = await server.fetch('/dashboard', {
         headers: { authorization: `Bearer ${generateJwt('1', 'admin', 'admin')}` },
       });
 
@@ -165,18 +165,18 @@ describe('web routes', () => {
     });
 
     it('requires the admin role', async () => {
-      const response = await server.fetch('/admin', {
+      const response = await server.fetch('/dashboard', {
         headers: { cookie: `auth_token=${generateJwt('2', 'bram', 'user')}` },
       });
       expect(response.status).toBe(403);
     });
 
     it('renders an empty first page when there are no files', async () => {
-      const response = await server.fetch('/admin', { headers: adminCookie() });
+      const response = await server.fetch('/dashboard', { headers: adminCookie() });
 
       expect(response.status).toBe(200);
-      const empty: AdminPageData = { files: [], page: 1, totalPages: 0 };
-      await expect(adminData(response)).resolves.toEqual(empty);
+      const empty: DashboardPageData = { files: [], page: 1, totalPages: 0 };
+      await expect(dashboardData(response)).resolves.toEqual(empty);
     });
 
     it('formats each row for display', async () => {
@@ -189,8 +189,8 @@ describe('web routes', () => {
         }),
       );
 
-      const { files: rows } = await adminData(
-        await server.fetch('/admin', { headers: adminCookie() }),
+      const { files: rows } = await dashboardData(
+        await server.fetch('/dashboard', { headers: adminCookie() }),
       );
 
       expect(rows[0]).toEqual({
@@ -207,8 +207,8 @@ describe('web routes', () => {
 
     it('shows NEVER for a file with no expiry', async () => {
       await repo.create(makeRecord());
-      const { files: rows } = await adminData(
-        await server.fetch('/admin', { headers: adminCookie() }),
+      const { files: rows } = await dashboardData(
+        await server.fetch('/dashboard', { headers: adminCookie() }),
       );
 
       expect(rows[0]!.expiresAt).toBe('NEVER');
@@ -226,27 +226,27 @@ describe('web routes', () => {
         );
       }
 
-      const first = await adminData(await server.fetch('/admin', { headers: adminCookie() }));
+      const first = await dashboardData(await server.fetch('/dashboard', { headers: adminCookie() }));
       expect(first.files).toHaveLength(10);
       expect(first.totalPages).toBe(3);
 
-      const last = await adminData(await server.fetch('/admin?page=3', { headers: adminCookie() }));
+      const last = await dashboardData(await server.fetch('/dashboard?page=3', { headers: adminCookie() }));
       expect(last.files).toHaveLength(5);
       expect(last.page).toBe(3);
     });
 
     it.each([
-      ['no page parameter', '/admin'],
-      ['a non-numeric page', '/admin?page=abc'],
-      ['page zero', '/admin?page=0'],
-      ['a negative page', '/admin?page=-3'],
-      ['an empty page parameter', '/admin?page='],
+      ['no page parameter', '/dashboard'],
+      ['a non-numeric page', '/dashboard?page=abc'],
+      ['page zero', '/dashboard?page=0'],
+      ['a negative page', '/dashboard?page=-3'],
+      ['an empty page parameter', '/dashboard?page='],
     ])('clamps %s to page 1', async (_label, path) => {
-      const { page } = await adminData(await server.fetch(path, { headers: adminCookie() }));
+      const { page } = await dashboardData(await server.fetch(path, { headers: adminCookie() }));
       expect(page).toBe(1);
     });
 
-    it('renders the admin page with an error and a 500 when the lookup fails', async () => {
+    it('renders the dashboard page with an error and a 500 when the lookup fails', async () => {
       const broken = {
         getPaginatedFiles: () => Promise.reject(new Error('database is locked')),
       } as unknown as FileService;
@@ -259,10 +259,10 @@ describe('web routes', () => {
       const failing = await listen(app);
 
       try {
-        const response = await failing.fetch('/admin', { headers: adminCookie() });
+        const response = await failing.fetch('/dashboard', { headers: adminCookie() });
 
         expect(response.status).toBe(500);
-        await expect(adminData(response)).resolves.toEqual({
+        await expect(dashboardData(response)).resolves.toEqual({
           files: [],
           page: 1,
           totalPages: 0,

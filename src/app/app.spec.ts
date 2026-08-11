@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { App } from './app';
 import { routes } from './app.routes';
 import { serverRoutes } from './app.routes.server';
-import { AdminPage } from './pages/admin-page';
+import { DashboardPage } from './pages/dashboard-page';
 import { NotFoundPage } from './pages/not-found-page/not-found.page';
 import { FileViewPage } from './pages/file-view-page';
 import { IndexPage } from './pages/index-page/index.page';
@@ -37,8 +37,8 @@ describe('routes', () => {
   it.each([
     ['', IndexPage],
     ['login', LoginPage],
-    ['admin', AdminPage],
-    ['admin/mcp', McpTokensPage],
+    ['dashboard', DashboardPage],
+    ['dashboard/mcp', McpTokensPage],
     ['f/:id', FileViewPage],
     ['api/files/view/:id', NotFoundPage],
     ['api/files/download/:id', NotFoundPage],
@@ -69,7 +69,7 @@ describe('routes', () => {
     it.each([
       ['/', ''],
       ['/login', 'login'],
-      ['/admin', 'admin'],
+      ['/dashboard', 'dashboard'],
       ['/f/abc123', 'f/:id'],
       ['/api/files/delete/abc123', 'api/files/delete/:id'],
       ['/api/files/view/abc123', 'api/files/view/:id'],

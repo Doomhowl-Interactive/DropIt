@@ -20,11 +20,11 @@
 <div class="max-w-7xl mx-auto">
   <header class="mb-6 pb-4 flex justify-between items-start">
     <div>
-      <h1 class="text-4xl font-black uppercase tracking-tighter leading-none">System_Admin</h1>
+      <h1 class="text-4xl font-black uppercase tracking-tighter leading-none">System_Dashboard</h1>
     </div>
     <div class="flex flex-col items-end gap-2">
       <a href="/" class="text-sm font-bold underline">← Back</a>
-      <a href="/admin/mcp" class="text-sm font-bold underline">MCP access</a>
+      <a href="/dashboard/mcp" class="text-sm font-bold underline">MCP access</a>
       <a href="/logout" class="text-sm font-bold underline text-red-600">Logout</a>
     </div>
   </header>
@@ -54,7 +54,7 @@
         <tr>
           <td class="font-bold">
             <a
-              href="/api/files/admin/download/{{ file.id }}"
+              href="/api/files/dashboard/download/{{ file.id }}"
               target="_blank"
               class="underline hover:bg-black hover:text-white"
               >{{ file.filename }}</a
@@ -90,7 +90,7 @@
             <div class="flex gap-2">
               @if (!file.deleted) {
                 <form
-                  action="/api/files/admin/delete/{{ file.id }}"
+                  action="/api/files/dashboard/delete/{{ file.id }}"
                   method="POST"
                   (submit)="
                     openConfirm(
@@ -107,7 +107,7 @@
                 </form>
               }
               <form
-                action="/api/files/admin/delete/fr/{{ file.id }}"
+                action="/api/files/dashboard/delete/fr/{{ file.id }}"
                 method="POST"
                 (submit)="
                   openConfirm(

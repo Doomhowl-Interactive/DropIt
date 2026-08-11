@@ -42,7 +42,7 @@ export class LoginPage {
         return;
       }
 
-      this.document.location.href = '/admin';
+      this.document.location.href = '/dashboard';
     } catch {
       this.failed.set(true);
     }

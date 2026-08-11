@@ -76,9 +76,9 @@ describe('LoginPage', () => {
     });
   });
 
-  it('redirects to the admin console on success', async () => {
+  it('redirects to the dashboard on success', async () => {
     await submit();
-    expect(location.href).toBe('/admin');
+    expect(location.href).toBe('/dashboard');
   });
 
   it('shows ACCESS DENIED and stays put when the credentials are rejected', async () => {

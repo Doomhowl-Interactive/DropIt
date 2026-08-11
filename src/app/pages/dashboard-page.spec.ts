@@ -3,10 +3,10 @@ import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { setPageContext } from '../../testing/page-context';
-import type { AdminFileRow, AdminPageData } from '../utils/page-context';
-import { AdminPage } from './admin-page';
+import type { DashboardFileRow, DashboardPageData } from '../utils/page-context';
+import { DashboardPage } from './dashboard-page';
 
-function row(overrides: Partial<AdminFileRow> = {}): AdminFileRow {
+function row(overrides: Partial<DashboardFileRow> = {}): DashboardFileRow {
   return {
     id: 'file-1',
     filename: 'report.pdf',
@@ -20,12 +20,12 @@ function row(overrides: Partial<AdminFileRow> = {}): AdminFileRow {
   };
 }
 
-describe('AdminPage', () => {
-  let fixture: ComponentFixture<AdminPage>;
+describe('DashboardPage', () => {
+  let fixture: ComponentFixture<DashboardPage>;
 
-  const create = async (data: AdminPageData | null = { files: [], page: 1, totalPages: 0 }) => {
-    setPageContext(data ? { page: 'admin', data } : { page: 'index' });
-    fixture = TestBed.createComponent(AdminPage);
+  const create = async (data: DashboardPageData | null = { files: [], page: 1, totalPages: 0 }) => {
+    setPageContext(data ? { page: 'dashboard', data } : { page: 'index' });
+    fixture = TestBed.createComponent(DashboardPage);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
@@ -44,7 +44,7 @@ describe('AdminPage', () => {
   it('sets the page chrome', async () => {
     await create();
 
-    expect(TestBed.inject(Title).getTitle()).toBe('Admin Console');
+    expect(TestBed.inject(Title).getTitle()).toBe('Dashboard');
     expect(TestBed.inject(DOCUMENT).body.className).toBe('min-h-screen p-4');
   });
 
@@ -61,7 +61,7 @@ describe('AdminPage', () => {
   });
 
   describe('with files', () => {
-    const data: AdminPageData = {
+    const data: DashboardPageData = {
       files: [
         row(),
         row({ id: 'file-2', filename: 'secret.zip', deleted: true, deleteAfterDownload: true }),
@@ -72,11 +72,11 @@ describe('AdminPage', () => {
 
     beforeEach(() => create(data));
 
-    it('lists each file, linking to the admin download', () => {
-      const links = element().querySelectorAll('a[href^="/api/files/admin/download/"]');
+    it('lists each file, linking to the dashboard download', () => {
+      const links = element().querySelectorAll('a[href^="/api/files/dashboard/download/"]');
 
       expect(links).toHaveLength(2);
-      expect(links[0]!.getAttribute('href')).toBe('/api/files/admin/download/file-1');
+      expect(links[0]!.getAttribute('href')).toBe('/api/files/dashboard/download/file-1');
       expect(links[0]!.textContent).toContain('report.pdf');
     });
 
@@ -99,10 +99,10 @@ describe('AdminPage', () => {
     it('offers both actions for a live file but only the wipe for a deleted one', () => {
       const actions = forms().map((form) => form.getAttribute('action'));
 
-      expect(actions).toContain('/api/files/admin/delete/file-1');
-      expect(actions).toContain('/api/files/admin/delete/fr/file-1');
-      expect(actions).toContain('/api/files/admin/delete/fr/file-2');
-      expect(actions).not.toContain('/api/files/admin/delete/file-2');
+      expect(actions).toContain('/api/files/dashboard/delete/file-1');
+      expect(actions).toContain('/api/files/dashboard/delete/fr/file-1');
+      expect(actions).toContain('/api/files/dashboard/delete/fr/file-2');
+      expect(actions).not.toContain('/api/files/dashboard/delete/file-2');
     });
 
     it('reports the record count', () => {
@@ -123,10 +123,10 @@ describe('AdminPage', () => {
     beforeEach(() => create({ files: [row()], page: 1, totalPages: 1 }));
 
     const terminateForm = () =>
-      forms().find((form) => form.getAttribute('action') === '/api/files/admin/delete/file-1')!;
+      forms().find((form) => form.getAttribute('action') === '/api/files/dashboard/delete/file-1')!;
 
     const wipeForm = () =>
-      forms().find((form) => form.getAttribute('action') === '/api/files/admin/delete/fr/file-1')!;
+      forms().find((form) => form.getAttribute('action') === '/api/files/dashboard/delete/fr/file-1')!;
 
     const submit = (form: HTMLFormElement) => {
       const event = new Event('submit', { cancelable: true, bubbles: true });

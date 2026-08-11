@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { AdminPage } from './pages/admin-page';
+import { DashboardPage } from './pages/dashboard-page';
 import { NotFoundPage } from './pages/not-found-page/not-found.page';
 import { FileViewPage } from './pages/file-view-page';
 import { IndexPage } from './pages/index-page/index.page';
@@ -14,8 +14,8 @@ import { McpTokensPage } from './pages/mcp-tokens-page';
 export const routes: Routes = [
   { path: '', component: IndexPage },
   { path: 'login', component: LoginPage },
-  { path: 'admin', component: AdminPage },
-  { path: 'admin/mcp', component: McpTokensPage },
+  { path: 'dashboard', component: DashboardPage },
+  { path: 'dashboard/mcp', component: McpTokensPage },
   { path: 'f/:id', component: FileViewPage },
   { path: 'api/files/view/:id', component: NotFoundPage },
   { path: 'api/files/download/:id', component: NotFoundPage },
