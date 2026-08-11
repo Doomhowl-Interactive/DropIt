@@ -1,38 +1,32 @@
-FROM golang:1.26-alpine AS builder
-
+FROM node:26-alpine AS builder
 
 WORKDIR /app
 
-RUN apk add --no-cache git gcc musl-dev bash
-
-COPY go.mod go.sum ./
-RUN go mod download
+COPY package.json package-lock.json ./
+RUN npm ci
 
 COPY . .
+RUN npm run build
 
-ENV CGO_ENABLED=1
-ENV GIN_MODE=release
-
-RUN go build -o app ./cmd/server
-
-FROM alpine:latest
+FROM node:26-alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates tzdata
+ENV NODE_ENV=production
+ENV PORT=8080
 
-COPY --from=builder /app/app .
-COPY --from=builder /app/templates ./templates
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+
+COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/static ./static
-COPY --from=builder /app/.env ./
 
-RUN mkdir -p /app/uploads
+# Defaults for a plain `docker run`; docker-compose and fly.toml point these at
+# their own mounts.
+RUN mkdir -p /app/uploads /app/data && chown -R node:node /app
 
-RUN adduser -D appuser
-USER appuser
+USER node
 
-ENV GIN_MODE=release
+EXPOSE 8080
 
-EXPOSE 8000
-
-CMD ["./app"]
+CMD ["node", "dist/dropit/server/server.mjs"]

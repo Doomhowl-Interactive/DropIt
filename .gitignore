@@ -1,5 +1,18 @@
-.idea/**
-app
+# Build output
+/dist
+/out-tsc
+/.angular
+
+# Dependencies
+/node_modules
+npm-debug.log
+
+# Runtime data
 data/**
 uploads/**
 .env
+
+# Editors
+.idea/**
+.history/*
+.DS_Store

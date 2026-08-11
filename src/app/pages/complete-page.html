@@ -1,0 +1,55 @@
+<div class="w-full max-w-[493px] flex flex-col items-center">
+  <img src="/static/logo.png" alt="Send.it logo" style="width: 50%" class="mb-2 border-black" />
+
+  <div class="box">
+    <header class="mb-6 border-b-2 border-black pb-2 text-center">
+      <h1 class="text-xl font-bold uppercase">FILE READY</h1>
+    </header>
+
+    <div class="space-y-4">
+      <div class="bg-black text-white p-2 text-xs font-bold">UPLOAD COMPLETE</div>
+
+      <!--            &lt;!&ndash; File info &ndash;&gt;-->
+      <!--            <div class="text-[10px] uppercase font-bold">-->
+      <!--                example_file.png (2.4 MB)-->
+      <!--            </div>-->
+
+      <!-- Download -->
+      <div>
+        <label class="text-[10px] font-bold block">DOWNLOAD LINK</label>
+        <div class="flex">
+          <input id="res-url" readonly class="input-text text-sm" [value]="downloadUrl()" #resUrl />
+          <button (click)="copy(resUrl)" class="border-l-0">COPY</button>
+        </div>
+      </div>
+
+      <!-- Delete -->
+      <div>
+        <label class="text-[10px] font-bold block">DELETION LINK (PRIVATE)</label>
+        <div class="flex">
+          <input
+            id="res-del"
+            readonly
+            class="input-text text-sm text-red-600"
+            [value]="deleteUrl()"
+            #resDel
+          />
+          <button (click)="copy(resDel)" class="border-l-0">COPY</button>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="pt-4 flex justify-between">
+        <a href="/" class="text-xs underline">NEW UPLOAD</a>
+      </div>
+    </div>
+  </div>
+
+  <p class="mt-1 text-[10px] uppercase font-bold text-gray-400">
+    A service forked off
+    <a href="https://git.brammie15.dev/brammie15/ReSendit" target="_blank">ReSendit</a>]
+  </p>
+</div>
+
+<a href="/admin" class="fixed bottom-1 right-1 text-[10px] underline">SUDO</a>
+<a href="/static/TOS.txt" class="fixed bottom-1 left-1 text-[10px] underline">TOS</a>

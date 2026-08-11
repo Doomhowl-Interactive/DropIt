@@ -1,0 +1,154 @@
+<div id="modal-overlay" [style.display]="modalOpen() ? 'flex' : null">
+  <div class="modal-box">
+    <h2 id="modal-title" class="text-4xl font-black uppercase tracking-tighter mb-4">
+      {{ modalTitle() }}
+    </h2>
+    <div
+      id="modal-message"
+      class="text-sm font-bold mb-8 border-l-8 border-black pl-4 py-2 italic bg-gray-50"
+    >
+      {{ modalMessage() }}
+    </div>
+    <div class="flex gap-4">
+      <button
+        id="modal-confirm-btn"
+        class="flex-1 py-4 text-xl border-4 border-black font-black uppercase bg-yellow-400"
+        (click)="confirm()"
+      >
+        EXECUTE
+      </button>
+      <button
+        (click)="closeModal()"
+        class="flex-1 py-4 text-xl border-4 border-black font-black uppercase hover:bg-black hover:text-white"
+      >
+        ABORT
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto">
+  <header class="mb-6 border-b-8 border-black pb-4 flex justify-between items-start">
+    <div>
+      <h1 class="text-4xl font-black uppercase tracking-tighter leading-none">System_Admin</h1>
+    </div>
+    <div class="flex flex-col items-end gap-2">
+      <a href="/" class="nav-link">← BACK_TO_UPLOADER</a>
+      <a href="/logout" class="nav-link text-red-600">LOGOUT_SESSION</a>
+    </div>
+  </header>
+
+  <div class="box overflow-x-auto">
+    <table>
+      <thead>
+        <tr>
+          <th>File_Identifier</th>
+          <th>Size</th>
+          <th>Timeline (In/Out)</th>
+          <th>Hits</th>
+          <th>Burn</th>
+          <th>Status</th>
+          <th>System_Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (files().length === 0) {
+          <tr>
+            <td colspan="7" class="text-center py-10 font-bold uppercase italic">
+              Zero files in buffer
+            </td>
+          </tr>
+        }
+        @for (file of files(); track file.id) {
+          <tr>
+            <td class="font-bold">
+              <a
+                href="/api/files/admin/download/{{ file.id }}"
+                target="_blank"
+                class="underline hover:bg-black hover:text-white"
+                >{{ file.filename }}</a
+              >
+            </td>
+
+            <td class="whitespace-nowrap italic text-gray-600">{{ file.size }}</td>
+
+            <td class="text-[11px] leading-tight">
+              <span class="block"><strong>CRT:</strong> {{ file.createdAt }}</span>
+              <span class="block text-red-600"><strong>EXP:</strong> {{ file.expiresAt }}</span>
+            </td>
+
+            <td class="text-center font-black text-lg">{{ file.downloadCount }}</td>
+
+            <td>
+              @if (file.deleteAfterDownload) {
+                <span class="status-tag status-yes">YES</span>
+              } @else {
+                <span class="status-tag status-no">NO</span>
+              }
+            </td>
+
+            <td>
+              @if (file.deleted) {
+                <span class="status-tag status-deleted">REMOVED</span>
+              } @else {
+                <span class="status-tag status-active">LIVE</span>
+              }
+            </td>
+
+            <td>
+              <div class="btn-group">
+                @if (!file.deleted) {
+                  <form
+                    action="/api/files/admin/delete/{{ file.id }}"
+                    method="POST"
+                    (submit)="
+                      openConfirm(
+                        $event,
+                        'TERMINATE',
+                        'Kill this file? It will be removed from active storage.'
+                      )
+                    "
+                  >
+                    <input type="hidden" name="_csrf" class="csrf-field" [value]="csrf()" />
+                    <button type="submit" style="background: #ffcccc">Terminate</button>
+                  </form>
+                }
+                <form
+                  action="/api/files/admin/delete/fr/{{ file.id }}"
+                  method="POST"
+                  (submit)="
+                    openConfirm(
+                      $event,
+                      'FULL_WIPE',
+                      'Wiping file and purging record? This is a permanent database scrub.'
+                    )
+                  "
+                >
+                  <input type="hidden" name="_csrf" class="csrf-field" [value]="csrf()" />
+                  <button type="submit">Full_Wipe</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-6 flex justify-between items-center border-t-8 border-black pt-4">
+    <div class="flex gap-4">
+      @if (page() > 1) {
+        <a href="?page={{ page() - 1 }}" class="button">Prev_Page</a>
+      }
+      @if (page() < totalPages()) {
+        <a href="?page={{ page() + 1 }}" class="button">Next_Page</a>
+      }
+    </div>
+
+    <footer class="text-right">
+      <div class="text-[12px] font-black uppercase">
+        Data_Density: {{ files().length }} records | Page: {{ page() }}/{{ totalPages() }}
+      </div>
+    </footer>
+  </div>
+</div>
