@@ -2,6 +2,10 @@ FROM node:26-alpine AS builder
 
 WORKDIR /app
 
+RUN apk add --no-cache --virtual .build-deps \
+	build-base \
+	python3
+
 COPY package.json package-lock.json ./
 RUN npm ci
 
@@ -12,11 +16,19 @@ FROM node:26-alpine
 
 WORKDIR /app
 
+RUN apk add --no-cache --virtual .runtime-deps \
+		libstdc++
+
 ENV NODE_ENV=production
 ENV PORT=8080
 
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN apk add --no-cache --virtual .build-deps \
+		build-base \
+		python3 \
+	&& npm ci --omit=dev \
+	&& npm cache clean --force \
+	&& apk del .build-deps
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/static ./static
