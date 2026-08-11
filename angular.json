@@ -76,7 +76,10 @@
               "buildTarget": "dropit:build:production"
             },
             "development": {
-              "buildTarget": "dropit:build:development"
+              "buildTarget": "dropit:build:development",
+              "hmr": true,
+              "liveReload": true,
+              "poll": 1000
             }
           },
           "defaultConfiguration": "development"

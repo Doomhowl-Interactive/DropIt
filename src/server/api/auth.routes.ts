@@ -16,7 +16,8 @@ export function authRoutes(auth: AuthService): Router {
     let token: string;
     try {
       token = await auth.login(username, password);
-    } catch {
+    } catch (ex) {
+      console.warn(ex);
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }

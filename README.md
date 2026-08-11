@@ -70,17 +70,17 @@ render the same markup without a second round trip. See
 
 ## Routes
 
-| Route | What it does |
-| --- | --- |
-| `GET /` | Uploader |
-| `GET /f/:viewId` | Share page with the download and deletion links |
-| `GET /login` | Admin sign-in |
-| `GET /admin` | File console (admin) |
-| `GET /logout` | Clears the session (admin) |
-| `POST /api/files/upload` | Multipart upload (admin) |
-| `GET /api/files/view/:id`, `GET /api/files/download/:id` | Serves a file |
-| `GET /api/files/delete/:deletionId` | Soft-deletes and shows a confirmation (admin) |
-| `GET /api/files/admin/export`, `POST /api/files/admin/import` | Record export/import (admin) |
-| `GET /ping` | Health check |
+| Route                                                         | What it does                                    |
+| ------------------------------------------------------------- | ----------------------------------------------- |
+| `GET /`                                                       | Uploader                                        |
+| `GET /f/:viewId`                                              | Share page with the download and deletion links |
+| `GET /login`                                                  | Admin sign-in                                   |
+| `GET /admin`                                                  | File console (admin)                            |
+| `GET /logout`                                                 | Clears the session (admin)                      |
+| `POST /api/files/upload`                                      | Multipart upload (admin)                        |
+| `GET /api/files/view/:id`, `GET /api/files/download/:id`      | Serves a file                                   |
+| `GET /api/files/delete/:deletionId`                           | Soft-deletes and shows a confirmation (admin)   |
+| `GET /api/files/admin/export`, `POST /api/files/admin/import` | Record export/import (admin)                    |
+| `GET /ping`                                                   | Health check                                    |
 
 Forked off [ReSendit](https://git.brammie15.dev/brammie15/ReSendit).

@@ -1,6 +1,7 @@
 {
-    "recommendations": [
-        "angular.ng-template",
-        "christopherthomas.vsqlite-explorer"
-    ]
+  "recommendations": [
+    "angular.ng-template",
+    "christopherthomas.vsqlite-explorer",
+    "bradlc.vscode-tailwindcss"
+  ]
 }

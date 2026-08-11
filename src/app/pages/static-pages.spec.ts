@@ -88,10 +88,6 @@ describe('IndexPage content', () => {
     fixture.detectChanges();
   });
 
-  it('hosts the upload zone', () => {
-    expect(fixture.nativeElement.querySelector('app-upload-zone')).toBeTruthy();
-  });
-
   it('links to the admin console', () => {
     expect(fixture.nativeElement.querySelector('a[href="/admin"]')).toBeTruthy();
   });

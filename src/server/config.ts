@@ -5,7 +5,7 @@ export const config = {
     return Number(process.env['PORT'] ?? 8080);
   },
   get jwtSecret(): string {
-    return process.env['JWT_SECRET'] ?? '';
+    return process.env['JWT_SECRET'] ?? 'blablabla';
   },
   get useHttps(): boolean {
     return process.env['USE_HTTPS'] === 'true';

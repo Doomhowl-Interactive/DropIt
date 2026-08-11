@@ -7,7 +7,7 @@ import { UploadZone } from '../components/upload-zone/upload-zone';
   selector: 'app-index-page',
   templateUrl: './index-page.html',
   host: { style: 'display: contents' },
-  imports: [CardModule, UploadZone],
+  imports: [CardModule],
 })
 export class IndexPage {
   constructor() {
