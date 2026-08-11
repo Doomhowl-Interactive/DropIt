@@ -1,4 +1,6 @@
+import { and, eq, isNull } from 'drizzle-orm';
 import { fromDbDate, toDbDate, type Db } from '../db/db';
+import { users } from '../db/schema';
 
 export class UserNotFoundError extends Error {
   constructor() {
@@ -16,90 +18,74 @@ export interface User {
   updatedAt: Date | null;
 }
 
-interface Row {
-  id: number | string;
-  username: string;
-  password_hash: string;
-  role: string;
-  created_at: unknown;
-  updated_at: unknown;
-}
+type Row = typeof users.$inferSelect;
 
 function mapRow(row: Row): User {
   return {
-    id: Number(row.id),
+    id: row.id,
     username: row.username,
-    passwordHash: row.password_hash,
+    passwordHash: row.passwordHash,
     role: row.role,
-    createdAt: fromDbDate(row.created_at),
-    updatedAt: fromDbDate(row.updated_at),
+    createdAt: fromDbDate(row.createdAt),
+    updatedAt: fromDbDate(row.updatedAt),
   };
 }
 
-const COLUMNS = 'id, username, password_hash, role, force_change_password, created_at, updated_at';
-
-/** `deleted_at IS NULL` mirrors GORM's soft-delete semantics. */
+/** `deletedAt IS NULL` mirrors GORM's soft-delete semantics. */
 export class UserRepository {
   constructor(private readonly db: Db) {}
 
   async findByUsername(username: string): Promise<User> {
-    const row = await this.db.get<Row>(
-      `SELECT ${COLUMNS} FROM users WHERE username = ? AND deleted_at IS NULL`,
-      [username],
-    );
+    const [row] = await this.db
+      .select()
+      .from(users)
+      .where(and(eq(users.username, username), isNull(users.deletedAt)));
     if (!row) throw new UserNotFoundError();
     return mapRow(row);
   }
 
   async findById(id: number | string): Promise<User> {
-    const row = await this.db.get<Row>(
-      `SELECT ${COLUMNS} FROM users WHERE id = ? AND deleted_at IS NULL`,
-      [id],
-    );
+    const [row] = await this.db
+      .select()
+      .from(users)
+      .where(and(eq(users.id, Number(id)), isNull(users.deletedAt)));
     if (!row) throw new UserNotFoundError();
     return mapRow(row);
   }
 
   async create(user: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
-    const now = new Date();
-    await this.db.run(
-      `INSERT INTO users (created_at, updated_at, username, password_hash, role)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        toDbDate(now, this.db.dialect),
-        toDbDate(now, this.db.dialect),
-        user.username,
-        user.passwordHash,
-        user.role,
-      ],
-    );
+    const now = toDbDate(new Date());
+    await this.db.insert(users).values({
+      createdAt: now,
+      updatedAt: now,
+      username: user.username,
+      passwordHash: user.passwordHash,
+      role: user.role,
+    });
     return this.findByUsername(user.username);
   }
 
   async update(user: User): Promise<void> {
-    await this.db.run(
-      `UPDATE users
-          SET username = ?, password_hash = ?, role = ?, updated_at = ?
-        WHERE id = ?`,
-      [
-        user.username,
-        user.passwordHash,
-        user.role,
-        toDbDate(new Date(), this.db.dialect),
-        user.id,
-      ],
-    );
+    await this.db
+      .update(users)
+      .set({
+        username: user.username,
+        passwordHash: user.passwordHash,
+        role: user.role,
+        updatedAt: toDbDate(new Date()),
+      })
+      .where(eq(users.id, user.id));
   }
 
   async getAll(): Promise<User[]> {
-    const rows = await this.db.all<Row>(`SELECT ${COLUMNS} FROM users WHERE deleted_at IS NULL`);
+    const rows = await this.db.select().from(users).where(isNull(users.deletedAt));
     return rows.map(mapRow);
   }
 
   async delete(id: number): Promise<void> {
-    await this.db.run('UPDATE users SET deleted_at = ? WHERE id = ?', [
-      toDbDate(new Date(), this.db.dialect),
-      id,
-    ]);
+    await this.db
+      .update(users)
+      .set({ deletedAt: toDbDate(new Date()) })
+      .where(eq(users.id, id));
   }
 }

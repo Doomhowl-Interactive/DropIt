@@ -14,9 +14,7 @@ export const config = {
   get domain(): string {
     return process.env['DOMAIN'] ?? '';
   },
-  get dbType(): string {
-    return process.env['DB_TYPE'] || 'sqlite';
-  },
+  /** Path to the SQLite database file. */
   get databaseUrl(): string {
     return process.env['DATABASE_URL'] || '';
   },

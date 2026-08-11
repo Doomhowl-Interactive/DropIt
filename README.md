@@ -32,9 +32,9 @@ Uploading and the admin console both require that account (`/login`).
 ## Configuration
 
 Everything is environment driven; see [.env.example](.env.example) for the full
-list. `DB_TYPE` selects `sqlite` (default, via Node's built-in `node:sqlite`),
-`postgres`, or `mysql`; the schema is created on boot and is compatible with
-databases written by the previous Go implementation.
+list. Storage is SQLite, at the file path in `DATABASE_URL`; the schema is
+created on boot and is compatible with databases written by the previous Go
+implementation.
 
 ## Deploying
 

@@ -29,9 +29,7 @@
             ],
             "styles": ["src/styles.css"],
             "externalDependencies": [
-              "node:sqlite",
-              "pg",
-              "mysql2",
+              "better-sqlite3",
               "multer",
               "bcryptjs",
               "jsonwebtoken",

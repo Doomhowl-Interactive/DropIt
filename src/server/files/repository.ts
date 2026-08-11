@@ -1,4 +1,6 @@
-import { fromBool, fromDbDate, toBool, toDbDate, type Db } from '../db/db';
+import { desc, eq } from 'drizzle-orm';
+import { fromDbDate, toDbDate, type Db } from '../db/db';
+import { fileRecords } from '../db/schema';
 
 export class FileNotFoundError extends Error {
   constructor() {
@@ -22,85 +24,65 @@ export interface FileRecord {
   deleteAfterDownload: boolean;
 }
 
-interface Row {
-  id: string;
-  deletion_id: string;
-  view_id: string;
-  filename: string;
-  path: string;
-  size: number | string;
-  download_count: number | string;
-  deleted: unknown;
-  created_at: unknown;
-  expires_at: unknown;
-  delete_after_download: unknown;
-}
+type Row = typeof fileRecords.$inferSelect;
 
 function mapRow(row: Row): FileRecord {
   return {
     id: row.id,
-    deletionId: row.deletion_id,
-    viewId: row.view_id,
-    filename: row.filename,
-    path: row.path,
-    size: Number(row.size ?? 0),
-    downloadCount: Number(row.download_count ?? 0),
-    deleted: toBool(row.deleted),
-    createdAt: fromDbDate(row.created_at) ?? new Date(0),
-    expiresAt: fromDbDate(row.expires_at),
-    deleteAfterDownload: toBool(row.delete_after_download),
+    deletionId: row.deletionId ?? '',
+    viewId: row.viewId ?? '',
+    filename: row.filename ?? '',
+    path: row.path ?? '',
+    size: row.size ?? 0,
+    downloadCount: row.downloadCount ?? 0,
+    deleted: row.deleted ?? false,
+    createdAt: fromDbDate(row.createdAt) ?? new Date(0),
+    expiresAt: fromDbDate(row.expiresAt),
+    deleteAfterDownload: row.deleteAfterDownload ?? false,
   };
 }
-
-const COLUMNS = `id, deletion_id, view_id, filename, path, size,
-                 download_count, deleted, created_at, expires_at, delete_after_download`;
 
 export class FileRepository {
   constructor(private readonly db: Db) {}
 
   async create(file: FileRecord): Promise<void> {
-    await this.db.run(
-      `INSERT INTO file_records (${COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        file.id,
-        file.deletionId,
-        file.viewId,
-        file.filename,
-        file.path,
-        file.size,
-        file.downloadCount,
-        fromBool(file.deleted, this.db.dialect),
-        toDbDate(file.createdAt, this.db.dialect),
-        file.expiresAt ? toDbDate(file.expiresAt, this.db.dialect) : null,
-        fromBool(file.deleteAfterDownload, this.db.dialect),
-      ],
-    );
+    await this.db.insert(fileRecords).values({
+      id: file.id,
+      deletionId: file.deletionId,
+      viewId: file.viewId,
+      filename: file.filename,
+      path: file.path,
+      size: file.size,
+      downloadCount: file.downloadCount,
+      deleted: file.deleted,
+      createdAt: toDbDate(file.createdAt),
+      expiresAt: file.expiresAt ? toDbDate(file.expiresAt) : null,
+      deleteAfterDownload: file.deleteAfterDownload,
+    });
   }
 
   async getAll(): Promise<FileRecord[]> {
-    const rows = await this.db.all<Row>(`SELECT ${COLUMNS} FROM file_records`);
+    const rows = await this.db.select().from(fileRecords);
     return rows.map(mapRow);
   }
 
   async getById(id: string): Promise<FileRecord> {
-    const row = await this.db.get<Row>(`SELECT ${COLUMNS} FROM file_records WHERE id = ?`, [id]);
+    const [row] = await this.db.select().from(fileRecords).where(eq(fileRecords.id, id));
     if (!row) throw new FileNotFoundError();
     return mapRow(row);
   }
 
   async getByDeletionId(deletionId: string): Promise<FileRecord> {
-    const row = await this.db.get<Row>(
-      `SELECT ${COLUMNS} FROM file_records WHERE deletion_id = ?`,
-      [deletionId],
-    );
+    const [row] = await this.db
+      .select()
+      .from(fileRecords)
+      .where(eq(fileRecords.deletionId, deletionId));
     if (!row) throw new FileNotFoundError();
     return mapRow(row);
   }
 
   async getByViewId(viewId: string): Promise<FileRecord> {
-    const row = await this.db.get<Row>(`SELECT ${COLUMNS} FROM file_records WHERE view_id = ?`, [
-      viewId,
-    ]);
+    const [row] = await this.db.select().from(fileRecords).where(eq(fileRecords.viewId, viewId));
     if (!row) throw new FileNotFoundError();
     return mapRow(row);
   }
@@ -109,35 +91,32 @@ export class FileRepository {
     limit: number,
     offset: number,
   ): Promise<{ files: FileRecord[]; total: number }> {
-    const count = await this.db.get<{ n: number | string }>(
-      'SELECT COUNT(*) AS n FROM file_records',
-    );
-    const rows = await this.db.all<Row>(
-      `SELECT ${COLUMNS} FROM file_records ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-      [limit, offset],
-    );
-    return { files: rows.map(mapRow), total: Number(count?.n ?? 0) };
+    const total = await this.db.$count(fileRecords);
+    const rows = await this.db
+      .select()
+      .from(fileRecords)
+      .orderBy(desc(fileRecords.createdAt))
+      .limit(limit)
+      .offset(offset);
+    return { files: rows.map(mapRow), total };
   }
 
   async incrementDownload(file: FileRecord): Promise<void> {
     file.downloadCount += 1;
-    await this.db.run('UPDATE file_records SET download_count = ? WHERE id = ?', [
-      file.downloadCount,
-      file.id,
-    ]);
+    await this.db
+      .update(fileRecords)
+      .set({ downloadCount: file.downloadCount })
+      .where(eq(fileRecords.id, file.id));
   }
 
   /** Soft delete: the row stays, the file stops being served. */
   async markDeleted(file: FileRecord): Promise<void> {
     file.deleted = true;
-    await this.db.run('UPDATE file_records SET deleted = ? WHERE id = ?', [
-      fromBool(true, this.db.dialect),
-      file.id,
-    ]);
+    await this.db.update(fileRecords).set({ deleted: true }).where(eq(fileRecords.id, file.id));
   }
 
   /** Hard delete: the row is removed from the database. */
   async delete(file: FileRecord): Promise<void> {
-    await this.db.run('DELETE FROM file_records WHERE id = ?', [file.id]);
+    await this.db.delete(fileRecords).where(eq(fileRecords.id, file.id));
   }
 }

@@ -10,7 +10,6 @@ services:
       PORT: 8080
       ADMIN_PASSWORD: ""
 
-      DB_TYPE: sqlite
       DATABASE_URL: ./data/database.db
       STORAGE_DIR: ./uploads
 

@@ -10,7 +10,6 @@ primary_region = 'fra'
 [env]
   ALLOWED_HOSTS = 'dropit.doomhowl.com'
   DATABASE_URL = '/data/database.db'
-  DB_TYPE = 'sqlite'
   NODE_ENV = 'production'
   PORT = '8080'
   STORAGE_DIR = '/data/uploads'
