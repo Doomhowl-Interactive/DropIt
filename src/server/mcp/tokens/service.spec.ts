@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { testDb } from '../../testing/db';
+import { createTestDb } from '../../../testing/db';
 import { McpTokenRepository } from './repository';
 import { hashSecret, McpTokenService } from './service';
 
@@ -9,7 +9,7 @@ describe('McpTokenService', () => {
   let service: McpTokenService;
 
   beforeEach(() => {
-    repo = new McpTokenRepository(testDb());
+    repo = new McpTokenRepository(createTestDb());
     service = new McpTokenService(repo);
   });
 

@@ -1,13 +1,13 @@
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 
-import type { FileService } from '../files/service';
-import type { McpToken } from '../mcp/tokens/service';
-import type { McpTool, McpToolContext } from '../mcp/types';
+import type { FileService } from '../server/files/service';
+import type { McpToken } from '../server/mcp/tokens/service';
+import type { McpTool, McpToolContext } from '../server/mcp/types';
 
 export const TEST_ORIGIN = 'https://drop.test';
 
-export function testToken(): McpToken {
+export function testToken(overrides: Partial<McpToken> = {}): McpToken {
   return {
     id: 'token-1',
     name: 'test',
@@ -18,6 +18,7 @@ export function testToken(): McpToken {
     lastUsedAt: null,
     expiresAt: null,
     revokedAt: null,
+    ...overrides,
   };
 }
 
@@ -44,4 +45,9 @@ export function textOf(result: CallToolResult): string {
     .filter((block): block is { type: 'text'; text: string } => block.type === 'text')
     .map((block) => block.text)
     .join('\n');
+}
+
+/** The `structuredContent` of a successful tool result. */
+export function structuredOf(result: CallToolResult): Record<string, unknown> {
+  return (result.structuredContent ?? {}) as Record<string, unknown>;
 }

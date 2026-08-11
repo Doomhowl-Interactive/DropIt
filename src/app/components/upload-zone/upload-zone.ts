@@ -1,8 +1,8 @@
 import { Component, DOCUMENT, inject, signal, viewChild, type ElementRef } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { ProgressBarModule } from 'primeng/progressbar';
-import { formatBytes, formatTime } from '../../format';
-import { readCsrfToken } from '../../csrf';
+import { formatBytes, formatTime } from '../../utils/format';
+import { readCsrfToken } from '../../utils/csrf';
 
 @Component({
   selector: 'app-upload-zone',

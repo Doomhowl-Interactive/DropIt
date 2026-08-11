@@ -23,13 +23,21 @@
       <h1 class="text-4xl font-black uppercase tracking-tighter leading-none">System_Admin</h1>
     </div>
     <div class="flex flex-col items-end gap-2">
-      <a href="/" class="text-sm font-bold underline">← BACK_TO_UPLOADER</a>
-      <a href="/admin/mcp" class="text-sm font-bold underline">MCP_ACCESS</a>
-      <a href="/logout" class="text-sm font-bold underline text-red-600">LOGOUT_SESSION</a>
+      <a href="/" class="text-sm font-bold underline">← Back</a>
+      <a href="/admin/mcp" class="text-sm font-bold underline">MCP access</a>
+      <a href="/logout" class="text-sm font-bold underline text-red-600">Logout</a>
     </div>
   </header>
 
-  <p-card>
+  <p-card header="Upload">
+    <div class="w-1/2">
+      <app-upload-zone />
+    </div>
+  </p-card>
+
+  <p-divider />
+
+  <p-card header="Files list">
     <p-table [value]="files()" [tableStyle]="{ 'min-width': '60rem' }">
       <ng-template #header>
         <tr>

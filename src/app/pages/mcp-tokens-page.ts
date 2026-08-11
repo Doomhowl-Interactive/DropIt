@@ -8,7 +8,7 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 
 import { TokenSecretDialog } from '../components/token-secret-dialog/token-secret-dialog';
-import { PageDataService, usePage } from '../page';
+import { PageDataService, usePage } from '../utils/page';
 import { McpTokenApi } from '../services/mcp-token-api';
 import type { McpTokenRow, McpTokensPageData } from '../../shared/page-context';
 

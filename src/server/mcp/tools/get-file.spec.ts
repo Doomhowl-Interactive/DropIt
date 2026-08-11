@@ -1,30 +1,32 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { createTestDb } from '../../../testing/db';
+import { callTool, structuredOf, testContext, textOf } from '../../../testing/mcp';
 import { FileRepository } from '../../files/repository';
 import { FileService, type FileRecord } from '../../files/service';
-import { testDb, testStorageDir } from '../../testing/db';
-import { callTool, testContext, textOf } from '../../testing/mcp';
 import type { McpToolContext } from '../types';
 import { getFileTool } from './get-file';
 import { uploadFileTool } from './upload-file';
 
 describe('get_file', () => {
-  let storage: ReturnType<typeof testStorageDir>;
+  let storageDir: string;
   let files: FileService;
   let ctx: McpToolContext;
 
   beforeEach(() => {
-    storage = testStorageDir();
-    files = new FileService(new FileRepository(testDb()), storage.path);
+    storageDir = join(mkdtempSync(join(tmpdir(), 'dropit-mcp-')), 'uploads');
+    files = new FileService(new FileRepository(createTestDb()), storageDir);
     ctx = testContext(files);
   });
 
-  afterEach(() => storage.cleanup());
+  afterEach(() => rmSync(storageDir, { recursive: true, force: true }));
 
   const upload = async (args: Record<string, unknown>): Promise<FileRecord> => {
     const result = await callTool(uploadFileTool, args, ctx);
-    const id = String((result.structuredContent as Record<string, unknown>)['id']);
-    return files.getFileById(id);
+    return files.getFileById(String(structuredOf(result)['id']));
   };
 
   it('returns text files inline', async () => {
@@ -84,18 +86,47 @@ describe('get_file', () => {
     await files.deleteFileById(deleted.id);
     expect((await callTool(getFileTool, { id: deleted.id }, ctx)).isError).toBe(true);
 
-    // Registered directly so the expiry is already in the past — the tool only
-    // takes a positive `expires_in_seconds`, and waiting one out is not a test.
-    const { folderId, folderPath } = files.createUploadFolder();
-    const expired = await files.registerUpload({
-      folderId,
-      originalName: 'stale.txt',
-      path: `${folderPath}/stale.txt`,
-      size: 1,
-      expiresAt: new Date(Date.now() - 1000),
-    });
+    const expired = await registerExpired(files);
     expect((await callTool(getFileTool, { id: expired.id }, ctx)).isError).toBe(true);
 
     expect((await callTool(getFileTool, { id: 'nope' }, ctx)).isError).toBe(true);
   });
+
+  it('refuses a file larger than the inline limit, pointing at the download link', async () => {
+    const record = await upload({ filename: 'big.txt', content: 'hello', encoding: 'utf8' });
+
+    process.env['MCP_MAX_UPLOAD_BYTES'] = '2';
+    try {
+      const result = await callTool(getFileTool, { id: record.id }, ctx);
+      expect(result.isError).toBe(true);
+      expect(textOf(result)).toContain(`/api/files/download/${record.id}`);
+    } finally {
+      delete process.env['MCP_MAX_UPLOAD_BYTES'];
+    }
+  });
+
+  it('reports a file whose bytes have vanished from disk', async () => {
+    const record = await upload({ filename: 'note.txt', content: 'hello', encoding: 'utf8' });
+    rmSync(record.path);
+
+    const result = await callTool(getFileTool, { id: record.id }, ctx);
+    expect(result.isError).toBe(true);
+    expect(textOf(result)).toContain('Could not read');
+  });
 });
+
+/**
+ * Registered directly, with an expiry already in the past — the tool only takes
+ * a positive `expires_in_seconds`, and waiting one out is not a test.
+ */
+function registerExpired(files: FileService): Promise<FileRecord> {
+  const { folderId, folderPath } = files.createUploadFolder();
+
+  return files.registerUpload({
+    folderId,
+    originalName: 'stale.txt',
+    path: join(folderPath, 'stale.txt'),
+    size: 1,
+    expiresAt: new Date(Date.now() - 1000),
+  });
+}

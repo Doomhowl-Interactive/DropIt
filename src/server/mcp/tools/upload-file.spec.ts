@@ -1,25 +1,27 @@
-import { readdirSync, readFileSync } from 'node:fs';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { createTestDb } from '../../../testing/db';
+import { callTool, structuredOf, testContext, TEST_ORIGIN, textOf } from '../../../testing/mcp';
 import { FileRepository } from '../../files/repository';
 import { FileService } from '../../files/service';
-import { testDb, testStorageDir } from '../../testing/db';
-import { callTool, testContext, TEST_ORIGIN, textOf } from '../../testing/mcp';
 import type { McpToolContext } from '../types';
 import { uploadFileTool } from './upload-file';
 
 describe('upload_file', () => {
-  let storage: ReturnType<typeof testStorageDir>;
+  let storageDir: string;
   let files: FileService;
   let ctx: McpToolContext;
 
   beforeEach(() => {
-    storage = testStorageDir();
-    files = new FileService(new FileRepository(testDb()), storage.path);
+    storageDir = join(mkdtempSync(join(tmpdir(), 'dropit-mcp-')), 'uploads');
+    files = new FileService(new FileRepository(createTestDb()), storageDir);
     ctx = testContext(files);
   });
 
-  afterEach(() => storage.cleanup());
+  afterEach(() => rmSync(storageDir, { recursive: true, force: true }));
 
   it('stores the bytes and returns working links', async () => {
     const content = Buffer.from('hello drop').toString('base64');
@@ -27,7 +29,7 @@ describe('upload_file', () => {
 
     expect(result.isError).toBeFalsy();
 
-    const structured = result.structuredContent as Record<string, unknown>;
+    const structured = structuredOf(result);
     expect(structured['filename']).toBe('note.txt');
     expect(structured['size']).toBe(10);
     expect(structured['share_url']).toMatch(new RegExp(`^${TEST_ORIGIN}/f/`));
@@ -45,8 +47,7 @@ describe('upload_file', () => {
       ctx,
     );
 
-    const id = String((result.structuredContent as Record<string, unknown>)['id']);
-    const record = await files.getFileById(id);
+    const record = await files.getFileById(String(structuredOf(result)['id']));
     expect(readFileSync(record.path, 'utf8')).toBe('plain');
   });
 
@@ -63,8 +64,7 @@ describe('upload_file', () => {
       ctx,
     );
 
-    const id = String((result.structuredContent as Record<string, unknown>)['id']);
-    const record = await files.getFileById(id);
+    const record = await files.getFileById(String(structuredOf(result)['id']));
 
     expect(record.deleteAfterDownload).toBe(true);
     expect(record.expiresAt?.getTime()).toBeGreaterThan(Date.now());
@@ -77,13 +77,12 @@ describe('upload_file', () => {
       ctx,
     );
 
-    const structured = result.structuredContent as Record<string, unknown>;
-    expect(structured['filename']).toBe('passwd');
+    expect(structuredOf(result)['filename']).toBe('passwd');
 
     // One upload folder, holding one file, directly under the storage root.
-    const folders = readdirSync(storage.path);
+    const folders = readdirSync(storageDir);
     expect(folders).toHaveLength(1);
-    expect(readdirSync(`${storage.path}/${folders[0]}`)).toHaveLength(1);
+    expect(readdirSync(join(storageDir, folders[0]!))).toHaveLength(1);
   });
 
   it('rejects malformed base64 rather than storing a truncated file', async () => {
@@ -95,7 +94,17 @@ describe('upload_file', () => {
 
     expect(result.isError).toBe(true);
     expect(textOf(result)).toContain('base64');
-    expect(readdirSync(storage.path)).toHaveLength(0);
+    expect(readdirSync(storageDir)).toHaveLength(0);
+  });
+
+  it('accepts wrapped and url-safe base64', async () => {
+    const bytes = Buffer.from([0xfa, 0xff, 0xbe, 0xef, 0x01, 0x02]);
+    const wrapped = bytes.toString('base64url').replace(/(.{2})/, '$1\n');
+
+    const result = await callTool(uploadFileTool, { filename: 'b.bin', content: wrapped }, ctx);
+
+    const record = await files.getFileById(String(structuredOf(result)['id']));
+    expect(readFileSync(record.path)).toEqual(bytes);
   });
 
   it('rejects an empty file', async () => {
@@ -106,7 +115,7 @@ describe('upload_file', () => {
     );
 
     expect(result.isError).toBe(true);
-    expect(readdirSync(storage.path)).toHaveLength(0);
+    expect(readdirSync(storageDir)).toHaveLength(0);
   });
 
   it('rejects a file over the configured limit', async () => {
@@ -120,9 +129,23 @@ describe('upload_file', () => {
 
       expect(result.isError).toBe(true);
       expect(textOf(result)).toContain('limit');
-      expect(readdirSync(storage.path)).toHaveLength(0);
+      expect(readdirSync(storageDir)).toHaveLength(0);
     } finally {
       delete process.env['MCP_MAX_UPLOAD_BYTES'];
     }
+  });
+
+  it('reports a failed upload instead of leaving an orphaned folder', async () => {
+    vi.spyOn(files, 'registerUpload').mockRejectedValue(new Error('database is locked'));
+
+    const result = await callTool(
+      uploadFileTool,
+      { filename: 'note.txt', content: 'x', encoding: 'utf8' },
+      ctx,
+    );
+
+    expect(result.isError).toBe(true);
+    expect(textOf(result)).toContain('database is locked');
+    expect(readdirSync(storageDir)).toHaveLength(0);
   });
 });

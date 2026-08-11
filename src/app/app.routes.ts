@@ -1,11 +1,10 @@
 import { Routes } from '@angular/router';
 import { AdminPage } from './pages/admin-page';
 import { DeleteResultPage } from './pages/delete-result-page';
-import { ErrorPage } from './pages/error-page';
-import { FileNotFoundPage } from './pages/file-not-found-page';
+import { NotFoundPage } from './pages/not-found-page/not-found.page';
 import { FileViewPage } from './pages/file-view-page';
-import { IndexPage } from './pages/index-page';
-import { LoginPage } from './pages/login-page';
+import { IndexPage } from './pages/index-page/index.page';
+import { LoginPage } from './pages/login-page/login.page';
 import { McpTokensPage } from './pages/mcp-tokens-page';
 
 /**
@@ -20,7 +19,7 @@ export const routes: Routes = [
   { path: 'admin/mcp', component: McpTokensPage },
   { path: 'f/:id', component: FileViewPage },
   { path: 'api/files/delete/:id', component: DeleteResultPage },
-  { path: 'api/files/view/:id', component: FileNotFoundPage },
-  { path: 'api/files/download/:id', component: FileNotFoundPage },
-  { path: '**', component: ErrorPage },
+  { path: 'api/files/view/:id', component: NotFoundPage },
+  { path: 'api/files/download/:id', component: NotFoundPage },
+  { path: '**', component: NotFoundPage },
 ];

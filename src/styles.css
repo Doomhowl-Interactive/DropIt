@@ -1,3 +1,5 @@
+@import 'primeicons/primeicons.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -11,4 +13,9 @@ app-root {
 
 router-outlet {
   display: none;
+}
+
+.p-button {
+  /* Remove dumb flicker of buttons on page load. */
+  transition: none !important;
 }

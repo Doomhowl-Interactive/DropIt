@@ -1,12 +1,14 @@
 import { Component, DOCUMENT, afterNextRender, computed, inject, signal } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
+import { DividerModule } from 'primeng/divider';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
-import { PageDataService, usePage } from '../page';
-import { readCsrfToken } from '../csrf';
+import { PageDataService, usePage } from '../utils/page';
+import { readCsrfToken } from '../utils/csrf';
 import type { AdminPageData } from '../../shared/page-context';
+import { UploadZone } from '../components/upload-zone/upload-zone';
 
 const EMPTY: AdminPageData = { files: [], page: 1, totalPages: 0 };
 
@@ -14,7 +16,15 @@ const EMPTY: AdminPageData = { files: [], page: 1, totalPages: 0 };
   selector: 'app-admin-page',
   templateUrl: './admin-page.html',
   host: { style: 'display: contents' },
-  imports: [CardModule, ButtonModule, TableModule, TagModule, DialogModule],
+  imports: [
+    CardModule,
+    ButtonModule,
+    DividerModule,
+    TableModule,
+    TagModule,
+    DialogModule,
+    UploadZone,
+  ],
 })
 export class AdminPage {
   private readonly document = inject(DOCUMENT);
