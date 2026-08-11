@@ -31,7 +31,6 @@ export async function createAdminUser(users: UserService): Promise<void> {
     const admin = await users.createUser('admin', password, 'admin');
 
     if (!configured) {
-      admin.forceChangePassword = true;
       await users.updateUser(admin);
       console.log(`Admin user created with random password: ${password}`);
     } else {

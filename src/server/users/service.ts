@@ -38,7 +38,6 @@ export class UserService {
       username,
       passwordHash: await hashPassword(password),
       role,
-      forceChangePassword: false,
     });
   }
 
@@ -62,7 +61,6 @@ export class UserService {
     }
 
     user.passwordHash = await hashPassword(newPassword);
-    user.forceChangePassword = false;
     await this.repo.update(user);
   }
 
