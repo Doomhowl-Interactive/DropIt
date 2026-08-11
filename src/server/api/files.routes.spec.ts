@@ -292,22 +292,22 @@ describe('file routes', () => {
     });
   });
 
-  describe('admin endpoints', () => {
+  describe('dashboard endpoints', () => {
     it.each([
-      ['GET', '/api/files/admin/'],
-      ['GET', '/api/files/admin/export'],
-      ['POST', '/api/files/admin/import'],
+      ['GET', '/api/files/dashboard/'],
+      ['GET', '/api/files/dashboard/export'],
+      ['POST', '/api/files/dashboard/import'],
     ])('%s %s requires an admin', async (method, path) => {
       expect((await server.fetch(path, { method })).status).toBe(401);
       expect((await server.fetch(path, { method, headers: user() })).status).toBe(403);
     });
 
-    describe('GET /admin/ and /admin/export', () => {
+    describe('GET /dashboard/ and /dashboard/export', () => {
       it('list every file', async () => {
         await store();
         await store();
 
-        for (const path of ['/api/files/admin/', '/api/files/admin/export']) {
+        for (const path of ['/api/files/dashboard/', '/api/files/dashboard/export']) {
           const response = await server.fetch(path, { headers: admin() });
           expect(response.status, path).toBe(200);
           await expect(response.json()).resolves.toHaveLength(2);
@@ -326,7 +326,7 @@ describe('file routes', () => {
         const failing = await listen(app);
 
         try {
-          const response = await failing.fetch('/api/files/admin/', { headers: admin() });
+          const response = await failing.fetch('/api/files/dashboard/', { headers: admin() });
           expect(response.status).toBe(500);
           await expect(response.json()).resolves.toEqual({ error: 'database is locked' });
         } finally {
@@ -335,9 +335,9 @@ describe('file routes', () => {
       });
     });
 
-    describe('POST /admin/import', () => {
+    describe('POST /dashboard/import', () => {
       const post = (body: unknown) =>
-        server.fetch('/api/files/admin/import', {
+        server.fetch('/api/files/dashboard/import', {
           method: 'POST',
           headers: { ...admin(), 'content-type': 'application/json' },
           body: JSON.stringify(body),
@@ -373,7 +373,7 @@ describe('file routes', () => {
       });
 
       it('answers 400 when the body is missing entirely', async () => {
-        const response = await server.fetch('/api/files/admin/import', {
+        const response = await server.fetch('/api/files/dashboard/import', {
           method: 'POST',
           headers: admin(),
         });
@@ -387,7 +387,7 @@ describe('file routes', () => {
         ['null', 'null'],
         ['malformed JSON', '{'],
       ])('is rejected by the body parser for %s', async (_label, raw) => {
-        const response = await server.fetch('/api/files/admin/import', {
+        const response = await server.fetch('/api/files/dashboard/import', {
           method: 'POST',
           headers: { ...admin(), 'content-type': 'application/json' },
           body: raw,
@@ -409,7 +409,7 @@ describe('file routes', () => {
         const failing = await listen(app);
 
         try {
-          const response = await failing.fetch('/api/files/admin/import', {
+          const response = await failing.fetch('/api/files/dashboard/import', {
             method: 'POST',
             headers: { ...admin(), 'content-type': 'application/json' },
             body: JSON.stringify([incoming]),
@@ -423,22 +423,22 @@ describe('file routes', () => {
       });
     });
 
-    describe('POST /admin/delete/:id', () => {
+    describe('POST /dashboard/delete/:id', () => {
       it('soft-deletes and redirects back to the console', async () => {
         const record = await store();
-        const response = await server.fetch(`/api/files/admin/delete/${record.id}`, {
+        const response = await server.fetch(`/api/files/dashboard/delete/${record.id}`, {
           method: 'POST',
           headers: admin(),
         });
 
         expect(response.status).toBe(303);
-        expect(response.headers.get('location')).toBe('/admin');
+        expect(response.headers.get('location')).toBe('/dashboard');
         await expect(repo.getById(record.id)).resolves.toMatchObject({ deleted: true });
       });
 
       it('leaves the bytes on disk', async () => {
         const record = await store();
-        await server.fetch(`/api/files/admin/delete/${record.id}`, {
+        await server.fetch(`/api/files/dashboard/delete/${record.id}`, {
           method: 'POST',
           headers: admin(),
         });
@@ -447,7 +447,7 @@ describe('file routes', () => {
       });
 
       it('answers 404 for an unknown id', async () => {
-        const response = await server.fetch('/api/files/admin/delete/nope', {
+        const response = await server.fetch('/api/files/dashboard/delete/nope', {
           method: 'POST',
           headers: admin(),
         });
@@ -460,7 +460,7 @@ describe('file routes', () => {
         const record = await store();
         await files.deleteFileById(record.id);
 
-        const response = await server.fetch(`/api/files/admin/delete/${record.id}`, {
+        const response = await server.fetch(`/api/files/dashboard/delete/${record.id}`, {
           method: 'POST',
           headers: admin(),
         });
@@ -468,16 +468,16 @@ describe('file routes', () => {
       });
     });
 
-    describe('POST /admin/delete/fr/:id', () => {
+    describe('POST /dashboard/delete/fr/:id', () => {
       it('removes the row and the bytes, then redirects', async () => {
         const record = await store();
-        const response = await server.fetch(`/api/files/admin/delete/fr/${record.id}`, {
+        const response = await server.fetch(`/api/files/dashboard/delete/fr/${record.id}`, {
           method: 'POST',
           headers: admin(),
         });
 
         expect(response.status).toBe(303);
-        expect(response.headers.get('location')).toBe('/admin');
+        expect(response.headers.get('location')).toBe('/dashboard');
         expect(existsSync(join(storageDir, record.id))).toBe(false);
         await expect(repo.getAll()).resolves.toEqual([]);
       });
@@ -486,7 +486,7 @@ describe('file routes', () => {
         const record = await store();
         await files.deleteFileById(record.id);
 
-        const response = await server.fetch(`/api/files/admin/delete/fr/${record.id}`, {
+        const response = await server.fetch(`/api/files/dashboard/delete/fr/${record.id}`, {
           method: 'POST',
           headers: admin(),
         });
@@ -494,7 +494,7 @@ describe('file routes', () => {
       });
 
       it('answers 404 for an unknown id', async () => {
-        const response = await server.fetch('/api/files/admin/delete/fr/nope', {
+        const response = await server.fetch('/api/files/dashboard/delete/fr/nope', {
           method: 'POST',
           headers: admin(),
         });
@@ -516,7 +516,7 @@ describe('file routes', () => {
         const failing = await listen(app);
 
         try {
-          const response = await failing.fetch(`/api/files/admin/delete/fr/${record.id}`, {
+          const response = await failing.fetch(`/api/files/dashboard/delete/fr/${record.id}`, {
             method: 'POST',
             headers: admin(),
           });
@@ -529,7 +529,7 @@ describe('file routes', () => {
       });
     });
 
-    describe.each(['/api/files/admin/download', '/api/files/admin'])('GET %s/:id', (prefix) => {
+    describe.each(['/api/files/dashboard/download', '/api/files/dashboard'])('GET %s/:id', (prefix) => {
       it('streams the file without counting a download', async () => {
         const record = await store('hello world');
         const response = await server.fetch(`${prefix}/${record.id}`, { headers: admin() });
@@ -565,7 +565,7 @@ describe('file routes', () => {
       const record = await store();
       rmSync(join(storageDir, record.id), { recursive: true, force: true });
 
-      const response = await server.fetch(`/api/files/admin/download/${record.id}`, {
+      const response = await server.fetch(`/api/files/dashboard/download/${record.id}`, {
         headers: admin(),
       });
       await expect(response.json()).resolves.toEqual({ page: 'file-not-found' });

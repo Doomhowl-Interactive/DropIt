@@ -110,10 +110,10 @@ export function fileRoutes(files: FileService, render: RenderPage): Router {
     },
   );
 
-  const admin = Router();
-  admin.use(authMiddleware(), requireRole('admin'));
+  const dashboard = Router();
+  dashboard.use(authMiddleware(), requireRole('admin'));
 
-  admin.get('/', async (_req, res) => {
+  dashboard.get('/', async (_req, res) => {
     try {
       res.json(await files.getAllFiles());
     } catch (err) {
@@ -121,7 +121,7 @@ export function fileRoutes(files: FileService, render: RenderPage): Router {
     }
   });
 
-  admin.get('/export', async (_req, res) => {
+  dashboard.get('/export', async (_req, res) => {
     try {
       res.json(await files.getAllFiles());
     } catch (err) {
@@ -129,7 +129,7 @@ export function fileRoutes(files: FileService, render: RenderPage): Router {
     }
   });
 
-  admin.post('/import', async (req, res) => {
+  dashboard.post('/import', async (req, res) => {
     if (!Array.isArray(req.body)) {
       res.status(400).json({ error: 'invalid JSON' });
       return;
@@ -142,7 +142,7 @@ export function fileRoutes(files: FileService, render: RenderPage): Router {
     }
   });
 
-  admin.post('/delete/fr/:id', async (req, res) => {
+  dashboard.post('/delete/fr/:id', async (req, res) => {
     try {
       await files.getFileById(param(req, 'id'));
     } catch {
@@ -152,22 +152,22 @@ export function fileRoutes(files: FileService, render: RenderPage): Router {
 
     try {
       await files.forceDelete(param(req, 'id'));
-      res.redirect(303, '/admin');
+      res.redirect(303, '/dashboard');
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }
   });
 
-  admin.post('/delete/:id', async (req, res) => {
+  dashboard.post('/delete/:id', async (req, res) => {
     try {
       await files.deleteFileById(param(req, 'id'));
-      res.redirect(303, '/admin');
+      res.redirect(303, '/dashboard');
     } catch {
       res.status(404).json({ error: 'file not found' });
     }
   });
 
-  const adminServe = async (req: Request, res: Response): Promise<void> => {
+  const dashboardServe = async (req: Request, res: Response): Promise<void> => {
     try {
       const record = await files.getFileById(param(req, 'id'));
       serve(record, req, res);
@@ -176,9 +176,9 @@ export function fileRoutes(files: FileService, render: RenderPage): Router {
     }
   };
 
-  admin.get('/download/:id', adminServe);
-  admin.get('/:id', adminServe);
+  dashboard.get('/download/:id', dashboardServe);
+  dashboard.get('/:id', dashboardServe);
 
-  router.use('/admin', admin);
+  router.use('/dashboard', dashboard);
   return router;
 }

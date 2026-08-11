@@ -6,7 +6,7 @@ import { formatTimestamp, humanSize, param, requestOrigin } from './util';
 import type { FileService } from './files/service';
 import type { McpTokenService } from './mcp/tokens/service';
 import type { RenderPage } from './render';
-import type { AdminFileRow } from '../app/utils/page-context';
+import type { DashboardFileRow } from '../app/utils/page-context';
 
 const PAGE_SIZE = 10;
 
@@ -41,7 +41,7 @@ export function webRoutes(files: FileService, tokens: McpTokenService, render: R
   // every request that merely passes through on its way to the static files.
   const adminOnly = [authMiddleware(), requireRole('admin')];
 
-  router.get('/admin', ...adminOnly, async (req, res) => {
+  router.get('/dashboard', ...adminOnly, async (req, res) => {
     const page = Math.max(1, Number.parseInt(String(req.query['page'] ?? ''), 10) || 1);
 
     try {
@@ -50,7 +50,7 @@ export function webRoutes(files: FileService, tokens: McpTokenService, render: R
         (page - 1) * PAGE_SIZE,
       );
 
-      const rows: AdminFileRow[] = records.map((file) => ({
+      const rows: DashboardFileRow[] = records.map((file) => ({
         id: file.id,
         filename: file.filename,
         size: humanSize(file.size),
@@ -62,7 +62,7 @@ export function webRoutes(files: FileService, tokens: McpTokenService, render: R
       }));
 
       await render(req, res, {
-        page: 'admin',
+        page: 'dashboard',
         data: {
           files: rows,
           page,
@@ -74,7 +74,7 @@ export function webRoutes(files: FileService, tokens: McpTokenService, render: R
         req,
         res,
         {
-          page: 'admin',
+          page: 'dashboard',
           data: { files: [], page: 1, totalPages: 0, error: (err as Error).message },
         },
         500,
@@ -82,7 +82,7 @@ export function webRoutes(files: FileService, tokens: McpTokenService, render: R
     }
   });
 
-  router.get('/admin/mcp', ...adminOnly, async (req, res) => {
+  router.get('/dashboard/mcp', ...adminOnly, async (req, res) => {
     const endpoint = `${requestOrigin(req)}/mcp`;
 
     try {

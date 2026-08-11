@@ -16,7 +16,7 @@ export interface CompletePageData {
   origin: string;
 }
 
-export interface AdminFileRow {
+export interface DashboardFileRow {
   id: string;
   filename: string;
   size: string;
@@ -27,8 +27,8 @@ export interface AdminFileRow {
   deleted: boolean;
 }
 
-export interface AdminPageData {
-  files: AdminFileRow[];
+export interface DashboardPageData {
+  files: DashboardFileRow[];
   page: number;
   totalPages: number;
   error?: string;
@@ -68,7 +68,7 @@ export type PageContext =
   | { page: 'complete'; data: CompletePageData }
   | { page: 'file-not-found' }
   | { page: 'deleted' }
-  | { page: 'admin'; data: AdminPageData }
+  | { page: 'dashboard'; data: DashboardPageData }
   | { page: 'mcp-tokens'; data: McpTokensPageData }
   | { page: 'error' };
 
