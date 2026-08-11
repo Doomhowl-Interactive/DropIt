@@ -1,15 +1,15 @@
 import { eq } from 'drizzle-orm';
-import { fromDbDate, toDbDate, type Db } from '../../db/db';
-import { mcpTokens } from '../../db/schema';
+import { fromDbDate, toDbDate, type Db } from '../db/db';
+import { apiTokens } from '../db/schema';
 
-export class McpTokenNotFoundError extends Error {
+export class ApiTokenNotFoundError extends Error {
   constructor() {
-    super('mcp token not found');
-    this.name = 'McpTokenNotFoundError';
+    super('api token not found');
+    this.name = 'ApiTokenNotFoundError';
   }
 }
 
-export interface McpToken {
+export interface ApiToken {
   id: string;
   name: string;
   /** sha-256 hex of the secret. The secret itself is never stored. */
@@ -23,9 +23,9 @@ export interface McpToken {
   revokedAt: Date | null;
 }
 
-type Row = typeof mcpTokens.$inferSelect;
+type Row = typeof apiTokens.$inferSelect;
 
-function mapRow(row: Row): McpToken {
+function mapRow(row: Row): ApiToken {
   return {
     id: row.id,
     name: row.name,
@@ -39,11 +39,11 @@ function mapRow(row: Row): McpToken {
   };
 }
 
-export class McpTokenRepository {
+export class ApiTokenRepository {
   constructor(private readonly db: Db) {}
 
-  async create(token: McpToken): Promise<McpToken> {
-    await this.db.insert(mcpTokens).values({
+  async create(token: ApiToken): Promise<ApiToken> {
+    await this.db.insert(apiTokens).values({
       id: token.id,
       name: token.name,
       tokenHash: token.tokenHash,
@@ -57,34 +57,34 @@ export class McpTokenRepository {
     return token;
   }
 
-  async findById(id: string): Promise<McpToken> {
-    const [row] = await this.db.select().from(mcpTokens).where(eq(mcpTokens.id, id));
-    if (!row) throw new McpTokenNotFoundError();
+  async findById(id: string): Promise<ApiToken> {
+    const [row] = await this.db.select().from(apiTokens).where(eq(apiTokens.id, id));
+    if (!row) throw new ApiTokenNotFoundError();
     return mapRow(row);
   }
 
   /** Returns null rather than throwing: a bad token is a 401, not an error. */
-  async findByHash(tokenHash: string): Promise<McpToken | null> {
-    const [row] = await this.db.select().from(mcpTokens).where(eq(mcpTokens.tokenHash, tokenHash));
+  async findByHash(tokenHash: string): Promise<ApiToken | null> {
+    const [row] = await this.db.select().from(apiTokens).where(eq(apiTokens.tokenHash, tokenHash));
     return row ? mapRow(row) : null;
   }
 
-  async getAll(): Promise<McpToken[]> {
-    const rows = await this.db.select().from(mcpTokens);
+  async getAll(): Promise<ApiToken[]> {
+    const rows = await this.db.select().from(apiTokens);
     return rows.map(mapRow);
   }
 
   async revoke(id: string): Promise<void> {
     await this.db
-      .update(mcpTokens)
+      .update(apiTokens)
       .set({ revokedAt: toDbDate(new Date()) })
-      .where(eq(mcpTokens.id, id));
+      .where(eq(apiTokens.id, id));
   }
 
   async touchLastUsed(id: string, when: Date): Promise<void> {
     await this.db
-      .update(mcpTokens)
+      .update(apiTokens)
       .set({ lastUsedAt: toDbDate(when) })
-      .where(eq(mcpTokens.id, id));
+      .where(eq(apiTokens.id, id));
   }
 }

@@ -1,22 +1,22 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { createTestDb } from '../../../testing/db';
-import { McpTokenRepository } from './repository';
-import { hashSecret, McpTokenService } from './service';
+import { createTestDb } from '../../testing/db';
+import { ApiTokenRepository } from './repository';
+import { hashSecret, ApiTokenService } from './service';
 
-describe('McpTokenService', () => {
-  let repo: McpTokenRepository;
-  let service: McpTokenService;
+describe('ApiTokenService', () => {
+  let repo: ApiTokenRepository;
+  let service: ApiTokenService;
 
   beforeEach(() => {
-    repo = new McpTokenRepository(createTestDb());
-    service = new McpTokenService(repo);
+    repo = new ApiTokenRepository(createTestDb());
+    service = new ApiTokenService(repo);
   });
 
   it('returns a secret that is not itself stored', async () => {
     const { token, secret } = await service.issue({ name: 'laptop', userId: 1 });
 
-    expect(secret).toMatch(/^dropit_mcp_/);
+    expect(secret).toMatch(/^dropit_api_/);
     expect(token.tokenHash).toBe(hashSecret(secret));
 
     const stored = await repo.findById(token.id);
@@ -32,7 +32,7 @@ describe('McpTokenService', () => {
   });
 
   it('rejects unknown, revoked and expired secrets', async () => {
-    await expect(service.verify('dropit_mcp_nope')).resolves.toBeNull();
+    await expect(service.verify('dropit_api_nope')).resolves.toBeNull();
     await expect(service.verify('')).resolves.toBeNull();
 
     const revoked = await service.issue({ name: 'revoked', userId: 1 });

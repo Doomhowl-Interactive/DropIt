@@ -1,13 +1,13 @@
-import type { McpTokenRow } from '../../../app/utils/page-context';
-import { formatTimestamp } from '../../util';
-import type { McpToken, McpTokenService } from './service';
+import type { ApiTokenRow } from '../../app/utils/page-context';
+import { formatTimestamp } from '../util';
+import type { ApiToken, ApiTokenService } from './service';
 
 /**
  * The only shape a token is ever allowed to leave the server in — note the
  * absence of `tokenHash`. Shared by the SSR page data and the JSON API so the
  * Angular page can treat both identically.
  */
-export function toMcpTokenRow(token: McpToken): McpTokenRow {
+export function toApiTokenRow(token: ApiToken): ApiTokenRow {
   return {
     id: token.id,
     name: token.name,
@@ -20,9 +20,9 @@ export function toMcpTokenRow(token: McpToken): McpTokenRow {
 }
 
 /** Every token, newest first — the order both the page and the API return. */
-export async function listTokenRows(tokens: McpTokenService): Promise<McpTokenRow[]> {
+export async function listTokenRows(tokens: ApiTokenService): Promise<ApiTokenRow[]> {
   const all = await tokens.list();
   return all
     .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
-    .map(toMcpTokenRow);
+    .map(toApiTokenRow);
 }
