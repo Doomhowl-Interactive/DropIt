@@ -1,25 +1,17 @@
 import { Router } from 'express';
 import { config } from './config';
 import { authMiddleware, requireRole } from './middleware/auth';
-import { formatTimestamp, humanSize, param } from './util';
+import { listTokenRows } from './mcp/tokens/view';
+import { formatTimestamp, humanSize, param, requestOrigin } from './util';
 import type { FileService } from './files/service';
+import type { McpTokenService } from './mcp/tokens/service';
 import type { RenderPage } from './render';
 import type { AdminFileRow } from '../shared/page-context';
 
 const PAGE_SIZE = 10;
 
-/**
- * The origin the visitor actually used, so the share links on the "file ready"
- * page match what the browser would have built for itself.
- */
-function requestOrigin(req: { protocol: string; get(name: string): string | undefined }): string {
-  const proto = req.get('x-forwarded-proto')?.split(',')[0]?.trim() || req.protocol;
-  const host = req.get('x-forwarded-host')?.split(',')[0]?.trim() || req.get('host') || '';
-  return `${proto}://${host}`;
-}
-
 /** The HTML pages, all rendered by Angular on the server. */
-export function webRoutes(files: FileService, render: RenderPage): Router {
+export function webRoutes(files: FileService, tokens: McpTokenService, render: RenderPage): Router {
   const router = Router();
 
   router.get('/', (req, res) => render(req, res, { page: 'index' }));
@@ -85,6 +77,24 @@ export function webRoutes(files: FileService, render: RenderPage): Router {
           page: 'admin',
           data: { files: [], page: 1, totalPages: 0, error: (err as Error).message },
         },
+        500,
+      );
+    }
+  });
+
+  router.get('/admin/mcp', ...adminOnly, async (req, res) => {
+    const endpoint = `${requestOrigin(req)}/mcp`;
+
+    try {
+      await render(req, res, {
+        page: 'mcp-tokens',
+        data: { tokens: await listTokenRows(tokens), endpoint },
+      });
+    } catch (err) {
+      await render(
+        req,
+        res,
+        { page: 'mcp-tokens', data: { tokens: [], endpoint, error: (err as Error).message } },
         500,
       );
     }

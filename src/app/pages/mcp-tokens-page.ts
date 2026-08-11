@@ -1,0 +1,107 @@
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { InputTextModule } from 'primeng/inputtext';
+import { MessageModule } from 'primeng/message';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+
+import { TokenSecretDialog } from '../components/token-secret-dialog/token-secret-dialog';
+import { PageDataService, usePage } from '../page';
+import { McpTokenApi } from '../services/mcp-token-api';
+import type { McpTokenRow, McpTokensPageData } from '../../shared/page-context';
+
+const EMPTY: McpTokensPageData = { tokens: [], endpoint: '' };
+
+@Component({
+  selector: 'app-mcp-tokens-page',
+  templateUrl: './mcp-tokens-page.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { style: 'display: contents' },
+  imports: [
+    ButtonModule,
+    CardModule,
+    FormsModule,
+    InputTextModule,
+    MessageModule,
+    TableModule,
+    TagModule,
+    TokenSecretDialog,
+  ],
+})
+export class McpTokensPage {
+  private readonly api = inject(McpTokenApi);
+  private readonly context = inject(PageDataService).context;
+
+  private readonly data = computed<McpTokensPageData>(() =>
+    this.context?.page === 'mcp-tokens' ? this.context.data : EMPTY,
+  );
+
+  /** Seeded from the server render, then kept up to date locally. */
+  protected readonly tokens = signal<McpTokenRow[]>(this.data().tokens);
+  protected readonly endpoint = computed(() => this.data().endpoint);
+
+  protected readonly newName = signal('');
+  protected readonly newExpiryDays = signal('');
+  protected readonly busy = signal(false);
+  protected readonly error = signal(this.data().error ?? '');
+
+  /** Non-null only while a freshly created secret is waiting to be copied. */
+  protected readonly issuedSecret = signal<string | null>(null);
+
+  constructor() {
+    usePage({ title: 'MCP Tokens', bodyClass: 'min-h-screen p-4' });
+  }
+
+  protected async create(): Promise<void> {
+    const name = this.newName().trim();
+    if (!name || this.busy()) return;
+
+    this.busy.set(true);
+    this.error.set('');
+
+    try {
+      const created = await this.api.create(name, this.parseExpiry());
+
+      this.tokens.update((tokens) => [created.token, ...tokens]);
+      this.issuedSecret.set(created.secret);
+      this.newName.set('');
+      this.newExpiryDays.set('');
+    } catch (err) {
+      this.error.set(this.messageFor(err, 'Could not create the token.'));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  protected async revoke(token: McpTokenRow): Promise<void> {
+    if (token.revoked || this.busy()) return;
+
+    this.busy.set(true);
+    this.error.set('');
+
+    try {
+      const updated = await this.api.revoke(token.id);
+      this.tokens.update((tokens) => tokens.map((row) => (row.id === updated.id ? updated : row)));
+    } catch (err) {
+      this.error.set(this.messageFor(err, 'Could not revoke the token.'));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  protected dismissSecret(): void {
+    this.issuedSecret.set(null);
+  }
+
+  private parseExpiry(): number | null {
+    const days = Number(this.newExpiryDays().trim());
+    return Number.isFinite(days) && days > 0 ? days : null;
+  }
+
+  private messageFor(err: unknown, fallback: string): string {
+    const detail = (err as { error?: { error?: string } })?.error?.error;
+    return detail ? `${fallback} ${detail}` : fallback;
+  }
+}

@@ -28,6 +28,19 @@ export function param(req: { params: Record<string, unknown> }, name: string): s
   return Array.isArray(value) ? String(value[0] ?? '') : String(value ?? '');
 }
 
+/**
+ * The origin the caller actually used, so links we hand back match what the
+ * browser (or MCP client) would have built for itself.
+ */
+export function requestOrigin(req: {
+  protocol: string;
+  get(name: string): string | undefined;
+}): string {
+  const proto = req.get('x-forwarded-proto')?.split(',')[0]?.trim() || req.protocol;
+  const host = req.get('x-forwarded-host')?.split(',')[0]?.trim() || req.get('host') || '';
+  return `${proto}://${host}`;
+}
+
 /** Strips characters that would break out of a quoted header value. */
 export function safeFilename(name: string): string {
   const cleaned = [...name]

@@ -6,6 +6,7 @@ import { FileNotFoundPage } from './pages/file-not-found-page';
 import { FileViewPage } from './pages/file-view-page';
 import { IndexPage } from './pages/index-page';
 import { LoginPage } from './pages/login-page';
+import { McpTokensPage } from './pages/mcp-tokens-page';
 
 /**
  * The `api/...` entries exist because those endpoints answer with a page rather
@@ -16,6 +17,7 @@ export const routes: Routes = [
   { path: '', component: IndexPage },
   { path: 'login', component: LoginPage },
   { path: 'admin', component: AdminPage },
+  { path: 'admin/mcp', component: McpTokensPage },
   { path: 'f/:id', component: FileViewPage },
   { path: 'api/files/delete/:id', component: DeleteResultPage },
   { path: 'api/files/view/:id', component: FileNotFoundPage },

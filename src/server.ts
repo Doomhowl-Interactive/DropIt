@@ -7,6 +7,7 @@ import { join, resolve } from 'node:path';
 
 import { authRoutes } from './server/api/auth.routes';
 import { fileRoutes } from './server/api/files.routes';
+import { mcpTokenRoutes } from './server/api/mcp-tokens.routes';
 import { AuthService } from './server/auth/service';
 import { createAdminUser } from './server/bootstrap';
 import { config } from './server/config';
@@ -14,6 +15,9 @@ import { connect } from './server/db/db';
 import { migrate } from './server/db/migrate';
 import { FileRepository } from './server/files/repository';
 import { FileService } from './server/files/service';
+import { mcpRoutes } from './server/mcp/routes';
+import { McpTokenRepository } from './server/mcp/tokens/repository';
+import { McpTokenService } from './server/mcp/tokens/service';
 import { csrfMiddleware, ensureCsrfCookie } from './server/middleware/csrf';
 import { createRenderer } from './server/render';
 import { UserRepository } from './server/users/repository';
@@ -32,8 +36,8 @@ const browserDistFolder = join(import.meta.dirname, '../browser');
  * such as Fly.io so `X-Forwarded-*` is honoured instead of warned about.
  */
 const angularApp = new AngularNodeAppEngine({
-  allowedHosts: (process.env['ALLOWED_HOSTS'] || '*').split(',').map((host) => host.trim()),
-  trustProxyHeaders: process.env['TRUST_PROXY_HEADERS'] === 'true',
+  allowedHosts: config.allowedHosts,
+  trustProxyHeaders: config.trustProxyHeaders,
 });
 
 async function createApp(): Promise<Express> {
@@ -53,12 +57,25 @@ async function createApp(): Promise<Express> {
   const users = new UserService(new UserRepository(db));
   const auth = new AuthService(users);
   const files = new FileService(new FileRepository(db), config.storageDir);
+  const mcpTokens = new McpTokenService(new McpTokenRepository(db));
 
   await createAdminUser(users);
 
   app.disable('x-powered-by');
   app.use(cookieParser());
   app.use(ensureCsrfCookie());
+
+  /**
+   * Mounted ahead of the app-wide body parser so it can bring its own, far
+   * larger limit — MCP uploads arrive base64-encoded inside the request body,
+   * and the 1mb cap below would silently reduce them to ~750 KB of file.
+   *
+   * It sits outside `/api` on purpose: MCP clients authenticate with a bearer
+   * token rather than a cookie, so the CSRF check does not apply to them.
+   */
+  if (config.mcpEnabled) {
+    app.use('/mcp', mcpRoutes({ files, tokens: mcpTokens }));
+  }
 
   // Uploads are streamed to disk by multer, so only small bodies land here.
   app.use(express.json({ limit: '1mb' }));
@@ -83,9 +100,10 @@ async function createApp(): Promise<Express> {
   api.use(csrfMiddleware());
   api.use('/auth', authRoutes(auth));
   api.use('/files', fileRoutes(files, render));
+  api.use('/mcp-tokens', mcpTokenRoutes(mcpTokens));
   app.use('/api', api);
 
-  app.use(webRoutes(files, render));
+  app.use(webRoutes(files, mcpTokens, render));
 
   /** Anything left over is "nothing to see here". */
   app.use((req: Request, res: Response, next: NextFunction) => {

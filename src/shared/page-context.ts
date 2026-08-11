@@ -34,6 +34,34 @@ export interface AdminPageData {
   error?: string;
 }
 
+/**
+ * An MCP access token as the server is willing to describe it. The secret is
+ * shown exactly once, when the token is created, and never lives here.
+ */
+export interface McpTokenRow {
+  id: string;
+  name: string;
+  /** Leading characters of the secret, so two tokens can be told apart. */
+  prefix: string;
+  createdAt: string;
+  lastUsedAt: string;
+  expiresAt: string;
+  revoked: boolean;
+}
+
+export interface McpTokensPageData {
+  tokens: McpTokenRow[];
+  /** Absolute URL of the MCP endpoint, ready to paste into a client config. */
+  endpoint: string;
+  error?: string;
+}
+
+/** Response to a token creation — the one and only sighting of `secret`. */
+export interface CreatedMcpToken {
+  token: McpTokenRow;
+  secret: string;
+}
+
 export type PageContext =
   | { page: 'index' }
   | { page: 'login'; error?: boolean }
@@ -41,6 +69,7 @@ export type PageContext =
   | { page: 'file-not-found' }
   | { page: 'deleted' }
   | { page: 'admin'; data: AdminPageData }
+  | { page: 'mcp-tokens'; data: McpTokensPageData }
   | { page: 'error' };
 
 export const PAGE_CONTEXT_KEY = 'dropit.pageContext';

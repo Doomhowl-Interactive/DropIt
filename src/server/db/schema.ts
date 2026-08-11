@@ -23,6 +23,33 @@ export const users = sqliteTable(
   ],
 );
 
+/**
+ * Long-lived bearer tokens for the MCP endpoint. MCP clients run unattended and
+ * cannot re-do a browser login, so they get their own credential rather than
+ * the 24h session JWT — one can be revoked without logging anyone out.
+ *
+ * Only the sha-256 of the secret is stored; `prefix` exists purely so the admin
+ * UI can tell two tokens apart after the plaintext is gone.
+ */
+export const mcpTokens = sqliteTable(
+  'mcp_tokens',
+  {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    tokenHash: text('token_hash').notNull(),
+    prefix: text('prefix').notNull(),
+    userId: integer('user_id').notNull(),
+    createdAt: text('created_at'),
+    lastUsedAt: text('last_used_at'),
+    expiresAt: text('expires_at'),
+    revokedAt: text('revoked_at'),
+  },
+  (table) => [
+    uniqueIndex('idx_mcp_tokens_token_hash').on(table.tokenHash),
+    index('idx_mcp_tokens_revoked_at').on(table.revokedAt),
+  ],
+);
+
 export const fileRecords = sqliteTable('file_records', {
   id: text('id').primaryKey(),
   deletionId: text('deletion_id'),

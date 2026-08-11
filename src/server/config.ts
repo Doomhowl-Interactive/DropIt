@@ -24,4 +24,43 @@ export const config = {
   get staticDir(): string {
     return process.env['STATIC_DIR'] || './static';
   },
+
+  /**
+   * Host header allow-list, shared by the Angular SSR engine and the MCP
+   * transport's DNS-rebinding check. `*` — the default — accepts any Host,
+   * matching how the Go server behaved.
+   */
+  get allowedHosts(): string[] {
+    return splitList(process.env['ALLOWED_HOSTS'] ?? '*');
+  },
+  get trustProxyHeaders(): boolean {
+    return process.env['TRUST_PROXY_HEADERS'] === 'true';
+  },
+
+  /** Serve the MCP endpoint at /mcp. */
+  get mcpEnabled(): boolean {
+    return (process.env['MCP_ENABLED'] ?? 'true') !== 'false';
+  },
+  /**
+   * Body limit for /mcp. Files arrive base64-encoded inside the JSON-RPC
+   * envelope, so this has to be roughly 4/3 of the largest upload allowed.
+   */
+  get mcpMaxBody(): string {
+    return process.env['MCP_MAX_BODY'] || '35mb';
+  },
+  /** Largest file `upload_file` will accept, and `get_file` will return. */
+  get mcpMaxUploadBytes(): number {
+    return Number(process.env['MCP_MAX_UPLOAD_BYTES'] ?? 25 * 1024 * 1024);
+  },
+  /** Origin allow-list for MCP requests; empty means "don't check Origin". */
+  get mcpAllowedOrigins(): string[] {
+    return splitList(process.env['MCP_ALLOWED_ORIGINS'] ?? '');
+  },
 };
+
+function splitList(value: string): string[] {
+  return value
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}

@@ -34,7 +34,10 @@
               "bcryptjs",
               "jsonwebtoken",
               "cookie-parser",
-              "express"
+              "express",
+              "@modelcontextprotocol/sdk",
+              "@modelcontextprotocol/sdk/*",
+              "zod"
             ],
             "server": "src/main.server.ts",
             "outputMode": "server",
