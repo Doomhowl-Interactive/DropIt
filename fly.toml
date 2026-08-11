@@ -1,65 +1,40 @@
-# Fly.io deployment for Drop.it.
+# fly.toml app configuration file generated for dropit on 2026-08-11T02:20:58+02:00
 #
-# First-time setup:
-#   fly launch --no-deploy --copy-config      # or: fly apps create dropit
-#   fly volumes create dropit_data --size 3   # in the same region as the app
-#   fly secrets set JWT_SECRET="$(openssl rand -base64 32)"
-#   fly deploy
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
-# The uploads and the SQLite database both live on the volume, so keep this a
-# single-machine app (or move DB_TYPE to postgres) — a volume attaches to one
-# machine at a time.
 
-app = "dropit"
-primary_region = "ams"
+app = 'dropit'
+primary_region = 'fra'
 
 [build]
-
 [env]
-  PORT = "8080"
-  NODE_ENV = "production"
-
-  DB_TYPE = "sqlite"
-  DATABASE_URL = "/data/database.db"
-  STORAGE_DIR = "/data/uploads"
-
-  # Fly terminates TLS at the edge and forwards X-Forwarded-*.
-  USE_HTTPS = "true"
-  TRUST_PROXY_HEADERS = "true"
-
-  # Narrow this to your own hostname(s) once the domain is settled, e.g.
-  # ALLOWED_HOSTS = "dropit.fly.dev,drop.example.com"
-  ALLOWED_HOSTS = "*"
+  ALLOWED_HOSTS = 'dropit.doomhowl.com'
+  DATABASE_URL = '/data/database.db'
+  DB_TYPE = 'sqlite'
+  NODE_ENV = 'production'
+  PORT = '8080'
+  STORAGE_DIR = '/data/uploads'
+  TRUST_PROXY_HEADERS = 'true'
+  USE_HTTPS = 'true'
 
 [[mounts]]
-  source = "dropit_data"
-  destination = "/data"
+  source = 'dropit_data'
+  destination = '/data'
   auto_extend_size_threshold = 80
-  auto_extend_size_increment = "1GB"
-  auto_extend_size_limit = "10GB"
+  auto_extend_size_increment = '1GB'
+  auto_extend_size_limit = '10GB'
 
 [http_service]
   internal_port = 8080
   force_https = true
-  # Uploads stream through the machine, so let it idle rather than stop mid-transfer.
-  auto_stop_machines = "suspend"
+  auto_stop_machines = 'suspend'
   auto_start_machines = true
   min_machines_running = 0
-  processes = ["app"]
-
-  [http_service.concurrency]
-    type = "requests"
-    soft_limit = 200
-    hard_limit = 250
-
-  [[http_service.checks]]
-    grace_period = "10s"
-    interval = "30s"
-    method = "GET"
-    timeout = "5s"
-    path = "/ping"
+  processes = ['app']
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "512mb"
+  size = 'shared-cpu-1x'
+  memory = '256mb'
+  cpu_kind = 'shared'
   cpus = 1
+  memory_mb = 256
