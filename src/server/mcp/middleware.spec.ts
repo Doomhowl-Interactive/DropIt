@@ -55,6 +55,8 @@ describe('mcpTokenAuth', () => {
     const { token, secret } = await tokens.issue({ name: 'doomed', userId: 1 });
     await tokens.revoke(token.id);
 
-    await expect(get({ authorization: `Bearer ${secret}` })).resolves.toMatchObject({ status: 401 });
+    await expect(get({ authorization: `Bearer ${secret}` })).resolves.toMatchObject({
+      status: 401,
+    });
   });
 });
