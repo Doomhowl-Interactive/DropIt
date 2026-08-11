@@ -1,7 +1,7 @@
 # Drop.it
 
 A no-design file drop: upload a file, hand out the download link, keep the
-deletion link to yourself. Angular 22 with server-side rendering; the same
+deletion link to yourself. Angular 21 with server-side rendering; the same
 Node process serves the pages, the API and an MCP endpoint.
 
 ## Running it
@@ -70,32 +70,32 @@ render the same markup without a second round trip. See
 
 ## Routes
 
-| Route                                 | What it does                                         |
-| ------------------------------------- | ---------------------------------------------------- |
-| `GET /`                               | Uploader                                             |
-| `GET /f/:id`                          | Share page with the download and deletion links      |
-| `GET /login`                          | Admin sign-in page                                   |
-| `GET /admin?page=N`                   | Paginated file console (admin)                       |
-| `GET /logout`                         | Clears the session and redirects to `/` (admin)      |
-| `POST /api/auth/login`                | Authenticates a user and sets the auth cookie        |
-| `GET /api/auth/me`                    | Returns the authenticated user's ID and role         |
-| `GET /api/auth/admin-check`           | Checks that the authenticated user is an admin       |
-| `POST /api/files/upload`              | Multipart upload (admin)                             |
-| `GET /api/files/view/:id`             | Streams a file inline                                |
-| `GET /api/files/download/:id`         | Streams a file inline                                |
-| `GET /api/files/delete/:del_id`       | Soft-deletes and shows a confirmation (admin)        |
-| `GET /api/files/admin/`               | Lists all file records (admin)                       |
-| `GET /api/files/admin/export`         | Exports all file records (admin)                     |
-| `POST /api/files/admin/import`        | Imports file records (admin)                         |
-| `POST /api/files/admin/delete/:id`    | Soft-deletes a file and redirects to `/admin`        |
-| `POST /api/files/admin/delete/fr/:id` | Permanently deletes a file and redirects to `/admin` |
-| `GET /api/files/admin/download/:id`   | Streams an admin file by database ID (admin)         |
-| `GET /api/files/admin/:id`            | Streams an admin file by database ID (admin)         |
-| `GET /admin/mcp`                      | MCP token console (admin)                            |
-| `GET /api/mcp-tokens`                 | Lists the MCP access tokens (admin)                  |
-| `POST /api/mcp-tokens`                | Issues an MCP access token, returning it once (admin) |
-| `POST /api/mcp-tokens/:id/revoke`     | Revokes an MCP access token (admin)                  |
-| `POST /mcp`                           | MCP endpoint, Streamable HTTP (bearer token)         |
-| `GET /ping`                           | Health check                                         |
+| Verb | Route                            | Description                                           |
+| ---- | -------------------------------- | ----------------------------------------------------- |
+| GET  | `/`                              | Uploader                                              |
+| GET  | `/f/:id`                         | Share page with the download and deletion links       |
+| GET  | `/login`                         | Admin sign-in page                                    |
+| GET  | `/admin?page=N`                  | Paginated file console (admin)                        |
+| GET  | `/logout`                        | Clears the session and redirects to `/` (admin)       |
+| POST | `/api/auth/login`                | Authenticates a user and sets the auth cookie         |
+| GET  | `/api/auth/me`                   | Returns the authenticated user's ID and role          |
+| GET  | `/api/auth/admin-check`          | Checks that the authenticated user is an admin        |
+| POST | `/api/files/upload`              | Multipart upload (admin)                              |
+| GET  | `/api/files/view/:id`            | Streams a file inline                                 |
+| GET  | `/api/files/download/:id`        | Streams a file inline                                 |
+| GET  | `/api/files/delete/:del_id`      | Soft-deletes and shows a confirmation (admin)         |
+| GET  | `/api/files/admin/`              | Lists all file records (admin)                        |
+| GET  | `/api/files/admin/export`        | Exports all file records (admin)                      |
+| POST | `/api/files/admin/import`        | Imports file records (admin)                          |
+| POST | `/api/files/admin/delete/:id`    | Soft-deletes a file and redirects to `/admin`         |
+| POST | `/api/files/admin/delete/fr/:id` | Permanently deletes a file and redirects to `/admin`  |
+| GET  | `/api/files/admin/download/:id`  | Streams an admin file by database ID (admin)          |
+| GET  | `/api/files/admin/:id`           | Streams an admin file by database ID (admin)          |
+| GET  | `/admin/mcp`                     | MCP token console (admin)                             |
+| GET  | `/api/mcp-tokens`                | Lists the MCP access tokens (admin)                   |
+| POST | `/api/mcp-tokens`                | Issues an MCP access token, returning it once (admin) |
+| POST | `/api/mcp-tokens/:id/revoke`     | Revokes an MCP access token (admin)                   |
+| POST | `/mcp`                           | MCP endpoint, Streamable HTTP (bearer token)          |
+| GET  | `/ping`                          | Health check                                          |
 
 Forked off [ReSendit](https://git.brammie15.dev/brammie15/ReSendit).
