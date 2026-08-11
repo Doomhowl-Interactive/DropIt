@@ -1,8 +1,8 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import { McpTokenNotFoundError, McpTokenRepository, type McpToken } from './repository';
+import { ApiTokenNotFoundError, ApiTokenRepository, type ApiToken } from './repository';
 
 /** Recognisable in a config file, and greppable if one ever leaks. */
-const TOKEN_PREFIX = 'dropit_mcp_';
+const TOKEN_PREFIX = 'dropit_api_';
 const SECRET_BYTES = 32;
 const DISPLAY_PREFIX_LENGTH = TOKEN_PREFIX.length + 6;
 
@@ -13,7 +13,7 @@ const DISPLAY_PREFIX_LENGTH = TOKEN_PREFIX.length + 6;
 const TOUCH_INTERVAL_MS = 60_000;
 
 export interface IssuedToken {
-  token: McpToken;
+  token: ApiToken;
   /** The plaintext secret. Returned here once and never recoverable again. */
   secret: string;
 }
@@ -22,8 +22,8 @@ export function hashSecret(secret: string): string {
   return createHash('sha256').update(secret).digest('hex');
 }
 
-export class McpTokenService {
-  constructor(private readonly repo: McpTokenRepository) {}
+export class ApiTokenService {
+  constructor(private readonly repo: ApiTokenRepository) {}
 
   async issue(input: {
     name: string;
@@ -55,7 +55,7 @@ export class McpTokenService {
    * revoked or expired. The lookup is a single indexed match on the hash of a
    * 256-bit secret, so there is no guessable prefix to time against.
    */
-  async verify(secret: string): Promise<McpToken | null> {
+  async verify(secret: string): Promise<ApiToken | null> {
     if (!secret) return null;
 
     const token = await this.repo.findByHash(hashSecret(secret));
@@ -67,11 +67,11 @@ export class McpTokenService {
     return token;
   }
 
-  list(): Promise<McpToken[]> {
+  list(): Promise<ApiToken[]> {
     return this.repo.getAll();
   }
 
-  async revoke(id: string): Promise<McpToken> {
+  async revoke(id: string): Promise<ApiToken> {
     const token = await this.repo.findById(id);
     if (token.revokedAt) return token;
 
@@ -80,7 +80,7 @@ export class McpTokenService {
   }
 
   /** Best-effort last-seen bookkeeping; never blocks or fails a request. */
-  private async touch(token: McpToken): Promise<void> {
+  private async touch(token: ApiToken): Promise<void> {
     const now = new Date();
     const last = token.lastUsedAt?.getTime() ?? 0;
     if (now.getTime() - last < TOUCH_INTERVAL_MS) return;
@@ -94,5 +94,5 @@ export class McpTokenService {
   }
 }
 
-export { McpTokenNotFoundError };
-export type { McpToken };
+export { ApiTokenNotFoundError };
+export type { ApiToken };
