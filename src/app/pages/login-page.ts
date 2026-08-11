@@ -1,45 +1,61 @@
 import { Component, DOCUMENT, inject, signal, viewChild, type ElementRef } from '@angular/core';
+import { CardModule } from 'primeng/card';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { MessageModule } from 'primeng/message';
 import { usePage } from '../page';
 import { readCsrfToken } from '../csrf';
 
 @Component({
   selector: 'app-login-page',
   host: { style: 'display: contents' },
+  imports: [CardModule, ButtonModule, InputTextModule, MessageModule],
   template: `
     <div class="max-w-md mx-auto">
-      <header class="mb-8 border-b-4 border-black pb-2 flex justify-between items-end">
+      <header class="mb-8 pb-2 flex justify-between items-end">
         <h1 class="text-3xl font-black uppercase tracking-tighter">System Access</h1>
 
-        <a href="/" class="nav-link">← BACK</a>
+        <a href="/" class="text-sm font-bold underline">← BACK</a>
       </header>
 
-      <div class="box p-4">
+      <p-card>
         <form id="login-form" class="space-y-3" (submit)="submit($event)">
           @if (failed()) {
-            <div id="error-box" class="error">ACCESS DENIED</div>
+            <p-message severity="error" styleClass="w-full mb-2">ACCESS DENIED</p-message>
           }
 
-          <div>
-            <div class="label">Username</div>
-            <input id="username" required autocomplete="username" #username />
+          <div class="flex flex-col gap-1">
+            <label for="username" class="text-xs font-bold uppercase">Username</label>
+            <input
+              id="username"
+              pInputText
+              required
+              autocomplete="username"
+              class="w-full"
+              #username
+            />
           </div>
 
-          <div>
-            <div class="label">Password</div>
+          <div class="flex flex-col gap-1">
+            <label for="password" class="text-xs font-bold uppercase">Password</label>
             <input
               id="password"
+              pInputText
               type="password"
               required
               autocomplete="current-password"
+              class="w-full"
               #password
             />
           </div>
 
           <div class="pt-2">
-            <button type="submit">AUTHENTICATE</button>
+            <button type="submit" pButton class="w-full justify-center">
+              <span pButtonLabel>AUTHENTICATE</span>
+            </button>
           </div>
         </form>
-      </div>
+      </p-card>
     </div>
   `,
 })
@@ -51,7 +67,7 @@ export class LoginPage {
   protected readonly failed = signal(false);
 
   constructor() {
-    usePage({ title: 'Login', bodyClass: 'page-login' });
+    usePage({ title: 'Login', bodyClass: 'min-h-screen flex items-center justify-center p-4' });
   }
 
   protected async submit(event: Event): Promise<void> {

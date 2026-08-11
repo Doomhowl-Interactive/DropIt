@@ -1,4 +1,9 @@
 import { Component, DOCUMENT, computed, inject } from '@angular/core';
+import { CardModule } from 'primeng/card';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { MessageModule } from 'primeng/message';
 import { CENTERED_BODY, PageDataService, usePage } from '../page';
 import type { CompletePageData } from '../../shared/page-context';
 
@@ -6,6 +11,7 @@ import type { CompletePageData } from '../../shared/page-context';
   selector: 'app-complete-page',
   templateUrl: './complete-page.html',
   host: { style: 'display: contents' },
+  imports: [CardModule, ButtonModule, InputTextModule, InputGroupModule, MessageModule],
 })
 export class CompletePage {
   private readonly document = inject(DOCUMENT);
@@ -26,7 +32,7 @@ export class CompletePage {
   });
 
   constructor() {
-    usePage({ title: 'Send.it - File Ready', bodyClass: `page-complete ${CENTERED_BODY}` });
+    usePage({ title: 'Send.it - File Ready', bodyClass: CENTERED_BODY });
   }
 
   protected copy(input: HTMLInputElement): void {

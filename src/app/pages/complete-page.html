@@ -1,41 +1,41 @@
 <div class="w-full max-w-[493px] flex flex-col items-center">
-  <img src="/static/logo.png" alt="Send.it logo" style="width: 50%" class="mb-2 border-black" />
+  <img src="/static/logo.png" alt="Send.it logo" style="width: 50%" class="mb-2" />
 
-  <div class="box">
-    <header class="mb-6 border-b-2 border-black pb-2 text-center">
+  <p-card styleClass="w-full">
+    <header class="mb-6 pb-2 text-center">
       <h1 class="text-xl font-bold uppercase">FILE READY</h1>
     </header>
 
     <div class="space-y-4">
-      <div class="bg-black text-white p-2 text-xs font-bold">UPLOAD COMPLETE</div>
-
-      <!--            &lt;!&ndash; File info &ndash;&gt;-->
-      <!--            <div class="text-[10px] uppercase font-bold">-->
-      <!--                example_file.png (2.4 MB)-->
-      <!--            </div>-->
+      <p-message severity="success" styleClass="w-full font-bold">UPLOAD COMPLETE</p-message>
 
       <!-- Download -->
       <div>
-        <label class="text-[10px] font-bold block">DOWNLOAD LINK</label>
-        <div class="flex">
-          <input id="res-url" readonly class="input-text text-sm" [value]="downloadUrl()" #resUrl />
-          <button (click)="copy(resUrl)" class="border-l-0">COPY</button>
-        </div>
+        <label class="text-[10px] font-bold block mb-1">DOWNLOAD LINK</label>
+        <p-inputgroup>
+          <input id="res-url" pInputText readonly class="text-sm" [value]="downloadUrl()" #resUrl />
+          <button pButton severity="secondary" (click)="copy(resUrl)">
+            <span pButtonLabel>COPY</span>
+          </button>
+        </p-inputgroup>
       </div>
 
       <!-- Delete -->
       <div>
-        <label class="text-[10px] font-bold block">DELETION LINK (PRIVATE)</label>
-        <div class="flex">
+        <label class="text-[10px] font-bold block mb-1">DELETION LINK (PRIVATE)</label>
+        <p-inputgroup>
           <input
             id="res-del"
+            pInputText
             readonly
-            class="input-text text-sm text-red-600"
+            class="text-sm text-red-600"
             [value]="deleteUrl()"
             #resDel
           />
-          <button (click)="copy(resDel)" class="border-l-0">COPY</button>
-        </div>
+          <button pButton severity="secondary" (click)="copy(resDel)">
+            <span pButtonLabel>COPY</span>
+          </button>
+        </p-inputgroup>
       </div>
 
       <!-- Actions -->
@@ -43,9 +43,9 @@
         <a href="/" class="text-xs underline">NEW UPLOAD</a>
       </div>
     </div>
-  </div>
+  </p-card>
 
-  <p class="mt-1 text-[10px] uppercase font-bold text-gray-400">
+  <p class="mt-1 text-[10px] uppercase font-bold text-surface-500">
     A service forked off
     <a href="https://git.brammie15.dev/brammie15/ReSendit" target="_blank">ReSendit</a>]
   </p>

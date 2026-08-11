@@ -1,4 +1,7 @@
 import { Component, DOCUMENT, inject, signal, viewChild, type ElementRef } from '@angular/core';
+import { CardModule } from 'primeng/card';
+import { ButtonModule } from 'primeng/button';
+import { ProgressBarModule } from 'primeng/progressbar';
 import { CENTERED_BODY, usePage } from '../page';
 import { formatBytes, formatTime } from '../format';
 import { readCsrfToken } from '../csrf';
@@ -7,6 +10,7 @@ import { readCsrfToken } from '../csrf';
   selector: 'app-index-page',
   templateUrl: './index-page.html',
   host: { style: 'display: contents' },
+  imports: [CardModule, ButtonModule, ProgressBarModule],
 })
 export class IndexPage {
   private readonly document = inject(DOCUMENT);
@@ -22,7 +26,7 @@ export class IndexPage {
   private request: XMLHttpRequest | null = null;
 
   constructor() {
-    usePage({ title: 'Drop.it', bodyClass: `page-index ${CENTERED_BODY}` });
+    usePage({ title: 'Drop.it', bodyClass: CENTERED_BODY });
   }
 
   protected dropZoneText(): string {

@@ -48,4 +48,4 @@ export function usePage(options: { title: string; bodyClass: string }): void {
 }
 
 /** Centred single-column layout shared by most of the pages. */
-export const CENTERED_BODY = 'min-h-screen flex items-center justify-center p-4 no-transitions';
+export const CENTERED_BODY = 'min-h-screen flex items-center justify-center p-4';

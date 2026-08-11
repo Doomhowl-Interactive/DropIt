@@ -1,4 +1,9 @@
 import { Component, DOCUMENT, afterNextRender, computed, inject, signal } from '@angular/core';
+import { CardModule } from 'primeng/card';
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { DialogModule } from 'primeng/dialog';
 import { PageDataService, usePage } from '../page';
 import { readCsrfToken } from '../csrf';
 import type { AdminPageData } from '../../shared/page-context';
@@ -8,7 +13,8 @@ const EMPTY: AdminPageData = { files: [], page: 1, totalPages: 0 };
 @Component({
   selector: 'app-admin-page',
   templateUrl: './admin-page.html',
-  host: { style: 'display: contents', '(click)': 'onDocumentClick($event)' },
+  host: { style: 'display: contents' },
+  imports: [CardModule, ButtonModule, TableModule, TagModule, DialogModule],
 })
 export class AdminPage {
   private readonly document = inject(DOCUMENT);
@@ -34,7 +40,7 @@ export class AdminPage {
   private pendingForm: HTMLFormElement | null = null;
 
   constructor() {
-    usePage({ title: 'Admin Console', bodyClass: 'page-admin' });
+    usePage({ title: 'Admin Console', bodyClass: 'min-h-screen p-4' });
     afterNextRender(() => this.csrf.set(readCsrfToken(this.document)));
   }
 
@@ -57,12 +63,5 @@ export class AdminPage {
 
   protected confirm(): void {
     this.pendingForm?.submit();
-  }
-
-  /** Clicking the backdrop dismisses the dialog. */
-  protected onDocumentClick(event: MouseEvent): void {
-    if ((event.target as HTMLElement)?.id === 'modal-overlay') {
-      this.closeModal();
-    }
   }
 }
