@@ -4,7 +4,7 @@ import { authMiddleware, requireRole } from './middleware/auth';
 import { formatTimestamp, humanSize, param } from './util';
 import type { FileService } from './files/service';
 import type { RenderPage } from './render';
-import type { AdminFileRow } from '../shared/page-context';
+import type { AdminFileRow } from '../app/utils/page-context';
 
 const PAGE_SIZE = 10;
 

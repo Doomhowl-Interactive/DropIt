@@ -3,7 +3,7 @@ import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { setPageContext } from '../../testing/page-context';
-import type { AdminFileRow, AdminPageData } from '../../shared/page-context';
+import type { AdminFileRow, AdminPageData } from '../utils/page-context';
 import { AdminPage } from './admin-page';
 
 function row(overrides: Partial<AdminFileRow> = {}): AdminFileRow {
@@ -188,9 +188,9 @@ describe('AdminPage', () => {
       const nativeSubmit = vi.spyOn(form, 'submit').mockImplementation(() => undefined);
 
       submit(form);
-      const abort = Array.from(
-        TestBed.inject(DOCUMENT).querySelectorAll('button'),
-      ).find((button) => button.textContent?.includes('ABORT')) as HTMLButtonElement;
+      const abort = Array.from(TestBed.inject(DOCUMENT).querySelectorAll('button')).find((button) =>
+        button.textContent?.includes('ABORT'),
+      ) as HTMLButtonElement;
       abort.click();
       fixture.detectChanges();
 

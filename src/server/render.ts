@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import type { AngularNodeAppEngine } from '@angular/ssr/node';
-import type { PageContext } from '../shared/page-context';
+import type { PageContext } from '../app/utils/page-context';
 
 export type RenderPage = (
   req: Request,

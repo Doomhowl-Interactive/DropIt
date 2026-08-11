@@ -1,6 +1,6 @@
 import { TransferState, makeStateKey, type Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { PAGE_CONTEXT_KEY, type PageContext } from '../shared/page-context';
+import { PAGE_CONTEXT_KEY, type PageContext } from '../app/utils/page-context';
 
 const CONTEXT_KEY = makeStateKey<PageContext | null>(PAGE_CONTEXT_KEY);
 

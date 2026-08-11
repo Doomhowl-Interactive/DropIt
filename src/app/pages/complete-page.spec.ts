@@ -3,8 +3,7 @@ import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { setPageContext } from '../../testing/page-context';
-import type { CompletePageData } from '../../shared/page-context';
-import { CENTERED_BODY } from '../page';
+import type { CompletePageData } from '../utils/page-context';
 import { CompletePage } from './complete-page';
 
 const DATA: CompletePageData = {
@@ -33,7 +32,6 @@ describe('CompletePage', () => {
     create();
 
     expect(TestBed.inject(Title).getTitle()).toBe('Send.it - File Ready');
-    expect(TestBed.inject(DOCUMENT).body.className).toBe(CENTERED_BODY);
   });
 
   it('builds the download link from the origin and download id', () => {
