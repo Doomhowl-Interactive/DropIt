@@ -9,7 +9,8 @@ primary_region = 'fra'
 [build]
 [env]
   ALLOWED_HOSTS = 'dropit.doomhowl.com'
-  DATABASE_URL = '/data/database.db'
+  # Set by `fly postgres attach` as a secret; not listed here since [env] is
+  # plaintext and committed to source control.
   NODE_ENV = 'production'
   PORT = '8080'
   STORAGE_DIR = '/data/uploads'

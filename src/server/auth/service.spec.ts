@@ -12,7 +12,7 @@ describe('AuthService', () => {
 
   beforeEach(async () => {
     process.env['JWT_SECRET'] = 'test-secret';
-    users = new UserService(new UserRepository(createTestDb()));
+    users = new UserService(new UserRepository(await createTestDb()));
     auth = new AuthService(users);
     await users.createUser('admin', 'Hunter2!x', 'admin');
   });

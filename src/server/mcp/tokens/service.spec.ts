@@ -8,8 +8,8 @@ describe('McpTokenService', () => {
   let repo: McpTokenRepository;
   let service: McpTokenService;
 
-  beforeEach(() => {
-    repo = new McpTokenRepository(createTestDb());
+  beforeEach(async () => {
+    repo = new McpTokenRepository(await createTestDb());
     service = new McpTokenService(repo);
   });
 

@@ -1,21 +1,17 @@
-import { mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 import { config } from '../config';
 import * as schema from './schema';
 
 export type Db = ReturnType<typeof drizzle<typeof schema>>;
 
 export async function connect(): Promise<Db> {
-  const filePath = config.databaseUrl || './data/database.db';
-  mkdirSync(dirname(filePath), { recursive: true });
+  if (!config.databaseUrl) {
+    throw new Error('DATABASE_URL is required and must be a Postgres connection string');
+  }
 
-  const sqlite = new Database(filePath);
-  sqlite.pragma('journal_mode = WAL');
-  sqlite.pragma('foreign_keys = ON');
-
-  return drizzle(sqlite, { schema });
+  const pool = new Pool({ connectionString: config.databaseUrl });
+  return drizzle(pool, { schema });
 }
 
 export function toDbDate(date: Date): string {

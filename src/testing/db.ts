@@ -1,19 +1,20 @@
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { PGlite } from '@electric-sql/pglite';
+import { drizzle } from 'drizzle-orm/pglite';
 import type { Db } from '../server/db/db';
 import * as schema from '../server/db/schema';
 
 /**
- * An in-memory database with the production schema applied, for tests that
- * want to exercise real Drizzle queries rather than a hand-written fake.
+ * An in-memory Postgres (via PGlite) database with the production schema
+ * applied, for tests that want to exercise real Drizzle queries rather than a
+ * hand-written fake.
  *
  * The statements mirror the migrations in drizzle/; `migrate()` is covered
  * separately in src/server/db/migrate.spec.ts.
  */
-export function createTestDb(): Db {
-  const sqlite = new Database(':memory:');
+export async function createTestDb(): Promise<Db> {
+  const client = new PGlite();
 
-  sqlite.exec(`
+  await client.exec(`
     CREATE TABLE file_records (
       id text PRIMARY KEY NOT NULL,
       deletion_id text,
@@ -22,13 +23,13 @@ export function createTestDb(): Db {
       path text,
       size integer,
       download_count integer,
-      deleted integer,
+      deleted boolean,
       created_at text,
       expires_at text,
-      delete_after_download integer DEFAULT false
+      delete_after_download boolean DEFAULT false
     );
     CREATE TABLE users (
-      id integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+      id serial PRIMARY KEY NOT NULL,
       created_at text,
       updated_at text,
       deleted_at text,
@@ -53,5 +54,5 @@ export function createTestDb(): Db {
     CREATE INDEX idx_mcp_tokens_revoked_at ON mcp_tokens (revoked_at);
   `);
 
-  return drizzle(sqlite, { schema });
+  return drizzle(client, { schema }) as unknown as Db;
 }

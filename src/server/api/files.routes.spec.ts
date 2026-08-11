@@ -78,7 +78,7 @@ describe('file routes', () => {
     process.env['JWT_SECRET'] = 'test-secret';
 
     storageDir = join(mkdtempSync(join(tmpdir(), 'dropit-routes-')), 'uploads');
-    repo = new FileRepository(createTestDb());
+    repo = new FileRepository(await createTestDb());
     files = new FileService(repo, storageDir);
     render = fakeRenderer();
 

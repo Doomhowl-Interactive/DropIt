@@ -11,9 +11,9 @@ describe('createAdminUser', () => {
   let log: ReturnType<typeof vi.spyOn>;
   let error: ReturnType<typeof vi.spyOn>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     delete process.env['ADMIN_PASSWORD'];
-    users = new UserService(new UserRepository(createTestDb()));
+    users = new UserService(new UserRepository(await createTestDb()));
     log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
   });
@@ -61,7 +61,7 @@ describe('createAdminUser', () => {
 
   it('generates a different password on each run', async () => {
     await createAdminUser(users);
-    const other = new UserService(new UserRepository(createTestDb()));
+    const other = new UserService(new UserRepository(await createTestDb()));
     await createAdminUser(other);
 
     const printed = log.mock.calls

@@ -14,7 +14,7 @@ export const config = {
   get domain(): string {
     return process.env['DOMAIN'] ?? '';
   },
-  /** Path to the SQLite database file. */
+  /** Postgres connection string, e.g. postgres://user:pass@host:5432/dropit. */
   get databaseUrl(): string {
     return process.env['DATABASE_URL'] || '';
   },

@@ -13,9 +13,9 @@ describe('FileService', () => {
   let repo: FileRepository;
   let service: FileService;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     storageDir = join(mkdtempSync(join(tmpdir(), 'dropit-svc-')), 'uploads');
-    repo = new FileRepository(createTestDb());
+    repo = new FileRepository(await createTestDb());
     service = new FileService(repo, storageDir);
   });
 

@@ -8,10 +8,13 @@ Node process serves the pages, the API and an MCP endpoint.
 
 ```bash
 npm install
-cp .env.example .env        # set JWT_SECRET
+cp .env.example .env        # set JWT_SECRET and DATABASE_URL
 npm run build
 npm run serve               # http://localhost:8080
 ```
+
+A Postgres database is required; the schema is created on boot. For local
+development you can bring one up with `docker compose up postgres`.
 
 For development with live reload:
 
@@ -32,9 +35,8 @@ Uploading and the admin console both require that account (`/login`).
 ## Configuration
 
 Everything is environment driven; see [.env.example](.env.example) for the full
-list. Storage is SQLite, at the file path in `DATABASE_URL`; the schema is
-created on boot and is compatible with databases written by the previous Go
-implementation.
+list. Storage is Postgres, at the connection string in `DATABASE_URL`; the
+schema is created on boot.
 
 ## Deploying
 
@@ -44,9 +46,12 @@ implementation.
 docker compose up --build
 ```
 
-**Fly.io** — see the setup steps at the top of [fly.toml](fly.toml). Uploads and
-the SQLite file live on a mounted volume, so keep it to a single machine unless
-you move to Postgres.
+This also starts a Postgres container; see [docker-compose.yml](docker-compose.yml).
+
+**Fly.io** — see the setup steps at the top of [fly.toml](fly.toml). Attach a
+Fly Postgres (or other managed Postgres) with `fly postgres attach`, which sets
+`DATABASE_URL` as a secret. Uploads live on a mounted volume, so keep the app
+to a single machine.
 
 ## Layout
 
