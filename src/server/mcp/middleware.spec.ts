@@ -12,7 +12,7 @@ describe('mcpTokenAuth', () => {
   let tokens: McpTokenService;
 
   beforeEach(async () => {
-    tokens = new McpTokenService(new McpTokenRepository(createTestDb()));
+    tokens = new McpTokenService(new McpTokenRepository(await createTestDb()));
 
     const app = express();
     app.use(mcpTokenAuth(tokens));

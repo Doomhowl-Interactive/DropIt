@@ -14,8 +14,8 @@ describe('UserService', () => {
   let repo: UserRepository;
   let service: UserService;
 
-  beforeEach(() => {
-    repo = new UserRepository(createTestDb());
+  beforeEach(async () => {
+    repo = new UserRepository(await createTestDb());
     service = new UserService(repo);
   });
 

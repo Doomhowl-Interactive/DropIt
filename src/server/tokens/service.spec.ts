@@ -8,8 +8,8 @@ describe('ApiTokenService', () => {
   let repo: ApiTokenRepository;
   let service: ApiTokenService;
 
-  beforeEach(() => {
-    repo = new ApiTokenRepository(createTestDb());
+  beforeEach(async () => {
+    repo = new ApiTokenRepository(await createTestDb());
     service = new ApiTokenService(repo);
   });
 

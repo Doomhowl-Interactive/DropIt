@@ -1,5 +1,6 @@
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { PGlite } from '@electric-sql/pglite';
+import { sql } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/pglite';
 import { describe, expect, it } from 'vitest';
 import type { Db } from './db';
 import * as schema from './schema';
@@ -7,72 +8,60 @@ import * as schema from './schema';
 import { migrate } from './migrate';
 
 function emptyDb(): Db {
-  return drizzle(new Database(':memory:'), { schema });
+  return drizzle(new PGlite(), { schema }) as unknown as Db;
 }
 
-function columnNames(db: Db, table: string): string[] {
-  return db.all<{ name: string }>(`PRAGMA table_info(${table})`).map((column) => column.name);
+async function tableNames(db: Db): Promise<string[]> {
+  const result = await db.execute<{ table_name: string }>(
+    sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`,
+  );
+  return result.rows.map((row) => row.table_name);
+}
+
+async function indexNames(db: Db): Promise<string[]> {
+  const result = await db.execute<{ indexname: string }>(
+    sql`SELECT indexname FROM pg_indexes WHERE schemaname = 'public'`,
+  );
+  return result.rows.map((row) => row.indexname);
+}
+
+async function columnNames(db: Db, table: string): Promise<string[]> {
+  const result = await db.execute<{ column_name: string }>(
+    sql`SELECT column_name FROM information_schema.columns WHERE table_name = ${table}`,
+  );
+  return result.rows.map((row) => row.column_name);
 }
 
 describe('migrate', () => {
-  it('creates both tables from scratch', async () => {
+  it('creates all three tables from scratch', async () => {
     const db = emptyDb();
     await migrate(db);
 
-    const tables = db
-      .all<{ name: string }>(`SELECT name FROM sqlite_master WHERE type = 'table'`)
-      .map((row) => row.name);
-
-    expect(tables).toContain('users');
-    expect(tables).toContain('file_records');
+    const tables = await tableNames(db);
+    expect(tables).toEqual(expect.arrayContaining(['users', 'file_records', 'mcp_tokens']));
   });
 
-  it('creates the users indexes', async () => {
+  it('creates the users and mcp_tokens indexes', async () => {
     const db = emptyDb();
     await migrate(db);
 
-    const indexes = db
-      .all<{ name: string }>(`SELECT name FROM sqlite_master WHERE type = 'index'`)
-      .map((row) => row.name);
-
-    expect(indexes).toContain('idx_users_username');
-    expect(indexes).toContain('idx_users_deleted_at');
-  });
-
-  it('ends up with the legacy columns present exactly once', async () => {
-    const db = emptyDb();
-    await migrate(db);
-
-    const columns = columnNames(db, 'file_records');
-    expect(columns.filter((name) => name === 'expires_at')).toHaveLength(1);
-    expect(columns.filter((name) => name === 'delete_after_download')).toHaveLength(1);
-  });
-
-  it('tolerates a database that predates migration tracking but already has the legacy columns', async () => {
-    const db = emptyDb();
-    db.run(`
-      CREATE TABLE file_records (
-        id text PRIMARY KEY NOT NULL,
-        expires_at datetime,
-        delete_after_download numeric DEFAULT false
-      )
-    `);
-
-    await expect(migrate(db)).resolves.toBeUndefined();
-    expect(columnNames(db, 'file_records')).toEqual(
-      expect.arrayContaining(['expires_at', 'delete_after_download']),
+    const indexes = await indexNames(db);
+    expect(indexes).toEqual(
+      expect.arrayContaining([
+        'idx_users_username',
+        'idx_users_deleted_at',
+        'idx_mcp_tokens_token_hash',
+        'idx_mcp_tokens_revoked_at',
+      ]),
     );
   });
 
-  it('adds the legacy columns to a table that lacks them', async () => {
+  it('creates the file_records columns', async () => {
     const db = emptyDb();
-    db.run(`CREATE TABLE file_records (id text PRIMARY KEY NOT NULL)`);
-
     await migrate(db);
 
-    expect(columnNames(db, 'file_records')).toEqual(
-      expect.arrayContaining(['expires_at', 'delete_after_download']),
-    );
+    const columns = await columnNames(db, 'file_records');
+    expect(columns).toEqual(expect.arrayContaining(['expires_at', 'delete_after_download']));
   });
 
   it('is idempotent when run twice', async () => {
@@ -80,14 +69,5 @@ describe('migrate', () => {
     await migrate(db);
 
     await expect(migrate(db)).resolves.toBeUndefined();
-    expect(columnNames(db, 'file_records').filter((name) => name === 'expires_at')).toHaveLength(1);
-  });
-
-  it('surfaces an ALTER TABLE failure that is not a duplicate column', async () => {
-    const db = emptyDb();
-    await migrate(db);
-    db.run('DROP TABLE file_records');
-
-    await expect(migrate(db)).rejects.toThrow(/file_records/);
   });
 });
