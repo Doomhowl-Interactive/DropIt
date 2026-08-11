@@ -1,5 +1,5 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
-import { verifyJwt } from '../auth/jwt';
+import { verifyJwt, type Claims } from '../auth/jwt';
 
 export interface AuthInfo {
   userId: string;
@@ -13,20 +13,17 @@ declare module 'express-serve-static-core' {
   }
 }
 
-/** Reads the JWT from the auth_token cookie, falling back to a bearer header. */
+/**
+ * Reads the JWT from an `Authorization: Bearer` header, falling back to the
+ * auth_token cookie.
+ *
+ * An explicitly presented API token takes precedence: a stale or expired
+ * browser cookie must not mask it. Either source may still fall through to the
+ * other if it fails to verify.
+ */
 export function authMiddleware(): RequestHandler {
   return (req: Request, res: Response, next: NextFunction) => {
-    let token = req.cookies?.['auth_token'] ?? '';
-
-    if (!token) {
-      const header = req.get('authorization') ?? '';
-      const [scheme, value] = header.split(' ');
-      if (scheme === 'Bearer' && value) token = value;
-    }
-
-    if (!token) return abortUnauthorized(req, res);
-
-    const claims = verifyJwt(token);
+    const claims = verify(bearerToken(req)) ?? verify(req.cookies?.['auth_token']);
     if (!claims) return abortUnauthorized(req, res);
 
     req.auth = {
@@ -36,6 +33,16 @@ export function authMiddleware(): RequestHandler {
     };
     next();
   };
+}
+
+/** The token from `Authorization: Bearer <token>`, or empty if absent. */
+function bearerToken(req: Request): string {
+  const [scheme, value] = (req.get('authorization') ?? '').split(' ');
+  return scheme === 'Bearer' && value ? value : '';
+}
+
+function verify(token: unknown): Claims | null {
+  return typeof token === 'string' && token ? verifyJwt(token) : null;
 }
 
 export function requireRole(...roles: string[]): RequestHandler {

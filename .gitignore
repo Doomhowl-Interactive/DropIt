@@ -3,6 +3,9 @@
 /out-tsc
 /.angular
 
+# Test output
+/coverage
+
 # Dependencies
 /node_modules
 npm-debug.log
