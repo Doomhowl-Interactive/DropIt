@@ -1,0 +1,63 @@
+<div
+  id="drop-zone"
+  class="mb-4 border-2 border-dashed border-surface-300 rounded-md p-10 text-center cursor-pointer transition-colors"
+  [class.border-primary]="dragging()"
+  [class.bg-primary-50]="dragging()"
+  (click)="fileInput.click()"
+  (dragover)="onDragOver($event)"
+  (dragleave)="dragging.set(false)"
+  (drop)="onDrop($event)"
+>
+  <input type="file" id="fileInput" class="hidden" #fileInput (change)="onFileSelected()" />
+
+  <div id="dz-content">
+    <span id="dz-text" class="text-sm">{{ dropZoneText() }}</span>
+  </div>
+
+  @if (uploading()) {
+    <div id="progress-container" class="mt-3">
+      <p-progressbar [value]="percent()" [showValue]="false" styleClass="h-2" />
+    </div>
+
+    <div class="flex justify-between items-center mt-1">
+      <div id="progress-text" class="text-[10px] font-bold">{{ percent() }}%</div>
+      <div id="stats-text" class="text-[10px] font-bold uppercase">
+        <span id="speed-text">{{ speed() }}</span>
+        <span class="mx-1 opacity-30">|</span>
+        <span id="eta-text">{{ eta() }}</span>
+      </div>
+    </div>
+  }
+</div>
+
+<div class="space-y-4">
+  <div class="flex items-center justify-between pb-2">
+    <label for="duration" class="text-xs font-bold uppercase">Expire In:</label>
+    <select id="duration" class="border border-surface-300 rounded text-xs p-1">
+      <option value="-1">Heat death of the universe</option>
+    </select>
+  </div>
+
+  <button
+    id="uploadBtn"
+    pButton
+    class="w-full justify-center"
+    [disabled]="!selectedFile() || uploading()"
+    (click)="upload()"
+  >
+    <span pButtonLabel>{{ uploading() ? 'UPLOADING...' : 'UPLOAD' }}</span>
+  </button>
+
+  @if (uploading()) {
+    <button
+      id="cancelBtn"
+      pButton
+      severity="danger"
+      [outlined]="true"
+      class="w-full justify-center"
+      (click)="cancel($event)"
+    >
+      <span pButtonLabel>CANCEL UPLOAD</span>
+    </button>
+  }
+</div>
