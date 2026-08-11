@@ -36,7 +36,7 @@ describe('auth routes', () => {
     for (const key of ENV) delete process.env[key];
     process.env['JWT_SECRET'] = 'test-secret';
 
-    users = new UserService(new UserRepository(createTestDb()));
+    users = new UserService(new UserRepository(await createTestDb()));
     await users.createUser('admin', 'Hunter2!x', 'admin');
     await users.createUser('bram', 'Hunter2!x', 'user');
 

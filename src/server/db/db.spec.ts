@@ -1,9 +1,5 @@
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { afterAll, afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { connect, fromDbDate, toDbDate } from './db';
-import { fileRecords } from './schema';
 
 describe('toDbDate', () => {
   it('writes an ISO-8601 UTC string', () => {
@@ -59,7 +55,6 @@ describe('fromDbDate', () => {
 });
 
 describe('connect', () => {
-  const dirs: string[] = [];
   const saved = process.env['DATABASE_URL'];
 
   afterEach(() => {
@@ -67,29 +62,13 @@ describe('connect', () => {
     else process.env['DATABASE_URL'] = saved;
   });
 
-  afterAll(() => {
-    for (const dir of dirs) rmSync(dir, { recursive: true, force: true });
+  it('requires DATABASE_URL to be set', async () => {
+    delete process.env['DATABASE_URL'];
+    await expect(connect()).rejects.toThrow(/DATABASE_URL/);
   });
 
-  it('creates the parent directory and opens a usable database', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dropit-db-'));
-    dirs.push(dir);
-    process.env['DATABASE_URL'] = join(dir, 'nested', 'database.db');
-
-    const db = await connect();
-    db.run('CREATE TABLE file_records (id text primary key)');
-
-    await expect(db.select({ id: fileRecords.id }).from(fileRecords)).resolves.toEqual([]);
-  });
-
-  it('enables WAL and foreign keys', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dropit-db-'));
-    dirs.push(dir);
-    process.env['DATABASE_URL'] = join(dir, 'database.db');
-
-    const db = await connect();
-
-    expect(db.all<{ journal_mode: string }>('PRAGMA journal_mode')[0]?.journal_mode).toBe('wal');
-    expect(db.all<{ foreign_keys: number }>('PRAGMA foreign_keys')[0]?.foreign_keys).toBe(1);
+  it('requires DATABASE_URL to be non-empty', async () => {
+    process.env['DATABASE_URL'] = '';
+    await expect(connect()).rejects.toThrow(/DATABASE_URL/);
   });
 });

@@ -17,7 +17,7 @@ describe('mcp token routes', () => {
   beforeEach(async () => {
     process.env['JWT_SECRET'] = 'test-secret';
 
-    tokens = new McpTokenService(new McpTokenRepository(createTestDb()));
+    tokens = new McpTokenService(new McpTokenRepository(await createTestDb()));
 
     const app = express();
     app.use(express.json());

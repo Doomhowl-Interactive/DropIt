@@ -50,13 +50,15 @@ describe('web routes', () => {
     delete process.env['DOMAIN'];
 
     storageDir = join(mkdtempSync(join(tmpdir(), 'dropit-web-')), 'uploads');
-    repo = new FileRepository(createTestDb());
+    repo = new FileRepository(await createTestDb());
     files = new FileService(repo, storageDir);
     render = fakeRenderer();
 
     const app = express();
     app.use(cookieParser());
-    app.use(webRoutes(files, new McpTokenService(new McpTokenRepository(createTestDb())), render));
+    app.use(
+      webRoutes(files, new McpTokenService(new McpTokenRepository(await createTestDb())), render),
+    );
     server = await listen(app);
   });
 
@@ -254,7 +256,11 @@ describe('web routes', () => {
       const app = express();
       app.use(cookieParser());
       app.use(
-        webRoutes(broken, new McpTokenService(new McpTokenRepository(createTestDb())), render),
+        webRoutes(
+          broken,
+          new McpTokenService(new McpTokenRepository(await createTestDb())),
+          render,
+        ),
       );
       const failing = await listen(app);
 

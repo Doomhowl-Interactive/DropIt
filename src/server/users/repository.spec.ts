@@ -9,8 +9,8 @@ describe('UserRepository', () => {
   let db: Db;
   let repo: UserRepository;
 
-  beforeEach(() => {
-    db = createTestDb();
+  beforeEach(async () => {
+    db = await createTestDb();
     repo = new UserRepository(db);
   });
 

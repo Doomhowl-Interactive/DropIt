@@ -16,9 +16,9 @@ describe('list_files', () => {
   let files: FileService;
   let ctx: McpToolContext;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     storageDir = join(mkdtempSync(join(tmpdir(), 'dropit-mcp-')), 'uploads');
-    files = new FileService(new FileRepository(createTestDb()), storageDir);
+    files = new FileService(new FileRepository(await createTestDb()), storageDir);
     ctx = testContext(files);
   });
 

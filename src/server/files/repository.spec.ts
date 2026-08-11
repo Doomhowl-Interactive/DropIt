@@ -26,8 +26,8 @@ describe('FileRepository', () => {
   let db: Db;
   let repo: FileRepository;
 
-  beforeEach(() => {
-    db = createTestDb();
+  beforeEach(async () => {
+    db = await createTestDb();
     repo = new FileRepository(db);
   });
 
@@ -215,7 +215,7 @@ describe('FileRepository', () => {
     });
 
     it('keeps the deleteAfterDownload column default when it is absent', async () => {
-      await db.run(`INSERT INTO file_records (id) VALUES ('defaulted')`);
+      await db.execute(`INSERT INTO file_records (id) VALUES ('defaulted')`);
 
       const [row] = await db.select().from(fileRecords).where(eq(fileRecords.id, 'defaulted'));
       expect(row!.deleteAfterDownload).toBe(false);

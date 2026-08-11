@@ -1,4 +1,4 @@
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { boolean, index, integer, pgTable, serial, text, uniqueIndex } from 'drizzle-orm/pg-core';
 
 /**
  * Dates are stored as free-form text rather than a Drizzle timestamp mode:
@@ -6,10 +6,10 @@ import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqli
  * ("2026-08-11 00:39:09.044218258+02:00") that a strict mode can't parse.
  * See `fromDbDate` in ./db.ts for the read-side conversion.
  */
-export const users = sqliteTable(
+export const users = pgTable(
   'users',
   {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+    id: serial('id').primaryKey(),
     createdAt: text('created_at'),
     updatedAt: text('updated_at'),
     deletedAt: text('deleted_at'),
@@ -31,7 +31,7 @@ export const users = sqliteTable(
  * Only the sha-256 of the secret is stored; `prefix` exists purely so the admin
  * UI can tell two tokens apart after the plaintext is gone.
  */
-export const mcpTokens = sqliteTable(
+export const mcpTokens = pgTable(
   'mcp_tokens',
   {
     id: text('id').primaryKey(),
@@ -50,7 +50,7 @@ export const mcpTokens = sqliteTable(
   ],
 );
 
-export const fileRecords = sqliteTable('file_records', {
+export const fileRecords = pgTable('file_records', {
   id: text('id').primaryKey(),
   deletionId: text('deletion_id'),
   viewId: text('view_id'),
@@ -58,8 +58,8 @@ export const fileRecords = sqliteTable('file_records', {
   path: text('path'),
   size: integer('size'),
   downloadCount: integer('download_count'),
-  deleted: integer('deleted', { mode: 'boolean' }),
+  deleted: boolean('deleted'),
   createdAt: text('created_at'),
   expiresAt: text('expires_at'),
-  deleteAfterDownload: integer('delete_after_download', { mode: 'boolean' }).default(false),
+  deleteAfterDownload: boolean('delete_after_download').default(false),
 });

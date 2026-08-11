@@ -5,7 +5,7 @@ export const config = {
     return Number(process.env['PORT'] ?? 8080);
   },
   get jwtSecret(): string {
-    return process.env['JWT_SECRET'] ?? 'blablabla';
+    return process.env['JWT_SECRET'] ?? '';
   },
   get useHttps(): boolean {
     return process.env['USE_HTTPS'] === 'true';
@@ -14,7 +14,7 @@ export const config = {
   get domain(): string {
     return process.env['DOMAIN'] ?? '';
   },
-  /** Path to the SQLite database file. */
+  /** Postgres connection string, e.g. postgres://user:pass@host:5432/dropit. */
   get databaseUrl(): string {
     return process.env['DATABASE_URL'] || '';
   },
