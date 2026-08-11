@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import type { CreatedMcpToken, McpTokenRow } from '../../shared/page-context';
+import type { CreatedMcpToken, McpTokenRow } from '../utils/page-context';
 
 const BASE = '/api/mcp-tokens';
 

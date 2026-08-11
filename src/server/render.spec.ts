@@ -2,7 +2,7 @@ import express from 'express';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AngularNodeAppEngine } from '@angular/ssr/node';
 import { listen, type TestServer } from '../testing/http';
-import type { PageContext } from '../shared/page-context';
+import type { PageContext } from '../app/utils/page-context';
 import { createRenderer } from './render';
 
 /** A stand-in for the Angular SSR engine, returning whatever the test wants. */
@@ -73,7 +73,12 @@ describe('createRenderer', () => {
 
   it('restores the full path that Express trimmed inside a mounted router', async () => {
     const seen: string[] = [];
-    await start(fakeEngine(html('ok'), (url) => seen.push(url)), { page: 'index' }, 200, '/admin');
+    await start(
+      fakeEngine(html('ok'), (url) => seen.push(url)),
+      { page: 'index' },
+      200,
+      '/admin',
+    );
 
     await server.fetch('/admin/deep/path?page=2');
 

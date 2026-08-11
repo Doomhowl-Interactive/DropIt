@@ -10,7 +10,7 @@ import { TagModule } from 'primeng/tag';
 import { TokenSecretDialog } from '../components/token-secret-dialog/token-secret-dialog';
 import { PageDataService, usePage } from '../utils/page';
 import { McpTokenApi } from '../services/mcp-token-api';
-import type { McpTokenRow, McpTokensPageData } from '../../shared/page-context';
+import type { McpTokenRow, McpTokensPageData } from '../utils/page-context';
 
 const EMPTY: McpTokensPageData = { tokens: [], endpoint: '' };
 

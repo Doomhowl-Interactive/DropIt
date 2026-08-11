@@ -1,14 +1,8 @@
-import {
-  DOCUMENT,
-  PLATFORM_ID,
-  REQUEST_CONTEXT,
-  TransferState,
-  makeStateKey,
-} from '@angular/core';
+import { DOCUMENT, PLATFORM_ID, REQUEST_CONTEXT, TransferState, makeStateKey } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { PAGE_CONTEXT_KEY, type PageContext } from '../../shared/page-context';
+import { PAGE_CONTEXT_KEY, type PageContext } from './page-context';
 import { CENTERED_BODY, PageDataService, usePage } from './page';
 
 const CONTEXT_KEY = makeStateKey<PageContext | null>(PAGE_CONTEXT_KEY);

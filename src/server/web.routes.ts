@@ -6,7 +6,7 @@ import { formatTimestamp, humanSize, param, requestOrigin } from './util';
 import type { FileService } from './files/service';
 import type { McpTokenService } from './mcp/tokens/service';
 import type { RenderPage } from './render';
-import type { AdminFileRow } from '../shared/page-context';
+import type { AdminFileRow } from '../app/utils/page-context';
 
 const PAGE_SIZE = 10;
 

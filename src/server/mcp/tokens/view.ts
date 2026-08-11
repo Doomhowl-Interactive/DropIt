@@ -1,4 +1,4 @@
-import type { McpTokenRow } from '../../../shared/page-context';
+import type { McpTokenRow } from '../../../app/utils/page-context';
 import { formatTimestamp } from '../../util';
 import type { McpToken, McpTokenService } from './service';
 

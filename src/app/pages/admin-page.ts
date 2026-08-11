@@ -7,7 +7,7 @@ import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { PageDataService, usePage } from '../utils/page';
 import { readCsrfToken } from '../utils/csrf';
-import type { AdminPageData } from '../../shared/page-context';
+import type { AdminPageData } from '../utils/page-context';
 import { UploadZone } from '../components/upload-zone/upload-zone';
 
 const EMPTY: AdminPageData = { files: [], page: 1, totalPages: 0 };

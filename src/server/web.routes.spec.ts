@@ -12,7 +12,7 @@ import { FileRepository, type FileRecord } from './files/repository';
 import { FileService } from './files/service';
 import { McpTokenRepository } from './mcp/tokens/repository';
 import { McpTokenService } from './mcp/tokens/service';
-import type { AdminPageData, PageContext } from '../shared/page-context';
+import type { AdminPageData, PageContext } from '../app/utils/page-context';
 import { webRoutes } from './web.routes';
 
 const ENV = ['JWT_SECRET', 'DOMAIN'] as const;
@@ -189,7 +189,9 @@ describe('web routes', () => {
         }),
       );
 
-      const { files: rows } = await adminData(await server.fetch('/admin', { headers: adminCookie() }));
+      const { files: rows } = await adminData(
+        await server.fetch('/admin', { headers: adminCookie() }),
+      );
 
       expect(rows[0]).toEqual({
         id: 'file-1',
@@ -205,7 +207,9 @@ describe('web routes', () => {
 
     it('shows NEVER for a file with no expiry', async () => {
       await repo.create(makeRecord());
-      const { files: rows } = await adminData(await server.fetch('/admin', { headers: adminCookie() }));
+      const { files: rows } = await adminData(
+        await server.fetch('/admin', { headers: adminCookie() }),
+      );
 
       expect(rows[0]!.expiresAt).toBe('NEVER');
     });
@@ -213,7 +217,12 @@ describe('web routes', () => {
     it('paginates ten files to a page', async () => {
       for (let i = 0; i < 25; i++) {
         await repo.create(
-          makeRecord({ id: `f${i}`, deletionId: `d${i}`, viewId: `v${i}`, createdAt: new Date(2026, 7, 11, 10, i) }),
+          makeRecord({
+            id: `f${i}`,
+            deletionId: `d${i}`,
+            viewId: `v${i}`,
+            createdAt: new Date(2026, 7, 11, 10, i),
+          }),
         );
       }
 
