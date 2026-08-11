@@ -9,10 +9,10 @@ import { serverRoutes } from './app.routes.server';
 import { AdminPage } from './pages/admin-page';
 import { DeleteResultPage } from './pages/delete-result-page';
 import { ErrorPage } from './pages/error-page';
-import { FileNotFoundPage } from './pages/file-not-found-page';
+import { NotFoundPage } from './pages/not-found-page/not-found.page';
 import { FileViewPage } from './pages/file-view-page';
 import { IndexPage } from './pages/index-page';
-import { LoginPage } from './pages/login-page';
+import { LoginPage } from './pages/login-page/login.page';
 
 @Component({ template: '', standalone: true })
 class Blank {}
@@ -41,8 +41,8 @@ describe('routes', () => {
     ['admin', AdminPage],
     ['f/:id', FileViewPage],
     ['api/files/delete/:id', DeleteResultPage],
-    ['api/files/view/:id', FileNotFoundPage],
-    ['api/files/download/:id', FileNotFoundPage],
+    ['api/files/view/:id', NotFoundPage],
+    ['api/files/download/:id', NotFoundPage],
     ['**', ErrorPage],
   ])('maps %o to its page', (path, component) => {
     expect(routes.find((route) => route.path === path)?.component).toBe(component);

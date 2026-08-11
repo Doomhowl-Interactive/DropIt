@@ -2,18 +2,17 @@ import { DOCUMENT } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fakeLocation, provideFakeLocation } from '../../testing/document';
-import { LoginPage } from './login-page';
+import { fakeLocation, provideFakeLocation } from '../../../testing/document';
+import { LoginPage } from './login.page';
 
 describe('LoginPage', () => {
   let fixture: ComponentFixture<LoginPage>;
   let location: ReturnType<typeof fakeLocation>;
   let fetchMock: ReturnType<typeof vi.fn>;
 
-  const field = (id: string) =>
-    fixture.nativeElement.querySelector(`#${id}`) as HTMLInputElement;
+  const field = (id: string) => fixture.nativeElement.querySelector(`#${id}`) as HTMLInputElement;
 
-  const form = () => fixture.nativeElement.querySelector('#login-form') as HTMLFormElement;
+  const form = () => fixture.nativeElement.querySelector('form') as HTMLFormElement;
 
   const submit = async () => {
     form().dispatchEvent(new Event('submit', { cancelable: true }));

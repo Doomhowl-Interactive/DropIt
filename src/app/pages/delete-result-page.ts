@@ -1,12 +1,12 @@
 import { Component, computed, inject } from '@angular/core';
-import { PageDataService } from '../page';
+import { PageDataService } from '../utils/page';
 import { DeletedPage } from './deleted-page';
-import { FileNotFoundPage } from './file-not-found-page';
+import { NotFoundPage } from './not-found-page/not-found.page';
 
 /** `/api/files/delete/:id` — confirmation of a deletion, or the 404 page. */
 @Component({
   selector: 'app-delete-result-page',
-  imports: [DeletedPage, FileNotFoundPage],
+  imports: [DeletedPage, NotFoundPage],
   host: { style: 'display: contents' },
   template: `
     @if (deleted()) {

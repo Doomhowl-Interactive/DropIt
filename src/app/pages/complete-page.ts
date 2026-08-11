@@ -4,7 +4,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { MessageModule } from 'primeng/message';
-import { CENTERED_BODY, PageDataService, usePage } from '../page';
+import { CENTERED_BODY, PageDataService, usePage } from '../utils/page';
 import type { CompletePageData } from '../../shared/page-context';
 
 @Component({

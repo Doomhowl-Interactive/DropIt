@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
-import { CENTERED_BODY, usePage } from '../page';
+import { CENTERED_BODY, usePage } from '../utils/page';
 
 @Component({
   selector: 'app-deleted-page',

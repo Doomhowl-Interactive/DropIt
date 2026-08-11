@@ -1,0 +1,43 @@
+<div class="w-screen h-screen flex items-center justify-center">
+  <p-card class="max-w-lg grow">
+    <ng-template #header>
+      <div class="flex items-center gap-3 pl-6 pt-6 font-semibold text-xl">
+        <button
+          type="button"
+          class="inline-flex items-center"
+          aria-label="Go back"
+          (click)="goBack()"
+        >
+          <i class="pi pi-arrow-left" style="font-size: 1.2rem" aria-hidden="true"></i>
+        </button>
+        <span>Login</span>
+      </div>
+    </ng-template>
+
+    <form class="space-y-3" (submit)="submit($event)">
+      @if (failed()) {
+        <p-message severity="error" styleClass="w-full mb-2">Access denied</p-message>
+      }
+
+      <div class="flex flex-col gap-1 py-3">
+        <label for="username" class="text-xs font-bold uppercase">Username</label>
+        <input id="username" pInputText required autocomplete="username" class="w-full" #username />
+      </div>
+
+      <div class="flex flex-col gap-1 py-3">
+        <label for="password" class="text-xs font-bold uppercase">Password</label>
+        <input
+          id="password"
+          pInputText
+          type="password"
+          required
+          autocomplete="current-password"
+          class="w-full"
+          #password
+        />
+      </div>
+
+      <button type="submit" pButton class="w-full justify-center">Login</button>
+    </form>
+  </p-card>
+</div>

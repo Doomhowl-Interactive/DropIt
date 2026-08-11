@@ -5,8 +5,8 @@ import { DividerModule } from 'primeng/divider';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
-import { PageDataService, usePage } from '../page';
-import { readCsrfToken } from '../csrf';
+import { PageDataService, usePage } from '../utils/page';
+import { readCsrfToken } from '../utils/csrf';
 import type { AdminPageData } from '../../shared/page-context';
 import { UploadZone } from '../components/upload-zone/upload-zone';
 

@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
 import { Title } from '@angular/platform-browser';
-import { PAGE_CONTEXT_KEY, type PageContext } from '../shared/page-context';
+import { PAGE_CONTEXT_KEY, type PageContext } from '../../shared/page-context';
 
 const CONTEXT_KEY = makeStateKey<PageContext | null>(PAGE_CONTEXT_KEY);
 
