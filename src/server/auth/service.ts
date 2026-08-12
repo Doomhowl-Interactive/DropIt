@@ -1,5 +1,10 @@
 import { checkPassword } from '../security/password';
-import { UserNotFoundError, type UserService } from '../users/service';
+import {
+  InvalidPasswordError,
+  PasswordsDoNotMatchError,
+  UserNotFoundError,
+  type UserService,
+} from '../users/service';
 import { generateJwt } from './jwt';
 
 export class InvalidCredentialsError extends Error {
@@ -25,4 +30,14 @@ export class AuthService {
 
     return generateJwt(String(user.id), user.username, user.role);
   }
+
+  async changePassword(
+    userId: string | number,
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    await this.users.changePassword(userId, oldPassword, newPassword);
+  }
 }
+
+export { InvalidPasswordError, PasswordsDoNotMatchError };

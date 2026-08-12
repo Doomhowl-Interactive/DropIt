@@ -76,8 +76,9 @@ describe('auth routes', () => {
       process.env['USE_HTTPS'] = 'true';
       process.env['DOMAIN'] = 'drop.example';
 
-      const [header] = (await login({ username: 'admin', password: 'Hunter2!x' })).headers
-        .getSetCookie();
+      const [header] = (
+        await login({ username: 'admin', password: 'Hunter2!x' })
+      ).headers.getSetCookie();
 
       expect(header).toContain('Secure');
       expect(header).toContain('Domain=drop.example');
@@ -125,7 +126,10 @@ describe('auth routes', () => {
 
   describe('GET /me', () => {
     it('reports the caller identified by the login cookie', async () => {
-      const token = cookieValue(await login({ username: 'bram', password: 'Hunter2!x' }), 'auth_token');
+      const token = cookieValue(
+        await login({ username: 'bram', password: 'Hunter2!x' }),
+        'auth_token',
+      );
       const user = await users.findByUsername('bram');
 
       const response = await server.fetch('/api/auth/me', {
@@ -159,6 +163,93 @@ describe('auth routes', () => {
 
     it('answers 401 without a token', async () => {
       expect((await server.fetch('/api/auth/admin-check')).status).toBe(401);
+    });
+  });
+
+  describe('POST /change-password', () => {
+    const changePassword = (body: unknown, token?: string) =>
+      server.fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...(token ? { cookie: `auth_token=${token}` } : {}),
+        },
+        body: JSON.stringify(body),
+      });
+
+    it('changes the password for the authenticated user', async () => {
+      const token = cookieValue(
+        await login({ username: 'bram', password: 'Hunter2!x' }),
+        'auth_token',
+      );
+
+      const response = await changePassword(
+        { oldPassword: 'Hunter2!x', newPassword: 'NewPass1!x' },
+        token,
+      );
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual({ message: 'password changed' });
+
+      // The old password no longer works, the new one does.
+      expect((await login({ username: 'bram', password: 'Hunter2!x' })).status).toBe(401);
+      expect((await login({ username: 'bram', password: 'NewPass1!x' })).status).toBe(200);
+    });
+
+    it('answers 400 when the old password is wrong', async () => {
+      const token = cookieValue(
+        await login({ username: 'bram', password: 'Hunter2!x' }),
+        'auth_token',
+      );
+
+      const response = await changePassword(
+        { oldPassword: 'wrong', newPassword: 'NewPass1!x' },
+        token,
+      );
+
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toEqual({ error: 'Old password is incorrect' });
+    });
+
+    it('answers 400 for a weak new password', async () => {
+      const token = cookieValue(
+        await login({ username: 'bram', password: 'Hunter2!x' }),
+        'auth_token',
+      );
+
+      const response = await changePassword(
+        { oldPassword: 'Hunter2!x', newPassword: 'short' },
+        token,
+      );
+
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toEqual({ error: 'New password is invalid' });
+    });
+
+    it.each([
+      ['a missing oldPassword', { newPassword: 'NewPass1!x' }],
+      ['a missing newPassword', { oldPassword: 'Hunter2!x' }],
+      ['an empty oldPassword', { oldPassword: '', newPassword: 'NewPass1!x' }],
+      ['an empty newPassword', { oldPassword: 'Hunter2!x', newPassword: '' }],
+      ['a non-string oldPassword', { oldPassword: 42, newPassword: 'NewPass1!x' }],
+      ['a non-string newPassword', { oldPassword: 'Hunter2!x', newPassword: null }],
+      ['an empty body', {}],
+    ])('answers 400 for %s', async (_label, body) => {
+      const token = cookieValue(
+        await login({ username: 'bram', password: 'Hunter2!x' }),
+        'auth_token',
+      );
+
+      const response = await changePassword(body, token);
+
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toEqual({ error: 'Invalid request body' });
+    });
+
+    it('answers 401 without a token', async () => {
+      expect(
+        (await changePassword({ oldPassword: 'Hunter2!x', newPassword: 'NewPass1!x' })).status,
+      ).toBe(401);
     });
   });
 });

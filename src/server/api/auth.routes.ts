@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { config } from '../config';
 import { authMiddleware, requireRole, type AuthDeps } from '../middleware/auth';
-import type { AuthService } from '../auth/service';
+import { InvalidPasswordError, PasswordsDoNotMatchError, type AuthService } from '../auth/service';
 
 export function authRoutes(auth: AuthService, authDeps: AuthDeps = {}): Router {
   const router = Router();
@@ -43,6 +43,35 @@ export function authRoutes(auth: AuthService, authDeps: AuthDeps = {}): Router {
 
   protectedRoutes.get('/admin-check', requireRole('admin'), (_req, res) => {
     res.json({ message: 'you are an admin' });
+  });
+
+  protectedRoutes.post('/change-password', async (req, res) => {
+    const { oldPassword, newPassword } = req.body ?? {};
+    if (
+      typeof oldPassword !== 'string' ||
+      typeof newPassword !== 'string' ||
+      !oldPassword ||
+      !newPassword
+    ) {
+      res.status(400).json({ error: 'Invalid request body' });
+      return;
+    }
+
+    try {
+      await auth.changePassword(req.auth!.userId, oldPassword, newPassword);
+    } catch (err) {
+      if (err instanceof InvalidPasswordError) {
+        res.status(400).json({ error: 'New password is invalid' });
+        return;
+      }
+      if (err instanceof PasswordsDoNotMatchError) {
+        res.status(400).json({ error: 'Old password is incorrect' });
+        return;
+      }
+      throw err;
+    }
+
+    res.json({ message: 'password changed' });
   });
 
   router.use(protectedRoutes);

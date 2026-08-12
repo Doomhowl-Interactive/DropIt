@@ -85,6 +85,7 @@ render the same markup without a second round trip. See
 | POST | `/api/auth/login`                    | Authenticates a user and sets the auth cookie            |
 | GET  | `/api/auth/me`                       | Returns the authenticated user's ID and role             |
 | GET  | `/api/auth/admin-check`              | Checks that the authenticated user is an admin           |
+| POST | `/api/auth/change-password`          | Changes the authenticated user's password                |
 | POST | `/api/files/upload`                  | Multipart upload (admin)                                 |
 | GET  | `/api/files/view/:id`                | Streams a file inline                                    |
 | GET  | `/api/files/download/:id`            | Streams a file inline                                    |
