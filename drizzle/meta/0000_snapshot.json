@@ -1,283 +1,289 @@
 {
-  "id": "ab1c54c2-ce9d-43e5-8211-6e0847f50b3b",
+  "version": "5",
+  "dialect": "mysql",
+  "id": "46725051-7aaf-4f6b-a02c-d8eaede96a31",
   "prevId": "00000000-0000-0000-0000-000000000000",
-  "version": "7",
-  "dialect": "postgresql",
   "tables": {
-    "public.file_records": {
-      "name": "file_records",
-      "schema": "",
+    "api_tokens": {
+      "name": "api_tokens",
       "columns": {
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
-          "notNull": true
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         },
-        "deletion_id": {
-          "name": "deletion_id",
+        "name": {
+          "name": "name",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true,
+          "autoincrement": false
         },
-        "view_id": {
-          "name": "view_id",
+        "token_hash": {
+          "name": "token_hash",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true,
+          "autoincrement": false
         },
-        "filename": {
-          "name": "filename",
+        "prefix": {
+          "name": "prefix",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true,
+          "autoincrement": false
         },
-        "path": {
-          "name": "path",
-          "type": "text",
+        "user_id": {
+          "name": "user_id",
+          "type": "int",
           "primaryKey": false,
-          "notNull": false
-        },
-        "size": {
-          "name": "size",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "download_count": {
-          "name": "download_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "deleted": {
-          "name": "deleted",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false
+          "notNull": true,
+          "autoincrement": false
         },
         "created_at": {
           "name": "created_at",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "autoincrement": false
+        },
+        "last_used_at": {
+          "name": "last_used_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         },
         "expires_at": {
           "name": "expires_at",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_api_tokens_token_hash": {
+          "name": "idx_api_tokens_token_hash",
+          "columns": [
+            "token_hash"
+          ],
+          "isUnique": true
+        },
+        "idx_api_tokens_revoked_at": {
+          "name": "idx_api_tokens_revoked_at",
+          "columns": [
+            "revoked_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "api_tokens_id": {
+          "name": "api_tokens_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "file_records": {
+      "name": "file_records",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "deletion_id": {
+          "name": "deletion_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "view_id": {
+          "name": "view_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "filename": {
+          "name": "filename",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "path": {
+          "name": "path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "size": {
+          "name": "size",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "download_count": {
+          "name": "download_count",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "deleted": {
+          "name": "deleted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         },
         "delete_after_download": {
           "name": "delete_after_download",
           "type": "boolean",
           "primaryKey": false,
           "notNull": false,
+          "autoincrement": false,
           "default": false
         }
       },
       "indexes": {},
       "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.mcp_tokens": {
-      "name": "mcp_tokens",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "token_hash": {
-          "name": "token_hash",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "prefix": {
-          "name": "prefix",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_used_at": {
-          "name": "last_used_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "revoked_at": {
-          "name": "revoked_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
+      "compositePrimaryKeys": {
+        "file_records_id": {
+          "name": "file_records_id",
+          "columns": [
+            "id"
+          ]
         }
       },
-      "indexes": {
-        "idx_mcp_tokens_token_hash": {
-          "name": "idx_mcp_tokens_token_hash",
-          "columns": [
-            {
-              "expression": "token_hash",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "idx_mcp_tokens_revoked_at": {
-          "name": "idx_mcp_tokens_revoked_at",
-          "columns": [
-            {
-              "expression": "revoked_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      "checkConstraint": {}
     },
-    "public.users": {
+    "users": {
       "name": "users",
-      "schema": "",
       "columns": {
         "id": {
           "name": "id",
           "type": "serial",
-          "primaryKey": true,
-          "notNull": true
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
         },
         "created_at": {
           "name": "created_at",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "autoincrement": false
         },
         "updated_at": {
           "name": "updated_at",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "autoincrement": false
         },
         "deleted_at": {
           "name": "deleted_at",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "autoincrement": false
         },
         "username": {
           "name": "username",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "autoincrement": false
         },
         "password_hash": {
           "name": "password_hash",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "autoincrement": false
         },
         "role": {
           "name": "role",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "autoincrement": false
         }
       },
       "indexes": {
         "idx_users_username": {
           "name": "idx_users_username",
           "columns": [
-            {
-              "expression": "username",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
+            "username"
           ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
+          "isUnique": true
         },
         "idx_users_deleted_at": {
           "name": "idx_users_deleted_at",
           "columns": [
-            {
-              "expression": "deleted_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
+            "deleted_at"
           ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
+          "isUnique": false
         }
       },
       "foreignKeys": {},
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "users_id": {
+          "name": "users_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      "checkConstraint": {}
     }
   },
-  "enums": {},
-  "schemas": {},
-  "sequences": {},
-  "roles": {},
-  "policies": {},
   "views": {},
   "_meta": {
-    "columns": {},
     "schemas": {},
-    "tables": {}
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {},
+    "indexes": {}
   }
 }

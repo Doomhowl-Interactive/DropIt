@@ -13,8 +13,9 @@ npm run build
 npm run serve               # http://localhost:8080
 ```
 
-A Postgres database is required; the schema is created on boot. For local
-development you can bring one up with `docker compose up postgres`.
+A MySQL database (or TiDB, which speaks the MySQL protocol) is required; the
+schema is created on boot. For local development you can bring one up with
+`docker compose up mysql`.
 
 For development with live reload:
 
@@ -35,7 +36,7 @@ Uploading and the admin console both require that account (`/login`).
 ## Configuration
 
 Everything is environment driven; see [.env.example](.env.example) for the full
-list. Storage is Postgres, at the connection string in `DATABASE_URL`; the
+list. Storage is MySQL/TiDB, at the connection string in `DATABASE_URL`; the
 schema is created on boot.
 
 ## Deploying
@@ -46,10 +47,10 @@ schema is created on boot.
 docker compose up --build
 ```
 
-This also starts a Postgres container; see [docker-compose.yml](docker-compose.yml).
+This also starts a MySQL container; see [docker-compose.yml](docker-compose.yml).
 
 **Fly.io** — see the setup steps at the top of [fly.toml](fly.toml). Attach a
-Fly Postgres (or other managed Postgres) with `fly postgres attach`, which sets
+managed MySQL/TiDB instance with `fly postgres attach` (TiDB) and set
 `DATABASE_URL` as a secret. Uploads live on a mounted volume, so keep the app
 to a single machine.
 

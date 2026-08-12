@@ -14,7 +14,7 @@ export const config = {
   get domain(): string {
     return process.env['DOMAIN'] ?? '';
   },
-  /** Postgres connection string, e.g. postgres://user:pass@host:5432/dropit. */
+  /** MySQL or TiDB connection string, e.g. mysql://user:pass@host:3306/dropit. */
   get databaseUrl(): string {
     return process.env['DATABASE_URL'] || '';
   },

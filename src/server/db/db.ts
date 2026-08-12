@@ -1,17 +1,17 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/mysql2';
+import mysql from 'mysql2/promise';
 import { config } from '../config';
 import * as schema from './schema';
 
-export type Db = ReturnType<typeof drizzle<typeof schema>>;
+export type Db = ReturnType<typeof drizzle<typeof schema, mysql.Pool>>;
 
 export async function connect(): Promise<Db> {
   if (!config.databaseUrl) {
-    throw new Error('DATABASE_URL is required and must be a Postgres connection string');
+    throw new Error('DATABASE_URL is required and must be a MySQL connection string');
   }
 
-  const pool = new Pool({ connectionString: config.databaseUrl });
-  return drizzle(pool, { schema });
+  const pool = mysql.createPool(config.databaseUrl);
+  return drizzle(pool, { schema, mode: 'default' });
 }
 
 export function toDbDate(date: Date): string {

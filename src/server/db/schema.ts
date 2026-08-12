@@ -1,4 +1,4 @@
-import { boolean, index, integer, pgTable, serial, text, uniqueIndex } from 'drizzle-orm/pg-core';
+import { boolean, index, int, mysqlTable, serial, text, uniqueIndex } from 'drizzle-orm/mysql-core';
 
 /**
  * Dates are stored as free-form text rather than a Drizzle timestamp mode:
@@ -6,7 +6,7 @@ import { boolean, index, integer, pgTable, serial, text, uniqueIndex } from 'dri
  * ("2026-08-11 00:39:09.044218258+02:00") that a strict mode can't parse.
  * See `fromDbDate` in ./db.ts for the read-side conversion.
  */
-export const users = pgTable(
+export const users = mysqlTable(
   'users',
   {
     id: serial('id').primaryKey(),
@@ -31,14 +31,14 @@ export const users = pgTable(
  * Only the sha-256 of the secret is stored; `prefix` exists purely so the admin
  * UI can tell two tokens apart after the plaintext is gone.
  */
-export const apiTokens = pgTable(
+export const apiTokens = mysqlTable(
   'api_tokens',
   {
     id: text('id').primaryKey(),
     name: text('name').notNull(),
     tokenHash: text('token_hash').notNull(),
     prefix: text('prefix').notNull(),
-    userId: integer('user_id').notNull(),
+    userId: int('user_id').notNull(),
     createdAt: text('created_at'),
     lastUsedAt: text('last_used_at'),
     expiresAt: text('expires_at'),
@@ -50,14 +50,14 @@ export const apiTokens = pgTable(
   ],
 );
 
-export const fileRecords = pgTable('file_records', {
+export const fileRecords = mysqlTable('file_records', {
   id: text('id').primaryKey(),
   deletionId: text('deletion_id'),
   viewId: text('view_id'),
   filename: text('filename'),
   path: text('path'),
-  size: integer('size'),
-  downloadCount: integer('download_count'),
+  size: int('size'),
+  downloadCount: int('download_count'),
   deleted: boolean('deleted'),
   createdAt: text('created_at'),
   expiresAt: text('expires_at'),

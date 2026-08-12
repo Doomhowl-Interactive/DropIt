@@ -17,7 +17,5 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardPage },
   { path: 'dashboard/tokens', component: ApiTokensPage },
   { path: 'f/:id', component: FileViewPage },
-  { path: 'api/files/view/:id', component: NotFoundPage },
-  { path: 'api/files/download/:id', component: NotFoundPage },
   { path: '**', component: NotFoundPage },
 ];

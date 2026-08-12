@@ -1,19 +1,12 @@
 {
   "version": "7",
-  "dialect": "postgresql",
+  "dialect": "mysql",
   "entries": [
     {
       "idx": 0,
-      "version": "7",
-      "when": 1786469706818,
-      "tag": "0000_lazy_oracle",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1786469800000,
-      "tag": "0001_rename_api_tokens",
+      "version": "5",
+      "when": 1786568284388,
+      "tag": "0000_robust_talon",
       "breakpoints": true
     }
   ]

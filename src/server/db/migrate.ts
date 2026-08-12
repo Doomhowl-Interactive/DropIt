@@ -1,4 +1,4 @@
-import { migrate as runMigrations } from 'drizzle-orm/node-postgres/migrator';
+import { migrate as runMigrations } from 'drizzle-orm/mysql2/migrator';
 import type { Db } from './db';
 
 /** Applies the generated migrations in ../../../drizzle (see drizzle.config.ts). */

@@ -10,7 +10,7 @@ services:
       PORT: 8080
       ADMIN_PASSWORD: ""
 
-      DATABASE_URL: postgres://dropit:dropit@postgres:5432/dropit
+      DATABASE_URL: mysql://dropit:dropit@mysql:3306/dropit
       STORAGE_DIR: ./uploads
 
       DOMAIN: ""
@@ -25,26 +25,27 @@ services:
       - ./uploads:/app/uploads
 
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
 
     restart: unless-stopped
 
-  postgres:
-    image: postgres:18-alpine
-    container_name: dropit-postgres
+  mysql:
+    image: mysql:8.4
+    container_name: dropit-mysql
     environment:
-      POSTGRES_USER: dropit
-      POSTGRES_PASSWORD: dropit
-      POSTGRES_DB: dropit
+      MYSQL_USER: dropit
+      MYSQL_PASSWORD: dropit
+      MYSQL_DATABASE: dropit
+      MYSQL_ROOT_PASSWORD: dropit
     volumes:
-      - dropit-postgres:/var/lib/postgresql/data
+      - dropit-mysql:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dropit"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pdropit"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
     restart: unless-stopped
 
 volumes:
-  dropit-postgres:
+  dropit-mysql:
