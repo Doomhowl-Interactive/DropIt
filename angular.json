@@ -89,6 +89,7 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
+            "runnerConfig": true,
             "coverage": true,
             "coverageInclude": ["src/server/**/*.ts"],
             "coverageExclude": ["src/**/*.spec.ts", "src/testing/**"],

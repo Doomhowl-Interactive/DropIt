@@ -3,23 +3,23 @@ services:
     build: .
     container_name: dropit
     ports:
-      - "8080:8080"
+      - '8080:8080'
 
     environment:
       JWT_SECRET: supersecretkey
       PORT: 8080
-      ADMIN_PASSWORD: ""
+      ADMIN_PASSWORD: ''
 
       DATABASE_URL: mysql://dropit:dropit@mysql:3306/dropit
       STORAGE_DIR: ./uploads
 
-      DOMAIN: ""
-      USE_HTTPS: "false"
+      DOMAIN: ''
+      USE_HTTPS: 'false'
 
       # Comma-separated Host allow-list; "*" accepts anything.
-      ALLOWED_HOSTS: "*"
+      ALLOWED_HOSTS: '*'
       # Set to true when a reverse proxy in front terminates TLS.
-      TRUST_PROXY_HEADERS: "false"
+      TRUST_PROXY_HEADERS: 'false'
 
     volumes:
       - ./uploads:/app/uploads
@@ -41,11 +41,13 @@ services:
     volumes:
       - dropit-mysql:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pdropit"]
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-uroot', '-pdropit']
       interval: 5s
       timeout: 5s
       retries: 10
     restart: unless-stopped
+    ports:
+      - 3306:3306
 
 volumes:
   dropit-mysql:

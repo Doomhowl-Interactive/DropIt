@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import cookieParser from 'cookie-parser';
@@ -297,6 +297,7 @@ describe('file routes', () => {
       ['GET', '/api/files/dashboard/'],
       ['GET', '/api/files/dashboard/export'],
       ['POST', '/api/files/dashboard/import'],
+      ['POST', '/api/files/dashboard/orphans'],
     ])('%s %s requires an admin', async (method, path) => {
       expect((await server.fetch(path, { method })).status).toBe(401);
       expect((await server.fetch(path, { method, headers: user() })).status).toBe(403);
@@ -417,6 +418,64 @@ describe('file routes', () => {
 
           expect(response.status).toBe(500);
           await expect(response.json()).resolves.toEqual({ error: 'database is locked' });
+        } finally {
+          await failing.close();
+        }
+      });
+    });
+
+    describe('POST /dashboard/orphans', () => {
+      const dropOrphan = (folderId = 'orphan-1', filename = 'stray.bin') => {
+        mkdirSync(join(storageDir, folderId), { recursive: true });
+        writeFileSync(join(storageDir, folderId, filename), 'stray bytes');
+      };
+
+      it('registers loose folders and redirects back to the console', async () => {
+        dropOrphan();
+
+        const response = await server.fetch('/api/files/dashboard/orphans', {
+          method: 'POST',
+          headers: admin(),
+        });
+
+        expect(response.status).toBe(303);
+        expect(response.headers.get('location')).toBe('/dashboard');
+        await expect(repo.getById('orphan-1')).resolves.toMatchObject({
+          filename: 'stray.bin',
+          path: join(storageDir, 'orphan-1', 'stray.bin'),
+        });
+      });
+
+      it('redirects even when there is nothing to add', async () => {
+        const response = await server.fetch('/api/files/dashboard/orphans', {
+          method: 'POST',
+          headers: admin(),
+        });
+
+        expect(response.status).toBe(303);
+        expect(response.headers.get('location')).toBe('/dashboard');
+        await expect(repo.getAll()).resolves.toEqual([]);
+      });
+
+      it('answers 500 when the scan fails', async () => {
+        const broken = Object.create(files) as FileService;
+        Object.defineProperty(broken, 'addOrphans', {
+          value: () => Promise.reject(new Error('disk is read-only')),
+        });
+
+        const app = express();
+        app.use(cookieParser());
+        app.use('/api/files', fileRoutes(broken, render));
+        const failing = await listen(app);
+
+        try {
+          const response = await failing.fetch('/api/files/dashboard/orphans', {
+            method: 'POST',
+            headers: admin(),
+          });
+
+          expect(response.status).toBe(500);
+          await expect(response.json()).resolves.toEqual({ error: 'disk is read-only' });
         } finally {
           await failing.close();
         }

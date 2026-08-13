@@ -183,10 +183,7 @@ describe('auth routes', () => {
         'auth_token',
       );
 
-      const response = await changePassword(
-        { oldPassword: 'Hunter2!x', newPassword: 'NewPass1!x' },
-        token,
-      );
+      const response = await changePassword({ newPassword: 'NewPass1!x' }, token);
 
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toEqual({ message: 'password changed' });
@@ -196,44 +193,22 @@ describe('auth routes', () => {
       expect((await login({ username: 'bram', password: 'NewPass1!x' })).status).toBe(200);
     });
 
-    it('answers 400 when the old password is wrong', async () => {
-      const token = cookieValue(
-        await login({ username: 'bram', password: 'Hunter2!x' }),
-        'auth_token',
-      );
-
-      const response = await changePassword(
-        { oldPassword: 'wrong', newPassword: 'NewPass1!x' },
-        token,
-      );
-
-      expect(response.status).toBe(400);
-      await expect(response.json()).resolves.toEqual({ error: 'Old password is incorrect' });
-    });
-
     it('answers 400 for a weak new password', async () => {
       const token = cookieValue(
         await login({ username: 'bram', password: 'Hunter2!x' }),
         'auth_token',
       );
 
-      const response = await changePassword(
-        { oldPassword: 'Hunter2!x', newPassword: 'short' },
-        token,
-      );
+      const response = await changePassword({ newPassword: 'short' }, token);
 
       expect(response.status).toBe(400);
       await expect(response.json()).resolves.toEqual({ error: 'New password is invalid' });
     });
 
     it.each([
-      ['a missing oldPassword', { newPassword: 'NewPass1!x' }],
-      ['a missing newPassword', { oldPassword: 'Hunter2!x' }],
-      ['an empty oldPassword', { oldPassword: '', newPassword: 'NewPass1!x' }],
-      ['an empty newPassword', { oldPassword: 'Hunter2!x', newPassword: '' }],
-      ['a non-string oldPassword', { oldPassword: 42, newPassword: 'NewPass1!x' }],
-      ['a non-string newPassword', { oldPassword: 'Hunter2!x', newPassword: null }],
-      ['an empty body', {}],
+      ['a missing newPassword', {}],
+      ['an empty newPassword', { newPassword: '' }],
+      ['a non-string newPassword', { newPassword: null }],
     ])('answers 400 for %s', async (_label, body) => {
       const token = cookieValue(
         await login({ username: 'bram', password: 'Hunter2!x' }),
@@ -247,9 +222,7 @@ describe('auth routes', () => {
     });
 
     it('answers 401 without a token', async () => {
-      expect(
-        (await changePassword({ oldPassword: 'Hunter2!x', newPassword: 'NewPass1!x' })).status,
-      ).toBe(401);
+      expect((await changePassword({ newPassword: 'NewPass1!x' })).status).toBe(401);
     });
   });
 });

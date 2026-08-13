@@ -1,7 +1,6 @@
 import { checkPassword } from '../security/password';
 import {
   InvalidPasswordError,
-  PasswordsDoNotMatchError,
   UserNotFoundError,
   type UserService,
 } from '../users/service';
@@ -31,13 +30,9 @@ export class AuthService {
     return generateJwt(String(user.id), user.username, user.role);
   }
 
-  async changePassword(
-    userId: string | number,
-    oldPassword: string,
-    newPassword: string,
-  ): Promise<void> {
-    await this.users.changePassword(userId, oldPassword, newPassword);
+  async changePassword(userId: string | number, newPassword: string): Promise<void> {
+    await this.users.changePassword(userId, newPassword);
   }
 }
 
-export { InvalidPasswordError, PasswordsDoNotMatchError };
+export { InvalidPasswordError };

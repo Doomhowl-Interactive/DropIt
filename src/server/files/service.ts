@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, rmSync } from 'node:fs';
+import { mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { FileNotFoundError, FileRepository, type FileRecord } from './repository';
 import type { ImportFileRecord } from '../../shared/types';
@@ -133,6 +133,44 @@ export class FileService {
         deleteAfterDownload: Boolean(incoming.delete_after_download),
       });
     }
+  }
+
+  /**
+   * Registers folders that hold bytes on disk but no database row — leftovers
+   * of an interrupted upload. Returns how many orphans were picked up.
+   */
+  async addOrphans(): Promise<number> {
+    const entries = readdirSync(this.storageDir, { withFileTypes: true });
+    let added = 0;
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      if (await this.repo.getById(entry.name).catch(() => null)) continue;
+
+      const dir = join(this.storageDir, entry.name);
+      const child = readdirSync(dir, { withFileTypes: true }).find((c) => c.isFile());
+      if (!child) continue;
+
+      const path = join(dir, child.name);
+      const stats = statSync(path);
+
+      await this.repo.create({
+        id: entry.name,
+        deletionId: randomUUID(),
+        viewId: randomUUID(),
+        filename: child.name,
+        path,
+        size: stats.size,
+        downloadCount: 0,
+        deleted: false,
+        createdAt: stats.mtime,
+        expiresAt: null,
+        deleteAfterDownload: false,
+      });
+      added += 1;
+    }
+
+    return added;
   }
 
   private buildPath(id: string, filename: string): string {

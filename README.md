@@ -47,6 +47,12 @@ schema is created on boot.
 docker compose up --build
 ```
 
+Development command:
+
+```bash
+JWT_SECRET="secret" DATABASE_URL='mysql://dropit:dropit@localhost:3306/dropit' npm run start
+```
+
 This also starts a MySQL container; see [docker-compose.yml](docker-compose.yml).
 
 **Fly.io** — see the setup steps at the top of [fly.toml](fly.toml). Attach a
@@ -96,6 +102,7 @@ render the same markup without a second round trip. See
 | GET  | `/api/files/dashboard/`              | Lists all file records (admin)                           |
 | GET  | `/api/files/dashboard/export`        | Exports all file records (admin)                         |
 | POST | `/api/files/dashboard/import`        | Imports file records (admin)                             |
+| POST | `/api/files/dashboard/orphans`       | Registers loose files on disk, then redirects (admin)    |
 | POST | `/api/files/dashboard/delete/:id`    | Soft-deletes a file and redirects to `/dashboard`        |
 | POST | `/api/files/dashboard/delete/fr/:id` | Permanently deletes a file and redirects to `/dashboard` |
 | GET  | `/api/files/dashboard/download/:id`  | Streams an admin file by database ID (admin)             |

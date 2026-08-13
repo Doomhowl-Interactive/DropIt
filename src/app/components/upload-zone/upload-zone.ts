@@ -2,7 +2,6 @@ import { Component, DOCUMENT, inject, signal, viewChild, type ElementRef } from 
 import { ButtonModule } from 'primeng/button';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { formatBytes, formatTime } from '../../utils/format';
-import { readCsrfToken } from '../../utils/csrf';
 import { UploadResponseSchema } from '../../../shared/types';
 
 @Component({
@@ -101,8 +100,6 @@ export class UploadZone {
     };
 
     request.open('POST', '/api/files/upload');
-    const csrf = readCsrfToken(this.document);
-    if (csrf) request.setRequestHeader('X-CSRF-Token', csrf);
     request.send(form);
   }
 

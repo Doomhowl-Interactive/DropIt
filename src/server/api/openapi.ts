@@ -144,10 +144,9 @@ export const openapiSpec = {
               schema: {
                 type: 'object',
                 properties: {
-                  oldPassword: { type: 'string' },
                   newPassword: { type: 'string' },
                 },
-                required: ['oldPassword', 'newPassword'],
+                required: ['newPassword'],
               },
             },
           },
@@ -164,7 +163,7 @@ export const openapiSpec = {
               },
             },
           },
-          '400': { description: 'Invalid request body, invalid new password, or wrong old password' },
+          '400': { description: 'Invalid request body or invalid new password' },
           '401': { description: 'Unauthorized' },
         },
       },
@@ -311,6 +310,18 @@ export const openapiSpec = {
             },
           },
           '400': { description: 'Invalid JSON' },
+          '401': { description: 'Unauthorized' },
+          '403': { description: 'Forbidden' },
+          '500': { description: 'Server error' },
+        },
+      },
+    },
+    '/files/dashboard/orphans': {
+      post: {
+        tags: ['files-dashboard'],
+        summary: 'Register loose files on disk that are missing from the database, then redirect to /dashboard',
+        responses: {
+          '303': { description: 'Redirect to /dashboard' },
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
           '500': { description: 'Server error' },

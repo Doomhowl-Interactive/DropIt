@@ -8,13 +8,6 @@ export class InvalidPasswordError extends Error {
   }
 }
 
-export class PasswordsDoNotMatchError extends Error {
-  constructor() {
-    super('Incorrect old password');
-    this.name = 'PasswordsDoNotMatchError';
-  }
-}
-
 export class CannotDeleteSelfError extends Error {
   constructor() {
     super('cannot delete yourself');
@@ -22,9 +15,8 @@ export class CannotDeleteSelfError extends Error {
   }
 }
 
-/** At least 8 characters with an upper, a lower and a digit — and not the old one. */
-function validNewPassword(oldPassword: string, newPassword: string): boolean {
-  if (oldPassword === newPassword) return false;
+/** At least 8 characters with an upper, a lower and a digit. */
+function validNewPassword(newPassword: string): boolean {
   if (newPassword.length < 8) return false;
 
   return /[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword) && /[0-9]/.test(newPassword);
@@ -46,18 +38,14 @@ export class UserService {
     return user;
   }
 
-  async changePassword(
-    userId: string | number,
-    oldPassword: string,
-    newPassword: string,
-  ): Promise<void> {
+  async changePassword(userId: string | number, newPassword: string): Promise<void> {
     const user = await this.repo.findById(userId);
 
-    if (!validNewPassword(oldPassword, newPassword)) {
+    if (!validNewPassword(newPassword)) {
       throw new InvalidPasswordError();
     }
-    if (!(await checkPassword(oldPassword, user.passwordHash))) {
-      throw new PasswordsDoNotMatchError();
+    if (await checkPassword(newPassword, user.passwordHash)) {
+      throw new InvalidPasswordError();
     }
 
     user.passwordHash = await hashPassword(newPassword);

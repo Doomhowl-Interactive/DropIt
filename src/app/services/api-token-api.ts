@@ -13,10 +13,9 @@ import {
 const BASE = '/api/tokens';
 
 /**
- * Talks to the API token endpoints. The CSRF header is attached by Angular's
- * XSRF interceptor (configured in app.config.ts), so nothing here handles it.
- * Every response is validated against the same Zod schema the server used to
- * build it, so a shape mismatch surfaces here instead of downstream.
+ * Talks to the API token endpoints. Every response is validated against the
+ * same Zod schema the server used to build it, so a shape mismatch surfaces
+ * here instead of downstream.
  */
 @Injectable({ providedIn: 'root' })
 export class ApiTokenApi {

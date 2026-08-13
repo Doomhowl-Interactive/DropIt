@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -306,5 +306,88 @@ describe('FileService', () => {
   it('reuses an existing storage directory rather than failing', () => {
     mkdirSync(storageDir, { recursive: true });
     expect(() => new FileService(repo, storageDir)).not.toThrow();
+  });
+
+  describe('addOrphans', () => {
+    const dropOrphan = (
+      folderId = 'orphan-1',
+      filename = 'stray.bin',
+      contents = 'stray bytes',
+    ) => {
+      const dir = join(storageDir, folderId);
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, filename), contents);
+    };
+
+    it('registers a loose folder that has no database row', async () => {
+      dropOrphan();
+
+      await expect(service.addOrphans()).resolves.toBe(1);
+
+      const record = await repo.getById('orphan-1');
+      expect(record).toMatchObject({
+        filename: 'stray.bin',
+        path: join(storageDir, 'orphan-1', 'stray.bin'),
+        size: 'stray bytes'.length,
+        downloadCount: 0,
+        deleted: false,
+        expiresAt: null,
+        deleteAfterDownload: false,
+      });
+      expect(record.deletionId).toMatch(UUID);
+      expect(record.viewId).toMatch(UUID);
+    });
+
+    it('registers several orphans and reports the count', async () => {
+      dropOrphan('orphan-1');
+      dropOrphan('orphan-2', 'other.bin');
+
+      await expect(service.addOrphans()).resolves.toBe(2);
+      await expect(repo.getAll()).resolves.toHaveLength(2);
+    });
+
+    it('takes the file modification time as the creation date', async () => {
+      dropOrphan();
+      const when = new Date('2026-07-01T12:00:00.000Z');
+      utimesSync(join(storageDir, 'orphan-1', 'stray.bin'), when, when);
+
+      await service.addOrphans();
+
+      await expect(repo.getById('orphan-1')).resolves.toMatchObject({ createdAt: when });
+    });
+
+    it('skips folders that already have a record', async () => {
+      const { id } = await register();
+      dropOrphan(id);
+
+      await expect(service.addOrphans()).resolves.toBe(0);
+    });
+
+    it('leaves registered folders alone while importing others', async () => {
+      await register();
+      dropOrphan('orphan-1');
+
+      await expect(service.addOrphans()).resolves.toBe(1);
+      await expect(repo.getAll()).resolves.toHaveLength(2);
+    });
+
+    it('ignores loose files directly under the storage root', async () => {
+      writeFileSync(join(storageDir, 'loose.txt'), 'nope');
+
+      await expect(service.addOrphans()).resolves.toBe(0);
+    });
+
+    it('ignores empty directories', async () => {
+      mkdirSync(join(storageDir, 'empty'), { recursive: true });
+
+      await expect(service.addOrphans()).resolves.toBe(0);
+    });
+
+    it('is idempotent — a second run adds nothing', async () => {
+      dropOrphan();
+
+      await expect(service.addOrphans()).resolves.toBe(1);
+      await expect(service.addOrphans()).resolves.toBe(0);
+    });
   });
 });

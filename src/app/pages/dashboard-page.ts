@@ -1,4 +1,4 @@
-import { Component, DOCUMENT, afterNextRender, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
@@ -6,7 +6,6 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { PageDataService, usePage } from '../utils/page';
-import { readCsrfToken } from '../utils/csrf';
 import type { DashboardPageData } from '../utils/page-context';
 import { UploadZone } from '../components/upload-zone/upload-zone';
 
@@ -27,7 +26,6 @@ const EMPTY: DashboardPageData = { files: [], page: 1, totalPages: 0 };
   ],
 })
 export class DashboardPage {
-  private readonly document = inject(DOCUMENT);
   private readonly context = inject(PageDataService).context;
 
   private readonly data = computed<DashboardPageData>(() =>
@@ -37,9 +35,6 @@ export class DashboardPage {
   protected readonly files = computed(() => this.data().files);
   protected readonly page = computed(() => this.data().page);
   protected readonly totalPages = computed(() => this.data().totalPages);
-
-  /** Double-submit token, read from the cookie once we are in the browser. */
-  protected readonly csrf = signal('');
 
   protected readonly modalOpen = signal(false);
   protected readonly modalTitle = signal('CONFIRM_WIPE');
@@ -51,7 +46,6 @@ export class DashboardPage {
 
   constructor() {
     usePage({ title: 'Dashboard', bodyClass: 'min-h-screen p-4' });
-    afterNextRender(() => this.csrf.set(readCsrfToken(this.document)));
   }
 
   /** Holds the submit back until the operator confirms in the modal. */
