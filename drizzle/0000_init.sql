@@ -1,21 +1,21 @@
 CREATE TABLE `api_tokens` (
-	`id` text NOT NULL,
-	`name` text NOT NULL,
-	`token_hash` text NOT NULL,
-	`prefix` text NOT NULL,
+	`id` varchar(36) NOT NULL,
+	`name` varchar(255) NOT NULL,
+	`token_hash` varchar(64) NOT NULL,
+	`prefix` varchar(32) NOT NULL,
 	`user_id` int NOT NULL,
 	`created_at` text,
 	`last_used_at` text,
 	`expires_at` text,
-	`revoked_at` text,
+	`revoked_at` varchar(64),
 	CONSTRAINT `api_tokens_id` PRIMARY KEY(`id`),
 	CONSTRAINT `idx_api_tokens_token_hash` UNIQUE(`token_hash`)
 );
 --> statement-breakpoint
 CREATE TABLE `file_records` (
-	`id` text NOT NULL,
-	`deletion_id` text,
-	`view_id` text,
+	`id` varchar(64) NOT NULL,
+	`deletion_id` varchar(64),
+	`view_id` varchar(64),
 	`filename` text,
 	`path` text,
 	`size` int,
@@ -31,10 +31,10 @@ CREATE TABLE `users` (
 	`id` serial AUTO_INCREMENT NOT NULL,
 	`created_at` text,
 	`updated_at` text,
-	`deleted_at` text,
-	`username` text NOT NULL,
+	`deleted_at` varchar(64),
+	`username` varchar(255) NOT NULL,
 	`password_hash` text NOT NULL,
-	`role` text NOT NULL,
+	`role` varchar(32) NOT NULL,
 	CONSTRAINT `users_id` PRIMARY KEY(`id`),
 	CONSTRAINT `idx_users_username` UNIQUE(`username`)
 );

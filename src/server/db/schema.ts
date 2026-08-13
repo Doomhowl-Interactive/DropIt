@@ -1,10 +1,22 @@
-import { boolean, index, int, mysqlTable, serial, text, uniqueIndex } from 'drizzle-orm/mysql-core';
+import {
+  boolean,
+  index,
+  int,
+  mysqlTable,
+  serial,
+  text,
+  uniqueIndex,
+  varchar,
+} from 'drizzle-orm/mysql-core';
 
 /**
  * Dates are stored as free-form text rather than a Drizzle timestamp mode:
  * the table predates this app and also holds GORM-formatted strings
  * ("2026-08-11 00:39:09.044218258+02:00") that a strict mode can't parse.
  * See `fromDbDate` in ./db.ts for the read-side conversion.
+ *
+ * Indexed string columns use varchar: MySQL rejects TEXT in PRIMARY KEY /
+ * UNIQUE / INDEX without an explicit prefix length (ER_BLOB_KEY_WITHOUT_LENGTH).
  */
 export const users = mysqlTable(
   'users',
@@ -12,10 +24,10 @@ export const users = mysqlTable(
     id: serial('id').primaryKey(),
     createdAt: text('created_at'),
     updatedAt: text('updated_at'),
-    deletedAt: text('deleted_at'),
-    username: text('username').notNull(),
+    deletedAt: varchar('deleted_at', { length: 64 }),
+    username: varchar('username', { length: 255 }).notNull(),
     passwordHash: text('password_hash').notNull(),
-    role: text('role').notNull(),
+    role: varchar('role', { length: 32 }).notNull(),
   },
   (table) => [
     uniqueIndex('idx_users_username').on(table.username),
@@ -34,15 +46,15 @@ export const users = mysqlTable(
 export const apiTokens = mysqlTable(
   'api_tokens',
   {
-    id: text('id').primaryKey(),
-    name: text('name').notNull(),
-    tokenHash: text('token_hash').notNull(),
-    prefix: text('prefix').notNull(),
+    id: varchar('id', { length: 36 }).primaryKey(),
+    name: varchar('name', { length: 255 }).notNull(),
+    tokenHash: varchar('token_hash', { length: 64 }).notNull(),
+    prefix: varchar('prefix', { length: 32 }).notNull(),
     userId: int('user_id').notNull(),
     createdAt: text('created_at'),
     lastUsedAt: text('last_used_at'),
     expiresAt: text('expires_at'),
-    revokedAt: text('revoked_at'),
+    revokedAt: varchar('revoked_at', { length: 64 }),
   },
   (table) => [
     uniqueIndex('idx_api_tokens_token_hash').on(table.tokenHash),
@@ -51,9 +63,9 @@ export const apiTokens = mysqlTable(
 );
 
 export const fileRecords = mysqlTable('file_records', {
-  id: text('id').primaryKey(),
-  deletionId: text('deletion_id'),
-  viewId: text('view_id'),
+  id: varchar('id', { length: 64 }).primaryKey(),
+  deletionId: varchar('deletion_id', { length: 64 }),
+  viewId: varchar('view_id', { length: 64 }),
   filename: text('filename'),
   path: text('path'),
   size: int('size'),
