@@ -1,4 +1,4 @@
-import type { ApiTokenRow } from '../../app/utils/page-context';
+import type { ApiTokenRow } from '../../shared/types';
 import { formatTimestamp } from '../util';
 import type { ApiToken, ApiTokenService } from './service';
 

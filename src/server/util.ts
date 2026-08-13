@@ -1,3 +1,24 @@
+import type { Response } from 'express';
+import type { z } from 'zod';
+
+/**
+ * Validates a request body against `schema`. On failure, sends a 400 with
+ * `errorMessage` and returns `undefined` so the caller can bail out with a
+ * plain `if (!body) return;`.
+ */
+export function parseBody<Schema extends z.ZodType>(
+  res: Response,
+  schema: Schema,
+  body: unknown,
+  errorMessage = 'Invalid request body',
+): z.infer<Schema> | undefined {
+  const result = schema.safeParse(body);
+  if (result.success) return result.data;
+
+  res.status(400).json({ error: errorMessage });
+  return undefined;
+}
+
 /** 1024-based size, one decimal — e.g. `530.2 KB`. */
 export function humanSize(size: number): string {
   const unit = 1024;
