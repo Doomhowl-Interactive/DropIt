@@ -37,7 +37,9 @@
               "express",
               "@modelcontextprotocol/sdk",
               "@modelcontextprotocol/sdk/*",
-              "zod"
+              "zod",
+              "swagger-ui-express",
+              "swagger-ui-dist"
             ],
             "server": "src/main.server.ts",
             "outputMode": "server",

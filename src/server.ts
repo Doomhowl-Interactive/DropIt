@@ -4,10 +4,12 @@ import express, { type Express, type NextFunction, type Request, type Response }
 import { existsSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { join, resolve } from 'node:path';
+import swaggerUi from 'swagger-ui-express';
 
 import { authRoutes } from './server/api/auth.routes';
 import { fileRoutes } from './server/api/files.routes';
 import { tokenRoutes } from './server/api/tokens.routes';
+import { openapiSpec } from './server/api/openapi';
 import { AuthService } from './server/auth/service';
 import { createAdminUser } from './server/bootstrap';
 import { config } from './server/config';
@@ -102,6 +104,9 @@ async function createApp(): Promise<Express> {
   api.use('/auth', authRoutes(auth, authDeps));
   api.use('/files', fileRoutes(files, render, authDeps));
   api.use('/tokens', tokenRoutes(apiTokens, authDeps));
+  api.get('/openapi.json', (_req, res) => res.json(openapiSpec));
+  api.use('/', swaggerUi.serve, swaggerUi.setup(openapiSpec));
+
   app.use('/api', api);
 
   app.use(webRoutes(files, apiTokens, render, authDeps));

@@ -83,6 +83,8 @@ render the same markup without a second round trip. See
 | GET  | `/login`                             | Admin sign-in page                                       |
 | GET  | `/dashboard?page=N`                  | Paginated file console (admin)                           |
 | GET  | `/logout`                            | Clears the session and redirects to `/` (admin)          |
+| GET  | `/api`                               | Swagger UI for the API                                   |
+| GET  | `/api/openapi.json`                  | Raw OpenAPI spec                                         |
 | POST | `/api/auth/login`                    | Authenticates a user and sets the auth cookie            |
 | GET  | `/api/auth/me`                       | Returns the authenticated user's ID and role             |
 | GET  | `/api/auth/admin-check`              | Checks that the authenticated user is an admin           |
