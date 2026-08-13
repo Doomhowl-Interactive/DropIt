@@ -144,21 +144,25 @@ export class FileService {
     let added = 0;
 
     for (const entry of entries) {
-      if (!entry.isDirectory()) continue;
-      if (await this.repo.getById(entry.name).catch(() => null)) continue;
+      console.log(`Checking if orphan: ${entry.name}`);
 
-      const dir = join(this.storageDir, entry.name);
-      const child = readdirSync(dir, { withFileTypes: true }).find((c) => c.isFile());
-      if (!child) continue;
+      if (!entry.isFile()) {
+        continue;
+      }
 
-      const path = join(dir, child.name);
+      if (await this.repo.getByIdOrNull(entry.name).catch((e) => console.error(e))) {
+        console.log(`Skipping ${entry.name} because it already exists in the database`);
+        continue;
+      }
+
+      const path = join(this.storageDir, entry.name);
       const stats = statSync(path);
 
       await this.repo.create({
         id: entry.name,
         deletionId: randomUUID(),
         viewId: randomUUID(),
-        filename: child.name,
+        filename: entry.name,
         path,
         size: stats.size,
         downloadCount: 0,
