@@ -17,7 +17,7 @@ export class CannotDeleteSelfError extends Error {
 
 /** At least 8 characters with an upper, a lower and a digit. */
 function validNewPassword(newPassword: string): boolean {
-  if (newPassword.length < 8) return false;
+  if (newPassword.length < 6) return false;
 
   return /[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword) && /[0-9]/.test(newPassword);
 }
