@@ -7,6 +7,7 @@ const KEYS = [
   'USE_HTTPS',
   'DOMAIN',
   'DATABASE_URL',
+  'DATABASE_SSL_CA',
   'STORAGE_DIR',
   'STATIC_DIR',
 ] as const;
@@ -32,6 +33,7 @@ describe('config', () => {
     expect(config.useHttps).toBe(false);
     expect(config.domain).toBe('');
     expect(config.databaseUrl).toBe('');
+    expect(config.databaseSslCa).toBe('');
     expect(config.storageDir).toBe('./uploads');
     expect(config.staticDir).toBe('./static');
   });
@@ -42,6 +44,7 @@ describe('config', () => {
     process.env['USE_HTTPS'] = 'true';
     process.env['DOMAIN'] = 'drop.example';
     process.env['DATABASE_URL'] = '/var/lib/dropit.db';
+    process.env['DATABASE_SSL_CA'] = '/etc/ssl/tidb-ca.pem';
     process.env['STORAGE_DIR'] = '/var/lib/uploads';
     process.env['STATIC_DIR'] = '/srv/static';
 
@@ -50,6 +53,7 @@ describe('config', () => {
     expect(config.useHttps).toBe(true);
     expect(config.domain).toBe('drop.example');
     expect(config.databaseUrl).toBe('/var/lib/dropit.db');
+    expect(config.databaseSslCa).toBe('/etc/ssl/tidb-ca.pem');
     expect(config.storageDir).toBe('/var/lib/uploads');
     expect(config.staticDir).toBe('/srv/static');
   });

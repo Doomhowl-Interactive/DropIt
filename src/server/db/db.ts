@@ -1,5 +1,6 @@
 import { drizzle } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
+import { readFileSync } from 'node:fs';
 import { config } from '../config';
 import * as schema from './schema';
 
@@ -10,7 +11,16 @@ export async function connect(): Promise<Db> {
     throw new Error('DATABASE_URL is required and must be a MySQL connection string');
   }
 
-  const pool = mysql.createPool(config.databaseUrl);
+  const pool = config.databaseSslCa
+    ? mysql.createPool({
+        uri: config.databaseUrl,
+        ssl: {
+          ca: readFileSync(config.databaseSslCa),
+          rejectUnauthorized: true,
+          verifyIdentity: true,
+        },
+      })
+    : mysql.createPool(config.databaseUrl);
   return drizzle(pool, { schema, mode: 'default' });
 }
 

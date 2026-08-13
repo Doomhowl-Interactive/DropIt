@@ -18,6 +18,10 @@ export const config = {
   get databaseUrl(): string {
     return process.env['DATABASE_URL'] || '';
   },
+  /** Optional PEM CA certificate path for verified MySQL/TiDB TLS. */
+  get databaseSslCa(): string {
+    return process.env['DATABASE_SSL_CA'] || '';
+  },
   get storageDir(): string {
     return process.env['STORAGE_DIR'] || './uploads';
   },
