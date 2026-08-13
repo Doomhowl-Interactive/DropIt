@@ -29,7 +29,6 @@
             ],
             "styles": ["src/styles.css"],
             "externalDependencies": [
-              "better-sqlite3",
               "multer",
               "bcryptjs",
               "jsonwebtoken",
@@ -37,9 +36,7 @@
               "express",
               "@modelcontextprotocol/sdk",
               "@modelcontextprotocol/sdk/*",
-              "zod",
-              "swagger-ui-express",
-              "swagger-ui-dist"
+              "swagger-ui-express"
             ],
             "server": "src/main.server.ts",
             "outputMode": "server",
