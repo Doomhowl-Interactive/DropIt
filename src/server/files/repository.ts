@@ -68,7 +68,17 @@ export class FileRepository {
 
   async getById(id: string): Promise<FileRecord> {
     const [row] = await this.db.select().from(fileRecords).where(eq(fileRecords.id, id));
-    if (!row) throw new FileNotFoundError();
+    if (!row) {
+      throw new FileNotFoundError();
+    }
+    return mapRow(row);
+  }
+
+  async getByIdOrNull(id: string): Promise<FileRecord | null> {
+    const [row] = await this.db.select().from(fileRecords).where(eq(fileRecords.id, id));
+    if (!row) {
+      return null;
+    }
     return mapRow(row);
   }
 
