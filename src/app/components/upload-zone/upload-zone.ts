@@ -3,6 +3,7 @@ import { ButtonModule } from 'primeng/button';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { formatBytes, formatTime } from '../../utils/format';
 import { readCsrfToken } from '../../utils/csrf';
+import { UploadResponseSchema } from '../../../shared/types';
 
 @Component({
   selector: 'app-upload-zone',
@@ -78,8 +79,7 @@ export class UploadZone {
     request.onload = () => {
       if (request.status >= 200 && request.status < 300) {
         try {
-          const data = JSON.parse(request.responseText);
-          if (data.error) throw new Error(data.error);
+          const data = UploadResponseSchema.parse(JSON.parse(request.responseText));
 
           // Hand off to the shareable view page.
           this.document.location.href = `/f/${data.view_key}`;

@@ -3,10 +3,33 @@ import { extname, resolve } from 'node:path';
 import { Router, type Request, type Response } from 'express';
 import multer from 'multer';
 import { authMiddleware, requireRole, type AuthDeps } from '../middleware/auth';
-import { param, safeFilename } from '../util';
+import { param, parseBody, safeFilename } from '../util';
 import type { FileService } from '../files/service';
 import type { FileRecord } from '../files/repository';
 import type { RenderPage } from '../render';
+import {
+  FileExportResponseSchema,
+  ImportRequestSchema,
+  ImportResponseSchema,
+  UploadResponseSchema,
+  type FileExportRecord,
+} from '../../shared/types';
+
+/** Maps a stored record to the shape the JSON API is willing to expose — the on-disk `path` never leaves the server. */
+function toExportRecord(file: FileRecord): FileExportRecord {
+  return {
+    id: file.id,
+    deletionId: file.deletionId,
+    viewId: file.viewId,
+    filename: file.filename,
+    size: file.size,
+    downloadCount: file.downloadCount,
+    deleted: file.deleted,
+    createdAt: file.createdAt.toISOString(),
+    expiresAt: file.expiresAt ? file.expiresAt.toISOString() : null,
+    deleteAfterDownload: file.deleteAfterDownload,
+  };
+}
 
 interface UploadRequest extends Request {
   uploadFolderId?: string;
@@ -82,13 +105,15 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
           expiresAt,
         });
 
-        res.json({
-          id: record.id,
-          deletion_id: record.deletionId,
-          filename: record.filename,
-          size: record.size,
-          view_key: record.viewId,
-        });
+        res.json(
+          UploadResponseSchema.parse({
+            id: record.id,
+            deletion_id: record.deletionId,
+            filename: record.filename,
+            size: record.size,
+            view_key: record.viewId,
+          }),
+        );
       } catch (err) {
         res.status(500).json({ error: (err as Error).message });
       }
@@ -113,30 +138,25 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
   const dashboard = Router();
   dashboard.use(authMiddleware(auth), requireRole('admin'));
 
-  dashboard.get('/', async (_req, res) => {
+  const listAll = async (_req: Request, res: Response): Promise<void> => {
     try {
-      res.json(await files.getAllFiles());
+      const records = await files.getAllFiles();
+      res.json(FileExportResponseSchema.parse(records.map(toExportRecord)));
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }
-  });
+  };
 
-  dashboard.get('/export', async (_req, res) => {
-    try {
-      res.json(await files.getAllFiles());
-    } catch (err) {
-      res.status(500).json({ error: (err as Error).message });
-    }
-  });
+  dashboard.get('/', listAll);
+  dashboard.get('/export', listAll);
 
   dashboard.post('/import', async (req, res) => {
-    if (!Array.isArray(req.body)) {
-      res.status(400).json({ error: 'invalid JSON' });
-      return;
-    }
+    const records = parseBody(res, ImportRequestSchema, req.body, 'invalid JSON');
+    if (!records) return;
+
     try {
-      await files.importFiles(req.body);
-      res.json({ imported: req.body.length });
+      await files.importFiles(records);
+      res.json(ImportResponseSchema.parse({ imported: records.length }));
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }

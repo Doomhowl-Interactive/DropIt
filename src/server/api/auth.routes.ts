@@ -2,16 +2,23 @@ import { Router } from 'express';
 import { config } from '../config';
 import { authMiddleware, requireRole, type AuthDeps } from '../middleware/auth';
 import { InvalidPasswordError, PasswordsDoNotMatchError, type AuthService } from '../auth/service';
+import { parseBody } from '../util';
+import {
+  AdminCheckResponseSchema,
+  ChangePasswordRequestSchema,
+  ChangePasswordResponseSchema,
+  LoginRequestSchema,
+  LoginResponseSchema,
+  MeResponseSchema,
+} from '../../shared/types';
 
 export function authRoutes(auth: AuthService, authDeps: AuthDeps = {}): Router {
   const router = Router();
 
   router.post('/login', async (req, res) => {
-    const { username, password } = req.body ?? {};
-    if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
-      res.status(400).json({ error: 'Invalid request body' });
-      return;
-    }
+    const body = parseBody(res, LoginRequestSchema, req.body);
+    if (!body) return;
+    const { username, password } = body;
 
     let token: string;
     try {
@@ -31,31 +38,24 @@ export function authRoutes(auth: AuthService, authDeps: AuthDeps = {}): Router {
       sameSite: 'strict',
     });
 
-    res.json({ token });
+    res.json(LoginResponseSchema.parse({ token }));
   });
 
   const protectedRoutes = Router();
   protectedRoutes.use(authMiddleware(authDeps));
 
   protectedRoutes.get('/me', (req, res) => {
-    res.json({ user_id: req.auth?.userId, role: req.auth?.role });
+    res.json(MeResponseSchema.parse({ user_id: req.auth?.userId, role: req.auth?.role }));
   });
 
   protectedRoutes.get('/admin-check', requireRole('admin'), (_req, res) => {
-    res.json({ message: 'you are an admin' });
+    res.json(AdminCheckResponseSchema.parse({ message: 'you are an admin' }));
   });
 
   protectedRoutes.post('/change-password', async (req, res) => {
-    const { oldPassword, newPassword } = req.body ?? {};
-    if (
-      typeof oldPassword !== 'string' ||
-      typeof newPassword !== 'string' ||
-      !oldPassword ||
-      !newPassword
-    ) {
-      res.status(400).json({ error: 'Invalid request body' });
-      return;
-    }
+    const body = parseBody(res, ChangePasswordRequestSchema, req.body);
+    if (!body) return;
+    const { oldPassword, newPassword } = body;
 
     try {
       await auth.changePassword(req.auth!.userId, oldPassword, newPassword);
@@ -71,7 +71,7 @@ export function authRoutes(auth: AuthService, authDeps: AuthDeps = {}): Router {
       throw err;
     }
 
-    res.json({ message: 'password changed' });
+    res.json(ChangePasswordResponseSchema.parse({ message: 'password changed' }));
   });
 
   router.use(protectedRoutes);

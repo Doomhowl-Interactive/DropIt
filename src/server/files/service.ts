@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { FileNotFoundError, FileRepository, type FileRecord } from './repository';
+import type { ImportFileRecord } from '../../shared/types';
 
 export interface UploadedFile {
   /** Directory name under the storage root; doubles as the record id. */
@@ -12,18 +13,6 @@ export interface UploadedFile {
   size: number;
   expiresAt?: Date | null;
   deleteAfterDownload?: boolean;
-}
-
-export interface ImportFileRecord {
-  id: string;
-  deletion_id: string;
-  filename: string;
-  expires_at?: string;
-  delete_after_download?: boolean;
-  size: number;
-  download_count: number;
-  deleted: boolean;
-  created_at: string;
 }
 
 export class FileService {
@@ -153,3 +142,4 @@ export class FileService {
 
 export { FileNotFoundError };
 export type { FileRecord };
+export type { ImportFileRecord };

@@ -6,7 +6,7 @@ import { formatTimestamp, humanSize, param, requestOrigin } from './util';
 import type { FileService } from './files/service';
 import type { ApiTokenService } from './tokens/service';
 import type { RenderPage } from './render';
-import type { DashboardFileRow } from '../app/utils/page-context';
+import type { DashboardFileRow } from '../shared/types';
 
 const PAGE_SIZE = 10;
 
