@@ -50,7 +50,7 @@ export const uploadFileTool = defineMcpTool({
 
   async handler(args, ctx) {
     // The filename comes from the model: strip any directory part before it can
-    // be used to escape the upload folder, then drop header-hostile characters.
+    // be used to escape the storage directory, then drop header-hostile characters.
     const filename = safeFilename(basename(args.filename));
 
     let bytes: Buffer;
@@ -115,8 +115,8 @@ export const uploadFileTool = defineMcpTool({
         },
       };
     } catch (err) {
-      // Never leave an orphaned folder behind when the record was not written.
-      await rm(folderPath, { recursive: true, force: true }).catch(() => undefined);
+      // Never leave an orphaned file behind when the record was not written.
+      await rm(path, { force: true }).catch(() => undefined);
       return toolError(`Upload failed: ${(err as Error).message}`);
     }
   },

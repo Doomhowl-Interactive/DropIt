@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -38,7 +38,7 @@ describe('file routes', () => {
     filename = 'report.txt',
   ) => {
     const { folderId, folderPath } = files.createUploadFolder();
-    const path = join(folderPath, 'blob');
+    const path = join(folderPath, `${folderId}.blob`);
     writeFileSync(path, contents);
 
     const record = await files.registerUpload({
@@ -114,11 +114,11 @@ describe('file routes', () => {
       expect(body['path']).toBeUndefined();
     });
 
-    it('writes the bytes under a per-upload folder', async () => {
+    it('writes the bytes directly under the storage root', async () => {
       const body = (await (await upload(formWith('uploaded bytes'))).json()) as UploadResponse;
       const record = await repo.getById(body.id);
 
-      expect(record.path.startsWith(join(storageDir, body.id))).toBe(true);
+      expect(dirname(record.path)).toBe(storageDir);
       expect(existsSync(record.path)).toBe(true);
     });
 
@@ -243,7 +243,7 @@ describe('file routes', () => {
 
     it('renders the 404 page when the row survives but the bytes are gone', async () => {
       const record = await store();
-      rmSync(join(storageDir, record.id), { recursive: true, force: true });
+      rmSync(record.path, { force: true });
 
       const response = await server.fetch(`/api/files/${route}/${record.id}`);
       await expect(response.json()).resolves.toEqual({ page: 'file-not-found' });
@@ -425,12 +425,11 @@ describe('file routes', () => {
     });
 
     describe('POST /dashboard/orphans', () => {
-      const dropOrphan = (folderId = 'orphan-1', filename = 'stray.bin') => {
-        mkdirSync(join(storageDir, folderId), { recursive: true });
-        writeFileSync(join(storageDir, folderId, filename), 'stray bytes');
+      const dropOrphan = (filename = 'orphan-1') => {
+        writeFileSync(join(storageDir, filename), 'stray bytes');
       };
 
-      it('registers loose folders and redirects back to the console', async () => {
+      it('registers loose files and redirects back to the console', async () => {
         dropOrphan();
 
         const response = await server.fetch('/api/files/dashboard/orphans', {
@@ -441,8 +440,8 @@ describe('file routes', () => {
         expect(response.status).toBe(303);
         expect(response.headers.get('location')).toBe('/dashboard');
         await expect(repo.getById('orphan-1')).resolves.toMatchObject({
-          filename: 'stray.bin',
-          path: join(storageDir, 'orphan-1', 'stray.bin'),
+          filename: 'orphan-1',
+          path: join(storageDir, 'orphan-1'),
         });
       });
 
@@ -537,7 +536,7 @@ describe('file routes', () => {
 
         expect(response.status).toBe(303);
         expect(response.headers.get('location')).toBe('/dashboard');
-        expect(existsSync(join(storageDir, record.id))).toBe(false);
+        expect(existsSync(record.path)).toBe(false);
         await expect(repo.getAll()).resolves.toEqual([]);
       });
 
@@ -622,7 +621,7 @@ describe('file routes', () => {
 
     it('renders the 404 page when an admin download finds no bytes on disk', async () => {
       const record = await store();
-      rmSync(join(storageDir, record.id), { recursive: true, force: true });
+      rmSync(record.path, { force: true });
 
       const response = await server.fetch(`/api/files/dashboard/download/${record.id}`, {
         headers: admin(),

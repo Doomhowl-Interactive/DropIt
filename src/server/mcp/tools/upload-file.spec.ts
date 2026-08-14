@@ -79,10 +79,9 @@ describe('upload_file', () => {
 
     expect(structuredOf(result)['filename']).toBe('passwd');
 
-    // One upload folder, holding one file, directly under the storage root.
-    const folders = readdirSync(storageDir);
-    expect(folders).toHaveLength(1);
-    expect(readdirSync(join(storageDir, folders[0]!))).toHaveLength(1);
+    // The file is stored directly under the storage root, without an upload folder.
+    const files = readdirSync(storageDir);
+    expect(files).toHaveLength(1);
   });
 
   it('rejects malformed base64 rather than storing a truncated file', async () => {
@@ -135,7 +134,7 @@ describe('upload_file', () => {
     }
   });
 
-  it('reports a failed upload instead of leaving an orphaned folder', async () => {
+  it('reports a failed upload instead of leaving an orphaned file', async () => {
     vi.spyOn(files, 'registerUpload').mockRejectedValue(new Error('database is locked'));
 
     const result = await callTool(

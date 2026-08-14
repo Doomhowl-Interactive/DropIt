@@ -26,12 +26,13 @@ describe('FileService', () => {
 
   const register = (overrides: Record<string, unknown> = {}) => {
     const { folderId, folderPath } = service.createUploadFolder();
-    writeFileSync(join(folderPath, 'blob'), 'contents');
+    const path = join(folderPath, folderId);
+    writeFileSync(path, 'contents');
 
     return service.registerUpload({
       folderId,
       originalName: 'report.pdf',
-      path: join(folderPath, 'blob'),
+      path,
       size: 8,
       ...overrides,
     });
@@ -42,15 +43,15 @@ describe('FileService', () => {
   });
 
   describe('createUploadFolder', () => {
-    it('creates a uniquely named directory under the storage root', () => {
+    it('returns the storage root and a unique upload id', () => {
       const { folderId, folderPath } = service.createUploadFolder();
 
       expect(folderId).toMatch(UUID);
-      expect(folderPath).toBe(join(storageDir, folderId));
+      expect(folderPath).toBe(storageDir);
       expect(existsSync(folderPath)).toBe(true);
     });
 
-    it('never hands out the same folder twice', () => {
+    it('never hands out the same upload id twice', () => {
       const a = service.createUploadFolder();
       const b = service.createUploadFolder();
       expect(a.folderId).not.toBe(b.folderId);
@@ -58,7 +59,7 @@ describe('FileService', () => {
   });
 
   describe('registerUpload', () => {
-    it('stores the record under the folder id with fresh deletion and view keys', async () => {
+    it('stores the record with fresh deletion and view keys', async () => {
       const record = await register();
 
       expect(record.deletionId).toMatch(UUID);
@@ -176,13 +177,14 @@ describe('FileService', () => {
   });
 
   describe('forceDelete', () => {
-    it('removes the folder from disk and the row from the database', async () => {
+    it('removes the file from disk and the row from the database', async () => {
       const { id } = await register();
-      expect(existsSync(join(storageDir, id))).toBe(true);
+      const record = await repo.getById(id);
+      expect(existsSync(record.path)).toBe(true);
 
       await expect(service.forceDelete(id)).resolves.toMatchObject({ id });
 
-      expect(existsSync(join(storageDir, id))).toBe(false);
+      expect(existsSync(record.path)).toBe(false);
       await expect(repo.getById(id)).rejects.toThrow(FileNotFoundError);
     });
 
@@ -253,7 +255,7 @@ describe('FileService', () => {
         createdAt: new Date('2026-01-02T03:04:05.000Z'),
       });
       expect(record.viewId).toMatch(UUID);
-      expect(record.path).toBe(join(storageDir, 'imported-1', 'legacy.bin'));
+      expect(record.path).toBe(join(storageDir, 'legacy.bin'));
     });
 
     it('carries over the expiry and the burn-after-reading flag', async () => {
@@ -309,25 +311,19 @@ describe('FileService', () => {
   });
 
   describe('addOrphans', () => {
-    const dropOrphan = (
-      folderId = 'orphan-1',
-      filename = 'stray.bin',
-      contents = 'stray bytes',
-    ) => {
-      const dir = join(storageDir, folderId);
-      mkdirSync(dir, { recursive: true });
-      writeFileSync(join(dir, filename), contents);
+    const dropOrphan = (filename = 'orphan-1', contents = 'stray bytes') => {
+      writeFileSync(join(storageDir, filename), contents);
     };
 
-    it('registers a loose folder that has no database row', async () => {
+    it('registers a loose file that has no database row', async () => {
       dropOrphan();
 
       await expect(service.addOrphans()).resolves.toBe(1);
 
       const record = await repo.getById('orphan-1');
       expect(record).toMatchObject({
-        filename: 'stray.bin',
-        path: join(storageDir, 'orphan-1', 'stray.bin'),
+        filename: 'orphan-1',
+        path: join(storageDir, 'orphan-1'),
         size: 'stray bytes'.length,
         downloadCount: 0,
         deleted: false,
@@ -340,7 +336,7 @@ describe('FileService', () => {
 
     it('registers several orphans and reports the count', async () => {
       dropOrphan('orphan-1');
-      dropOrphan('orphan-2', 'other.bin');
+      dropOrphan('other.bin');
 
       await expect(service.addOrphans()).resolves.toBe(2);
       await expect(repo.getAll()).resolves.toHaveLength(2);
@@ -349,21 +345,21 @@ describe('FileService', () => {
     it('takes the file modification time as the creation date', async () => {
       dropOrphan();
       const when = new Date('2026-07-01T12:00:00.000Z');
-      utimesSync(join(storageDir, 'orphan-1', 'stray.bin'), when, when);
+      utimesSync(join(storageDir, 'orphan-1'), when, when);
 
       await service.addOrphans();
 
       await expect(repo.getById('orphan-1')).resolves.toMatchObject({ createdAt: when });
     });
 
-    it('skips folders that already have a record', async () => {
+    it('skips files that already have a record', async () => {
       const { id } = await register();
       dropOrphan(id);
 
       await expect(service.addOrphans()).resolves.toBe(0);
     });
 
-    it('leaves registered folders alone while importing others', async () => {
+    it('leaves registered files alone while importing others', async () => {
       await register();
       dropOrphan('orphan-1');
 
@@ -371,10 +367,13 @@ describe('FileService', () => {
       await expect(repo.getAll()).resolves.toHaveLength(2);
     });
 
-    it('ignores loose files directly under the storage root', async () => {
-      writeFileSync(join(storageDir, 'loose.txt'), 'nope');
+    it('registers loose files directly under the storage root', async () => {
+      dropOrphan('loose.txt');
 
-      await expect(service.addOrphans()).resolves.toBe(0);
+      await expect(service.addOrphans()).resolves.toBe(1);
+      await expect(repo.getById('loose.txt')).resolves.toMatchObject({
+        path: join(storageDir, 'loose.txt'),
+      });
     });
 
     it('ignores empty directories', async () => {
