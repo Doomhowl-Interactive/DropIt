@@ -194,7 +194,10 @@ describe('auth routes', () => {
     });
 
     it('answers 400 for a weak new password', async () => {
-      const token = cookieValue(await login({ username: 'bram', password: 'abc' }), 'auth_token');
+      const token = cookieValue(
+        await login({ username: 'bram', password: 'Hunter2!x' }),
+        'auth_token',
+      );
 
       const response = await changePassword({ newPassword: 'short' }, token);
 

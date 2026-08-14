@@ -70,8 +70,8 @@ describe('UserService', () => {
       await expect(service.changePassword(userId, CURRENT)).rejects.toThrow(InvalidPasswordError);
     });
 
-    it('rejects a new password shorter than eight characters', async () => {
-      await expect(service.changePassword(userId, 'Ab1cdef')).rejects.toThrow(
+    it('rejects a new password shorter than six characters', async () => {
+      await expect(service.changePassword(userId, 'Ab1cd')).rejects.toThrow(
         InvalidPasswordError,
       );
     });
@@ -94,8 +94,8 @@ describe('UserService', () => {
       );
     });
 
-    it('accepts a password of exactly eight valid characters', async () => {
-      await expect(service.changePassword(userId, 'NewPass1')).resolves.toBeUndefined();
+    it('accepts a password of exactly six valid characters', async () => {
+      await expect(service.changePassword(userId, 'Abc123')).resolves.toBeUndefined();
     });
   });
 
