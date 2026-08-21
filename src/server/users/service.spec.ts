@@ -5,7 +5,6 @@ import { UserRepository } from './repository';
 import {
   CannotDeleteSelfError,
   InvalidPasswordError,
-  PasswordsDoNotMatchError,
   UserNotFoundError,
   UserService,
 } from './service';
@@ -44,74 +43,59 @@ describe('UserService', () => {
   });
 
   describe('changePassword', () => {
-    const OLD = 'OldPass1';
+    const CURRENT = 'OldPass1';
     let userId: number;
 
     beforeEach(async () => {
-      userId = (await service.createUser('bram', OLD, 'user')).id;
+      userId = (await service.createUser('bram', CURRENT, 'user')).id;
     });
 
-    it('replaces the hash when the old password checks out', async () => {
-      await service.changePassword(userId, OLD, 'NewPass1');
+    it('replaces the hash with the new password', async () => {
+      await service.changePassword(userId, 'NewPass1');
 
       const user = await repo.findById(userId);
       await expect(checkPassword('NewPass1', user.passwordHash)).resolves.toBe(true);
-      await expect(checkPassword(OLD, user.passwordHash)).resolves.toBe(false);
+      await expect(checkPassword(CURRENT, user.passwordHash)).resolves.toBe(false);
     });
 
     it('accepts a string user id', async () => {
-      await expect(service.changePassword(String(userId), OLD, 'NewPass1')).resolves.toBeUndefined();
+      await expect(service.changePassword(String(userId), 'NewPass1')).resolves.toBeUndefined();
     });
 
     it('throws for an unknown user', async () => {
-      await expect(service.changePassword(999, OLD, 'NewPass1')).rejects.toThrow(UserNotFoundError);
+      await expect(service.changePassword(999, 'NewPass1')).rejects.toThrow(UserNotFoundError);
     });
 
-    it('rejects a new password identical to the old one', async () => {
-      await expect(service.changePassword(userId, OLD, OLD)).rejects.toThrow(InvalidPasswordError);
+    it('rejects a new password identical to the current one', async () => {
+      await expect(service.changePassword(userId, CURRENT)).rejects.toThrow(InvalidPasswordError);
     });
 
-    it('rejects a new password shorter than eight characters', async () => {
-      await expect(service.changePassword(userId, OLD, 'Ab1cdef')).rejects.toThrow(
+    it('rejects a new password shorter than six characters', async () => {
+      await expect(service.changePassword(userId, 'Ab1cd')).rejects.toThrow(
         InvalidPasswordError,
       );
     });
 
     it('rejects a new password with no uppercase letter', async () => {
-      await expect(service.changePassword(userId, OLD, 'newpass1')).rejects.toThrow(
+      await expect(service.changePassword(userId, 'newpass1')).rejects.toThrow(
         InvalidPasswordError,
       );
     });
 
     it('rejects a new password with no lowercase letter', async () => {
-      await expect(service.changePassword(userId, OLD, 'NEWPASS1')).rejects.toThrow(
+      await expect(service.changePassword(userId, 'NEWPASS1')).rejects.toThrow(
         InvalidPasswordError,
       );
     });
 
     it('rejects a new password with no digit', async () => {
-      await expect(service.changePassword(userId, OLD, 'NewPassword')).rejects.toThrow(
+      await expect(service.changePassword(userId, 'NewPassword')).rejects.toThrow(
         InvalidPasswordError,
       );
     });
 
-    it('accepts a password of exactly eight valid characters', async () => {
-      await expect(service.changePassword(userId, OLD, 'NewPass1')).resolves.toBeUndefined();
-    });
-
-    it('rejects a wrong old password, and leaves the hash alone', async () => {
-      const before = (await repo.findById(userId)).passwordHash;
-
-      await expect(service.changePassword(userId, 'WrongOld1', 'NewPass1')).rejects.toThrow(
-        PasswordsDoNotMatchError,
-      );
-      await expect(repo.findById(userId)).resolves.toMatchObject({ passwordHash: before });
-    });
-
-    it('checks the new password rules before the old password', async () => {
-      await expect(service.changePassword(userId, 'WrongOld1', 'short')).rejects.toThrow(
-        InvalidPasswordError,
-      );
+    it('accepts a password of exactly six valid characters', async () => {
+      await expect(service.changePassword(userId, 'Abc123')).resolves.toBeUndefined();
     });
   });
 

@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, rmSync } from 'node:fs';
+import { mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { FileNotFoundError, FileRepository, type FileRecord } from './repository';
 import type { ImportFileRecord } from '../../shared/types';
 
 export interface UploadedFile {
-  /** Directory name under the storage root; doubles as the record id. */
+  /** Unique upload id; doubles as the record id. */
   folderId: string;
   originalName: string;
   /** Path on disk, relative to the process working directory. */
@@ -23,12 +23,10 @@ export class FileService {
     mkdirSync(storageDir, { recursive: true });
   }
 
-  /** Directory an in-flight upload should stream into. */
+  /** Allocates an upload id and returns the storage root as its destination. */
   createUploadFolder(): { folderId: string; folderPath: string } {
     const folderId = randomUUID();
-    const folderPath = join(this.storageDir, folderId);
-    mkdirSync(folderPath, { recursive: true });
-    return { folderId, folderPath };
+    return { folderId, folderPath: this.storageDir };
   }
 
   async registerUpload(upload: UploadedFile): Promise<FileRecord> {
@@ -88,7 +86,7 @@ export class FileService {
   async forceDelete(id: string): Promise<FileRecord> {
     const file = await this.repo.getById(id);
 
-    rmSync(join(this.storageDir, file.id), { recursive: true, force: true });
+    rmSync(file.path, { force: true });
     await this.repo.delete(file);
 
     return file;
@@ -124,7 +122,7 @@ export class FileService {
         deletionId: incoming.deletion_id,
         viewId: randomUUID(),
         filename: incoming.filename,
-        path: this.buildPath(incoming.id, incoming.filename),
+        path: this.buildPath(incoming.filename),
         size: Number(incoming.size ?? 0),
         downloadCount: Number(incoming.download_count ?? 0),
         deleted: Boolean(incoming.deleted),
@@ -135,8 +133,50 @@ export class FileService {
     }
   }
 
-  private buildPath(id: string, filename: string): string {
-    return join(this.storageDir, id, filename);
+  /**
+   * Registers files that have bytes on disk but no database row — leftovers of
+   * an interrupted upload. Returns how many orphans were picked up.
+   */
+  async addOrphans(): Promise<number> {
+    const entries = readdirSync(this.storageDir, { withFileTypes: true });
+    let added = 0;
+
+    for (const entry of entries) {
+      console.log(`Checking if orphan: ${entry.name}`);
+
+      if (!entry.isFile()) {
+        continue;
+      }
+
+      if (await this.repo.getByIdOrNull(entry.name).catch((e) => console.error(e))) {
+        console.log(`Skipping ${entry.name} because it already exists in the database`);
+        continue;
+      }
+
+      const path = join(this.storageDir, entry.name);
+      const stats = statSync(path);
+
+      await this.repo.create({
+        id: entry.name,
+        deletionId: randomUUID(),
+        viewId: randomUUID(),
+        filename: entry.name,
+        path,
+        size: stats.size,
+        downloadCount: 0,
+        deleted: false,
+        createdAt: stats.mtime,
+        expiresAt: null,
+        deleteAfterDownload: false,
+      });
+      added += 1;
+    }
+
+    return added;
+  }
+
+  private buildPath(filename: string): string {
+    return join(this.storageDir, filename);
   }
 }
 

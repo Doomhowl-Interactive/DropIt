@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { config } from '../config';
 import { authMiddleware, requireRole, type AuthDeps } from '../middleware/auth';
-import { InvalidPasswordError, PasswordsDoNotMatchError, type AuthService } from '../auth/service';
+import { InvalidPasswordError, type AuthService } from '../auth/service';
 import { parseBody } from '../util';
 import {
   AdminCheckResponseSchema,
@@ -55,17 +55,13 @@ export function authRoutes(auth: AuthService, authDeps: AuthDeps = {}): Router {
   protectedRoutes.post('/change-password', async (req, res) => {
     const body = parseBody(res, ChangePasswordRequestSchema, req.body);
     if (!body) return;
-    const { oldPassword, newPassword } = body;
+    const { newPassword } = body;
 
     try {
-      await auth.changePassword(req.auth!.userId, oldPassword, newPassword);
+      await auth.changePassword(req.auth!.userId, newPassword);
     } catch (err) {
       if (err instanceof InvalidPasswordError) {
         res.status(400).json({ error: 'New password is invalid' });
-        return;
-      }
-      if (err instanceof PasswordsDoNotMatchError) {
-        res.status(400).json({ error: 'Old password is incorrect' });
         return;
       }
       throw err;

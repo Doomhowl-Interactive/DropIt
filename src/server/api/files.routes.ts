@@ -162,6 +162,15 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
     }
   });
 
+  dashboard.post('/orphans', async (_req, res) => {
+    try {
+      await files.addOrphans();
+      res.redirect(303, '/dashboard');
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
+    }
+  });
+
   dashboard.post('/delete/fr/:id', async (req, res) => {
     try {
       await files.getFileById(param(req, 'id'));

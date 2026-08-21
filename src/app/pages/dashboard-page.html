@@ -25,6 +25,7 @@
     <div class="flex flex-col items-end gap-2">
       <a href="/" class="text-sm font-bold underline">← Back</a>
       <a href="/dashboard/tokens" class="text-sm font-bold underline">API tokens</a>
+      <a href="/api" class="text-sm font-bold underline">Swagger API spec</a>
       <a href="/dashboard/password" pButton size="small">
         <span pButtonLabel>Change_Password</span>
       </a>
@@ -35,6 +36,16 @@
   <p-card header="Upload">
     <div class="w-1/2">
       <app-upload-zone />
+    </div>
+    <div class="mt-4 flex items-center gap-3">
+      <form action="/api/files/dashboard/orphans" method="POST">
+        <button type="submit" pButton severity="secondary" size="small" [outlined]="true">
+          <span pButtonLabel>Add_Orphans</span>
+        </button>
+      </form>
+      <span class="text-xs italic text-surface-500">
+        Scans storage for loose files that missed the database and registers them.
+      </span>
     </div>
   </p-card>
 
@@ -103,7 +114,6 @@
                     )
                   "
                 >
-                  <input type="hidden" name="_csrf" class="csrf-field" [value]="csrf()" />
                   <button type="submit" pButton severity="danger" [outlined]="true" size="small">
                     <span pButtonLabel>Terminate</span>
                   </button>
@@ -120,7 +130,6 @@
                   )
                 "
               >
-                <input type="hidden" name="_csrf" class="csrf-field" [value]="csrf()" />
                 <button type="submit" pButton severity="secondary" size="small">
                   <span pButtonLabel>Full_Wipe</span>
                 </button>

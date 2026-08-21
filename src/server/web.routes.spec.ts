@@ -23,7 +23,7 @@ function makeRecord(overrides: Partial<FileRecord> = {}): FileRecord {
     deletionId: 'del-1',
     viewId: 'view-1',
     filename: 'report.pdf',
-    path: 'uploads/file-1/report.pdf',
+    path: 'uploads/report.pdf',
     size: 2048,
     downloadCount: 0,
     deleted: false,

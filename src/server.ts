@@ -18,7 +18,6 @@ import { migrate } from './server/db/migrate';
 import { FileRepository } from './server/files/repository';
 import { FileService } from './server/files/service';
 import { mcpRoutes } from './server/mcp/routes';
-import { csrfMiddleware, ensureCsrfCookie } from './server/middleware/csrf';
 import { createRenderer } from './server/render';
 import { ApiTokenRepository } from './server/tokens/repository';
 import { ApiTokenService } from './server/tokens/service';
@@ -66,7 +65,6 @@ async function createApp(): Promise<Express> {
 
   app.disable('x-powered-by');
   app.use(cookieParser());
-  app.use(ensureCsrfCookie());
 
   /**
    * Mounted ahead of the app-wide body parser so it can bring its own, far
@@ -74,7 +72,7 @@ async function createApp(): Promise<Express> {
    * and the 1mb cap below would silently reduce them to ~750 KB of file.
    *
    * It sits outside `/api` on purpose: MCP clients authenticate with a bearer
-   * token rather than a cookie, so the CSRF check does not apply to them.
+   * token rather than a cookie.
    */
   if (config.mcpEnabled) {
     app.use('/mcp', mcpRoutes({ files, tokens: apiTokens }));
@@ -100,7 +98,6 @@ async function createApp(): Promise<Express> {
   );
 
   const api = express.Router();
-  api.use(csrfMiddleware());
   api.use('/auth', authRoutes(auth, authDeps));
   api.use('/files', fileRoutes(files, render, authDeps));
   api.use('/tokens', tokenRoutes(apiTokens, authDeps));

@@ -18,7 +18,6 @@ import { usePage } from '../utils/page';
 export class ChangePasswordPage {
   private readonly api = inject(AuthApi);
 
-  protected readonly oldPassword = signal('');
   protected readonly newPassword = signal('');
   protected readonly confirmPassword = signal('');
   protected readonly busy = signal(false);
@@ -42,9 +41,8 @@ export class ChangePasswordPage {
     this.done.set(false);
 
     try {
-      await this.api.changePassword(this.oldPassword().trim(), this.newPassword());
+      await this.api.changePassword(this.newPassword());
       this.done.set(true);
-      this.oldPassword.set('');
       this.newPassword.set('');
       this.confirmPassword.set('');
     } catch (err) {

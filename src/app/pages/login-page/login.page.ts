@@ -3,7 +3,6 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
-import { readCsrfToken } from '../../utils/csrf';
 import { Location } from '@angular/common';
 
 @Component({
@@ -29,7 +28,6 @@ export class LoginPage {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-Token': readCsrfToken(this.document),
         },
         body: JSON.stringify({
           username: this.username().nativeElement.value,

@@ -35,7 +35,6 @@ export const AdminCheckResponseSchema = z.object({ message: z.string() });
 export type AdminCheckResponse = z.infer<typeof AdminCheckResponseSchema>;
 
 export const ChangePasswordRequestSchema = z.object({
-  oldPassword: z.string().min(1),
   newPassword: z.string().min(1),
 });
 export type ChangePasswordRequest = z.infer<typeof ChangePasswordRequestSchema>;
