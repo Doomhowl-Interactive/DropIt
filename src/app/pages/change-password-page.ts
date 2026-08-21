@@ -1,9 +1,11 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
+import { ZodError } from 'zod';
 
 import { AuthApi } from '../services/auth-api';
 import { usePage } from '../utils/page';
@@ -53,7 +55,12 @@ export class ChangePasswordPage {
   }
 
   private messageFor(err: unknown, fallback: string): string {
-    const detail = (err as { error?: { error?: string } })?.error?.error;
-    return detail ? `${fallback} ${detail}` : fallback;
+    if (err instanceof HttpErrorResponse) {
+      const detail: unknown = err.error?.error;
+      if (typeof detail === 'string' && detail) return `${fallback} ${detail}`;
+    } else if (err instanceof ZodError) {
+      return `${fallback} The server sent an unexpected response.`;
+    }
+    return fallback;
   }
 }
