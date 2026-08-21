@@ -1,6 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
@@ -15,7 +14,7 @@ import { usePage } from '../utils/page';
   templateUrl: './change-password-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: 'display: contents' },
-  imports: [ButtonModule, CardModule, FormsModule, InputTextModule, MessageModule],
+  imports: [ButtonModule, CardModule, InputTextModule, MessageModule],
 })
 export class ChangePasswordPage {
   private readonly api = inject(AuthApi);
@@ -28,6 +27,14 @@ export class ChangePasswordPage {
 
   constructor() {
     usePage({ title: 'Change Password', bodyClass: 'min-h-screen p-4' });
+  }
+
+  protected onNewPasswordInput(event: Event): void {
+    this.newPassword.set((event.target as HTMLInputElement).value);
+  }
+
+  protected onConfirmPasswordInput(event: Event): void {
+    this.confirmPassword.set((event.target as HTMLInputElement).value);
   }
 
   protected async change(): Promise<void> {

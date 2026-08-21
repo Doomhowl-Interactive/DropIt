@@ -5,7 +5,7 @@ import {
   ChangePasswordResponseSchema,
   type ChangePasswordRequest,
   type ChangePasswordResponse,
-} from '../../shared/types';
+} from '../../shared/change-password.types';
 
 const BASE = '/api/auth';
 
