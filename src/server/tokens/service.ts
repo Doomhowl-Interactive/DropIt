@@ -25,11 +25,7 @@ export function hashSecret(secret: string): string {
 export class ApiTokenService {
   constructor(private readonly repo: ApiTokenRepository) {}
 
-  async issue(input: {
-    name: string;
-    userId: number;
-    expiresAt?: Date | null;
-  }): Promise<IssuedToken> {
+  async issue(input: { name: string; userId: number }): Promise<IssuedToken> {
     const name = input.name.trim();
     if (!name) throw new Error('token name is required');
 
@@ -43,7 +39,6 @@ export class ApiTokenService {
       userId: input.userId,
       createdAt: new Date(),
       lastUsedAt: null,
-      expiresAt: input.expiresAt ?? null,
       revokedAt: null,
     });
 
@@ -51,9 +46,9 @@ export class ApiTokenService {
   }
 
   /**
-   * Resolves a bearer secret to a live token, or null when it is unknown,
-   * revoked or expired. The lookup is a single indexed match on the hash of a
-   * 256-bit secret, so there is no guessable prefix to time against.
+   * Resolves a bearer secret to a live token, or null when it is unknown or
+   * revoked. The lookup is a single indexed match on the hash of a 256-bit
+   * secret, so there is no guessable prefix to time against.
    */
   async verify(secret: string): Promise<ApiToken | null> {
     if (!secret) return null;
@@ -61,7 +56,6 @@ export class ApiTokenService {
     const token = await this.repo.findByHash(hashSecret(secret));
     if (!token) return null;
     if (token.revokedAt) return null;
-    if (token.expiresAt && token.expiresAt.getTime() <= Date.now()) return null;
 
     await this.touch(token);
     return token;

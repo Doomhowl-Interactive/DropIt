@@ -50,9 +50,9 @@ export function looksLikeText(bytes: Buffer): boolean {
  * Resolves a file by its download id, falling back to its view id — an agent
  * that was handed a share link only has the latter.
  *
- * Deliberately *not* `FileService.downloadFile`: that books a download and can
- * consume a delete-after-download file, which would make an agent merely
- * looking at a file destroy it. The liveness checks are repeated here instead.
+ * Deliberately *not* `FileService.downloadFile`: that books a download, which
+ * would make an agent merely looking at a file distort the download count.
+ * The liveness checks are repeated here instead.
  */
 export async function resolveLiveFile(files: FileService, id: string): Promise<FileRecord> {
   const record = await files
@@ -61,7 +61,6 @@ export async function resolveLiveFile(files: FileService, id: string): Promise<F
 
   if (!record) throw new FileNotFoundError();
   if (record.deleted) throw new FileNotFoundError();
-  if (record.expiresAt && record.expiresAt.getTime() <= Date.now()) throw new FileNotFoundError();
 
   return record;
 }

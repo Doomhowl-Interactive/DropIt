@@ -11,7 +11,6 @@ export class FileNotFoundError extends Error {
 
 export interface FileRecord {
   id: string;
-  deletionId: string;
   viewId: string;
   filename: string;
   /** Location on disk; never exposed over JSON. */
@@ -20,8 +19,6 @@ export interface FileRecord {
   downloadCount: number;
   deleted: boolean;
   createdAt: Date;
-  expiresAt: Date | null;
-  deleteAfterDownload: boolean;
 }
 
 type Row = typeof fileRecords.$inferSelect;
@@ -29,7 +26,6 @@ type Row = typeof fileRecords.$inferSelect;
 function mapRow(row: Row): FileRecord {
   return {
     id: row.id,
-    deletionId: row.deletionId ?? '',
     viewId: row.viewId ?? '',
     filename: row.filename ?? '',
     path: row.path ?? '',
@@ -37,8 +33,6 @@ function mapRow(row: Row): FileRecord {
     downloadCount: row.downloadCount ?? 0,
     deleted: row.deleted ?? false,
     createdAt: fromDbDate(row.createdAt) ?? new Date(0),
-    expiresAt: fromDbDate(row.expiresAt),
-    deleteAfterDownload: row.deleteAfterDownload ?? false,
   };
 }
 
@@ -48,7 +42,6 @@ export class FileRepository {
   async create(file: FileRecord): Promise<void> {
     await this.db.insert(fileRecords).values({
       id: file.id,
-      deletionId: file.deletionId,
       viewId: file.viewId,
       filename: file.filename,
       path: file.path,
@@ -56,8 +49,6 @@ export class FileRepository {
       downloadCount: file.downloadCount,
       deleted: file.deleted,
       createdAt: toDbDate(file.createdAt),
-      expiresAt: file.expiresAt ? toDbDate(file.expiresAt) : null,
-      deleteAfterDownload: file.deleteAfterDownload,
     });
   }
 
@@ -79,15 +70,6 @@ export class FileRepository {
     if (!row) {
       return null;
     }
-    return mapRow(row);
-  }
-
-  async getByDeletionId(deletionId: string): Promise<FileRecord> {
-    const [row] = await this.db
-      .select()
-      .from(fileRecords)
-      .where(eq(fileRecords.deletionId, deletionId));
-    if (!row) throw new FileNotFoundError();
     return mapRow(row);
   }
 

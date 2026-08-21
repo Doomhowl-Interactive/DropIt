@@ -53,7 +53,6 @@ export const apiTokens = mysqlTable(
     userId: int('user_id').notNull(),
     createdAt: text('created_at'),
     lastUsedAt: text('last_used_at'),
-    expiresAt: text('expires_at'),
     revokedAt: varchar('revoked_at', { length: 64 }),
   },
   (table) => [
@@ -64,7 +63,6 @@ export const apiTokens = mysqlTable(
 
 export const fileRecords = mysqlTable('file_records', {
   id: varchar('id', { length: 64 }).primaryKey(),
-  deletionId: varchar('deletion_id', { length: 64 }),
   viewId: varchar('view_id', { length: 64 }),
   filename: text('filename'),
   path: text('path'),
@@ -72,6 +70,4 @@ export const fileRecords = mysqlTable('file_records', {
   downloadCount: int('download_count'),
   deleted: boolean('deleted'),
   createdAt: text('created_at'),
-  expiresAt: text('expires_at'),
-  deleteAfterDownload: boolean('delete_after_download').default(false),
 });

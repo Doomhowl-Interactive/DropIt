@@ -14,7 +14,6 @@ import { fileRoutes } from './files.routes';
 
 interface UploadResponse {
   id: string;
-  deletion_id: string;
   filename: string;
   size: number;
   view_key: string;
@@ -105,7 +104,6 @@ describe('file routes', () => {
       expect(body.filename).toBe('notes.txt');
       expect(body.size).toBe('uploaded bytes'.length);
       expect(body.id).toBeTruthy();
-      expect(body.deletion_id).toBeTruthy();
       expect(body.view_key).toBeTruthy();
     });
 
@@ -122,36 +120,13 @@ describe('file routes', () => {
       expect(existsSync(record.path)).toBe(true);
     });
 
-    it('stores no expiry when no duration is given', async () => {
-      const body = (await (await upload(formWith())).json()) as UploadResponse;
-      await expect(repo.getById(body.id)).resolves.toMatchObject({ expiresAt: null });
-    });
-
-    it('turns a positive duration into an expiry that many seconds out', async () => {
-      const form = formWith('uploaded bytes', 'notes.txt', { duration: '3600' });
-
-      const before = Date.now();
-      const body = (await (await upload(form)).json()) as UploadResponse;
-      const record = await repo.getById(body.id);
-
-      expect(record.expiresAt!.getTime()).toBeGreaterThanOrEqual(before + 3600_000);
-      expect(record.expiresAt!.getTime()).toBeLessThan(Date.now() + 3601_000);
-    });
-
-    it.each(['-1', '0', 'forever', ''])('treats duration %o as no expiry', async (duration) => {
-      const form = formWith('uploaded bytes', 'notes.txt', { duration });
-
-      const body = (await (await upload(form)).json()) as UploadResponse;
-      await expect(repo.getById(body.id)).resolves.toMatchObject({ expiresAt: null });
-    });
-
     it('preserves a non-ASCII original filename', async () => {
       const body = (await (await upload(formWith('x', 'résumé.txt'))).json()) as UploadResponse;
       expect(body.filename).toBe('résumé.txt');
     });
 
     it('answers 400 when no file part is present', async () => {
-      const response = await upload(multipart([], { duration: '60' }));
+      const response = await upload(multipart([]));
       expect(response.status).toBe(400);
       await expect(response.json()).resolves.toEqual({ error: 'missing file' });
     });
@@ -233,14 +208,6 @@ describe('file routes', () => {
       ).resolves.toEqual({ page: 'file-not-found' });
     });
 
-    it('renders the 404 page for an expired file', async () => {
-      const record = await store('x', { expiresAt: new Date(Date.now() - 1000) });
-
-      await expect(
-        (await server.fetch(`/api/files/${route}/${record.id}`)).json(),
-      ).resolves.toEqual({ page: 'file-not-found' });
-    });
-
     it('renders the 404 page when the row survives but the bytes are gone', async () => {
       const record = await store();
       rmSync(record.path, { force: true });
@@ -252,43 +219,6 @@ describe('file routes', () => {
     it('is public — no token needed', async () => {
       const record = await store();
       expect((await server.fetch(`/api/files/${route}/${record.id}`)).status).toBe(200);
-    });
-  });
-
-  describe('GET /delete/:del_id', () => {
-    it('soft-deletes the file and renders the confirmation page', async () => {
-      const record = await store();
-      const response = await server.fetch(`/api/files/delete/${record.deletionId}`, {
-        headers: admin(),
-      });
-
-      expect(response.status).toBe(200);
-      await expect(response.json()).resolves.toEqual({ page: 'deleted' });
-      await expect(repo.getById(record.id)).resolves.toMatchObject({ deleted: true });
-    });
-
-    it('renders the 404 page for an unknown deletion key', async () => {
-      const response = await server.fetch('/api/files/delete/nope', { headers: admin() });
-      await expect(response.json()).resolves.toEqual({ page: 'file-not-found' });
-    });
-
-    it('renders the 404 page when the file is already deleted', async () => {
-      const record = await store();
-      await files.deleteFileById(record.id);
-
-      const response = await server.fetch(`/api/files/delete/${record.deletionId}`, {
-        headers: admin(),
-      });
-      await expect(response.json()).resolves.toEqual({ page: 'file-not-found' });
-    });
-
-    it('requires an admin', async () => {
-      const record = await store();
-
-      expect((await server.fetch(`/api/files/delete/${record.deletionId}`)).status).toBe(401);
-      expect(
-        (await server.fetch(`/api/files/delete/${record.deletionId}`, { headers: user() })).status,
-      ).toBe(403);
     });
   });
 
@@ -346,7 +276,6 @@ describe('file routes', () => {
 
       const incoming = {
         id: 'imported-1',
-        deletion_id: 'del-1',
         filename: 'legacy.bin',
         size: 10,
         download_count: 0,

@@ -20,24 +20,6 @@
         </p-inputgroup>
       </div>
 
-      <!-- Delete -->
-      <div>
-        <label class="text-[10px] font-bold block mb-1">DELETION LINK (PRIVATE)</label>
-        <p-inputgroup>
-          <input
-            id="res-del"
-            pInputText
-            readonly
-            class="text-sm text-red-600"
-            [value]="deleteUrl()"
-            #resDel
-          />
-          <button pButton severity="secondary" (click)="copy(resDel)">
-            <span pButtonLabel>COPY</span>
-          </button>
-        </p-inputgroup>
-      </div>
-
       <!-- Actions -->
       <div class="pt-4 flex justify-between">
         <a href="/" class="text-xs underline">NEW UPLOAD</a>

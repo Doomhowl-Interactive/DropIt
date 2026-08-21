@@ -31,20 +31,13 @@ describe('ApiTokenService', () => {
     await expect(service.verify(secret)).resolves.toMatchObject({ id: token.id });
   });
 
-  it('rejects unknown, revoked and expired secrets', async () => {
+  it('rejects unknown and revoked secrets', async () => {
     await expect(service.verify('dropit_api_nope')).resolves.toBeNull();
     await expect(service.verify('')).resolves.toBeNull();
 
     const revoked = await service.issue({ name: 'revoked', userId: 1 });
     await service.revoke(revoked.token.id);
     await expect(service.verify(revoked.secret)).resolves.toBeNull();
-
-    const expired = await service.issue({
-      name: 'expired',
-      userId: 1,
-      expiresAt: new Date(Date.now() - 1000),
-    });
-    await expect(service.verify(expired.secret)).resolves.toBeNull();
   });
 
   it('records when a token was last used', async () => {

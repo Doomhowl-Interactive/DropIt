@@ -28,13 +28,10 @@ export function tokenRoutes(tokens: ApiTokenService, auth: AuthDeps = {}): Route
     const body = parseBody(res, CreateApiTokenRequestSchema, req.body);
     if (!body) return;
 
-    const days = body.expiresInDays ?? null;
-
     try {
       const { token, secret } = await tokens.issue({
         name: body.name,
         userId: Number(req.auth?.userId ?? 0),
-        expiresAt: days === null ? null : new Date(Date.now() + days * 86_400_000),
       });
 
       // The only response that ever carries the plaintext secret.

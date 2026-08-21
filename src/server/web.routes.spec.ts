@@ -20,7 +20,6 @@ const ENV = ['JWT_SECRET', 'DOMAIN'] as const;
 function makeRecord(overrides: Partial<FileRecord> = {}): FileRecord {
   return {
     id: 'file-1',
-    deletionId: 'del-1',
     viewId: 'view-1',
     filename: 'report.pdf',
     path: 'uploads/report.pdf',
@@ -28,8 +27,6 @@ function makeRecord(overrides: Partial<FileRecord> = {}): FileRecord {
     downloadCount: 0,
     deleted: false,
     createdAt: new Date(2026, 7, 11, 10, 30),
-    expiresAt: null,
-    deleteAfterDownload: false,
     ...overrides,
   };
 }
@@ -99,7 +96,7 @@ describe('web routes', () => {
       expect(response.status).toBe(200);
       await expect(context(response)).resolves.toMatchObject({
         page: 'complete',
-        data: { filename: 'report.pdf', downloadId: 'file-1', deleteId: 'del-1' },
+        data: { filename: 'report.pdf', downloadId: 'file-1' },
       });
     });
 
@@ -139,7 +136,7 @@ describe('web routes', () => {
     });
 
     it('still resolves a soft-deleted file, since /f/ only shows the links', async () => {
-      await repo.create(makeRecord({ id: 'f2', deletionId: 'd2', viewId: 'v2', deleted: true }));
+      await repo.create(makeRecord({ id: 'f2', viewId: 'v2', deleted: true }));
 
       await expect(context(await server.fetch('/f/v2'))).resolves.toMatchObject({
         page: 'complete',
@@ -185,8 +182,6 @@ describe('web routes', () => {
         makeRecord({
           size: 2048,
           downloadCount: 3,
-          deleteAfterDownload: true,
-          expiresAt: new Date(2026, 8, 1, 8, 5),
         }),
       );
 
@@ -199,20 +194,9 @@ describe('web routes', () => {
         filename: 'report.pdf',
         size: '2.0 KB',
         createdAt: '11/08/26 10:30',
-        expiresAt: '01/09/26 08:05',
         downloadCount: 3,
-        deleteAfterDownload: true,
         deleted: false,
       });
-    });
-
-    it('shows NEVER for a file with no expiry', async () => {
-      await repo.create(makeRecord());
-      const { files: rows } = await dashboardData(
-        await server.fetch('/dashboard', { headers: adminCookie() }),
-      );
-
-      expect(rows[0]!.expiresAt).toBe('NEVER');
     });
 
     it('paginates ten files to a page', async () => {
@@ -220,7 +204,6 @@ describe('web routes', () => {
         await repo.create(
           makeRecord({
             id: `f${i}`,
-            deletionId: `d${i}`,
             viewId: `v${i}`,
             createdAt: new Date(2026, 7, 11, 10, i),
           }),

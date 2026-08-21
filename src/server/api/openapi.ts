@@ -42,9 +42,7 @@ export const openapiSpec = {
           filename: { type: 'string' },
           size: { type: 'integer' },
           createdAt: { type: 'string', format: 'date-time' },
-          expiresAt: { type: 'string', format: 'date-time', nullable: true },
           downloadCount: { type: 'integer' },
-          deleteAfterDownload: { type: 'boolean' },
           deleted: { type: 'boolean' },
         },
       },
@@ -54,7 +52,6 @@ export const openapiSpec = {
           id: { type: 'string' },
           name: { type: 'string' },
           createdAt: { type: 'string', format: 'date-time' },
-          expiresAt: { type: 'string', format: 'date-time', nullable: true },
           revokedAt: { type: 'string', format: 'date-time', nullable: true },
         },
       },
@@ -180,10 +177,6 @@ export const openapiSpec = {
                 type: 'object',
                 properties: {
                   file: { type: 'string', format: 'binary' },
-                  duration: {
-                    type: 'integer',
-                    description: 'Seconds until expiry; omit or <=0 for no expiry.',
-                  },
                 },
                 required: ['file'],
               },
@@ -199,7 +192,6 @@ export const openapiSpec = {
                   type: 'object',
                   properties: {
                     id: { type: 'string' },
-                    deletion_id: { type: 'string' },
                     filename: { type: 'string' },
                     size: { type: 'integer' },
                     view_key: { type: 'string' },
@@ -233,18 +225,6 @@ export const openapiSpec = {
         security: [],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: { '200': { description: 'File stream' } },
-      },
-    },
-    '/files/delete/{del_id}': {
-      get: {
-        tags: ['files'],
-        summary: 'Soft-delete and show a confirmation page (admin)',
-        parameters: [{ name: 'del_id', in: 'path', required: true, schema: { type: 'string' } }],
-        responses: {
-          '200': { description: 'Rendered confirmation or "file not found" page' },
-          '401': { description: 'Unauthorized' },
-          '403': { description: 'Forbidden' },
-        },
       },
     },
     '/files/dashboard': {
@@ -410,7 +390,6 @@ export const openapiSpec = {
                 type: 'object',
                 properties: {
                   name: { type: 'string' },
-                  expiresInDays: { type: 'integer', nullable: true },
                 },
                 required: ['name'],
               },
@@ -432,7 +411,7 @@ export const openapiSpec = {
               },
             },
           },
-          '400': { description: 'Invalid name or expiresInDays' },
+          '400': { description: 'Invalid name' },
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
           '500': { description: 'Server error' },

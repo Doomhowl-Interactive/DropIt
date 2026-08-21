@@ -54,20 +54,9 @@ describe('token routes', () => {
     expect(JSON.stringify(listed)).not.toContain(created.secret);
   });
 
-  it('accepts an expiry in days', async () => {
-    const response = await create({ name: 'temp', expiresInDays: 7 });
-    const created = (await response.json()) as { token: { expiresAt: string } };
-
-    expect(created.token.expiresAt).not.toBe('NEVER');
-  });
-
-  it('rejects a missing name and an out-of-range expiry', async () => {
+  it('rejects a missing name', async () => {
     await expect(create({ name: '  ' })).resolves.toMatchObject({ status: 400 });
     await expect(create({ name: 'x'.repeat(80) })).resolves.toMatchObject({ status: 400 });
-    await expect(create({ name: 'ok', expiresInDays: 0 })).resolves.toMatchObject({ status: 400 });
-    await expect(create({ name: 'ok', expiresInDays: 99999 })).resolves.toMatchObject({
-      status: 400,
-    });
   });
 
   it('revokes a token', async () => {

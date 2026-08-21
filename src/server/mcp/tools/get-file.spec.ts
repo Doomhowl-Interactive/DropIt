@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTestDb } from '../../../testing/db';
 import { callTool, structuredOf, testContext, textOf } from '../../../testing/mcp';
 import { FileRepository } from '../../files/repository';
-import { FileService, type FileRecord } from '../../files/service';
+import { FileService } from '../../files/service';
 import type { McpToolContext } from '../types';
 import { getFileTool } from './get-file';
 import { uploadFileTool } from './upload-file';
@@ -67,27 +67,10 @@ describe('get_file', () => {
     expect((await files.getFileById(record.id)).downloadCount).toBe(0);
   });
 
-  it('does not consume a delete-after-download file', async () => {
-    const record = await upload({
-      filename: 'once.txt',
-      content: 'hello',
-      encoding: 'utf8',
-      delete_after_download: true,
-    });
-
-    await callTool(getFileTool, { id: record.id }, ctx);
-
-    expect((await files.getFileById(record.id)).deleted).toBe(false);
-    expect(textOf(await callTool(getFileTool, { id: record.id }, ctx))).toBe('hello');
-  });
-
-  it('refuses deleted, expired and unknown ids', async () => {
+  it('refuses deleted and unknown ids', async () => {
     const deleted = await upload({ filename: 'gone.txt', content: 'x', encoding: 'utf8' });
     await files.deleteFileById(deleted.id);
     expect((await callTool(getFileTool, { id: deleted.id }, ctx)).isError).toBe(true);
-
-    const expired = await registerExpired(files);
-    expect((await callTool(getFileTool, { id: expired.id }, ctx)).isError).toBe(true);
 
     expect((await callTool(getFileTool, { id: 'nope' }, ctx)).isError).toBe(true);
   });
@@ -114,19 +97,3 @@ describe('get_file', () => {
     expect(textOf(result)).toContain('Could not read');
   });
 });
-
-/**
- * Registered directly, with an expiry already in the past — the tool only takes
- * a positive `expires_in_seconds`, and waiting one out is not a test.
- */
-function registerExpired(files: FileService): Promise<FileRecord> {
-  const { folderId, folderPath } = files.createUploadFolder();
-
-  return files.registerUpload({
-    folderId,
-    originalName: 'stale.txt',
-    path: join(folderPath, 'stale.txt'),
-    size: 1,
-    expiresAt: new Date(Date.now() - 1000),
-  });
-}

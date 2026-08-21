@@ -1,4 +1,3 @@
-import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestDb } from '../../testing/db';
 import type { Db } from '../db/db';
@@ -8,7 +7,6 @@ import { FileNotFoundError, FileRepository, type FileRecord } from './repository
 function makeRecord(overrides: Partial<FileRecord> = {}): FileRecord {
   return {
     id: 'file-1',
-    deletionId: 'del-1',
     viewId: 'view-1',
     filename: 'report.pdf',
     path: 'uploads/report.pdf',
@@ -16,8 +14,6 @@ function makeRecord(overrides: Partial<FileRecord> = {}): FileRecord {
     downloadCount: 0,
     deleted: false,
     createdAt: new Date('2026-08-11T10:00:00.000Z'),
-    expiresAt: null,
-    deleteAfterDownload: false,
     ...overrides,
   };
 }
@@ -34,18 +30,11 @@ describe('FileRepository', () => {
   describe('create / getById', () => {
     it('round-trips every field', async () => {
       const record = makeRecord({
-        expiresAt: new Date('2026-09-01T00:00:00.000Z'),
-        deleteAfterDownload: true,
         downloadCount: 3,
       });
       await repo.create(record);
 
       await expect(repo.getById('file-1')).resolves.toEqual(record);
-    });
-
-    it('stores a null expiry as null', async () => {
-      await repo.create(makeRecord());
-      await expect(repo.getById('file-1')).resolves.toMatchObject({ expiresAt: null });
     });
 
     it('throws FileNotFoundError for an unknown id', async () => {
@@ -61,16 +50,8 @@ describe('FileRepository', () => {
   describe('lookup by secondary keys', () => {
     beforeEach(() => repo.create(makeRecord()));
 
-    it('finds by deletion id', async () => {
-      await expect(repo.getByDeletionId('del-1')).resolves.toMatchObject({ id: 'file-1' });
-    });
-
     it('finds by view id', async () => {
       await expect(repo.getByViewId('view-1')).resolves.toMatchObject({ id: 'file-1' });
-    });
-
-    it('throws for an unknown deletion id', async () => {
-      await expect(repo.getByDeletionId('nope')).rejects.toThrow(FileNotFoundError);
     });
 
     it('throws for an unknown view id', async () => {
@@ -85,7 +66,7 @@ describe('FileRepository', () => {
 
     it('returns every record, deleted ones included', async () => {
       await repo.create(makeRecord());
-      await repo.create(makeRecord({ id: 'file-2', deletionId: 'd2', viewId: 'v2', deleted: true }));
+      await repo.create(makeRecord({ id: 'file-2', viewId: 'v2', deleted: true }));
 
       await expect(repo.getAll()).resolves.toHaveLength(2);
     });
@@ -97,7 +78,6 @@ describe('FileRepository', () => {
         await repo.create(
           makeRecord({
             id: `file-${i}`,
-            deletionId: `del-${i}`,
             viewId: `view-${i}`,
             createdAt: new Date(Date.UTC(2026, 7, 11, 10, i)),
           }),
@@ -185,7 +165,6 @@ describe('FileRepository', () => {
 
       await expect(repo.getById('legacy')).resolves.toEqual({
         id: 'legacy',
-        deletionId: '',
         viewId: '',
         filename: '',
         path: '',
@@ -193,8 +172,6 @@ describe('FileRepository', () => {
         downloadCount: 0,
         deleted: false,
         createdAt: new Date(0),
-        expiresAt: null,
-        deleteAfterDownload: false,
       });
     });
 
@@ -212,13 +189,6 @@ describe('FileRepository', () => {
 
       const record = await repo.getById('legacy');
       expect(record.createdAt).toEqual(new Date(0));
-    });
-
-    it('keeps the deleteAfterDownload column default when it is absent', async () => {
-      await db.execute(`INSERT INTO file_records (id) VALUES ('defaulted')`);
-
-      const [row] = await db.select().from(fileRecords).where(eq(fileRecords.id, 'defaulted'));
-      expect(row!.deleteAfterDownload).toBe(false);
     });
   });
 });

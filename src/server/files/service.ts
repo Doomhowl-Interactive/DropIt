@@ -11,8 +11,6 @@ export interface UploadedFile {
   /** Path on disk, relative to the process working directory. */
   path: string;
   size: number;
-  expiresAt?: Date | null;
-  deleteAfterDownload?: boolean;
 }
 
 export class FileService {
@@ -32,7 +30,6 @@ export class FileService {
   async registerUpload(upload: UploadedFile): Promise<FileRecord> {
     const record: FileRecord = {
       id: upload.folderId,
-      deletionId: randomUUID(),
       viewId: randomUUID(),
       filename: upload.originalName,
       path: upload.path,
@@ -40,8 +37,6 @@ export class FileService {
       downloadCount: 0,
       deleted: false,
       createdAt: new Date(),
-      expiresAt: upload.expiresAt ?? null,
-      deleteAfterDownload: upload.deleteAfterDownload ?? false,
     };
 
     await this.repo.create(record);
@@ -53,29 +48,14 @@ export class FileService {
     const file = await this.repo.getById(id);
 
     if (file.deleted) throw new FileNotFoundError();
-    if (file.expiresAt && file.expiresAt.getTime() <= Date.now()) {
-      throw new FileNotFoundError();
-    }
 
     await this.repo.incrementDownload(file);
-
-    if (file.deleteAfterDownload) {
-      await this.repo.markDeleted(file);
-    }
 
     return file;
   }
 
   async deleteFileById(id: string): Promise<FileRecord> {
     const file = await this.repo.getById(id);
-    if (file.deleted) throw new FileNotFoundError();
-
-    await this.repo.markDeleted(file);
-    return file;
-  }
-
-  async deleteFileByDeletionId(deletionId: string): Promise<FileRecord> {
-    const file = await this.repo.getByDeletionId(deletionId);
     if (file.deleted) throw new FileNotFoundError();
 
     await this.repo.markDeleted(file);
@@ -100,10 +80,6 @@ export class FileService {
     return this.repo.getById(id);
   }
 
-  getFileByDeletionId(deletionId: string) {
-    return this.repo.getByDeletionId(deletionId);
-  }
-
   getFileByViewId(viewId: string) {
     return this.repo.getByViewId(viewId);
   }
@@ -119,7 +95,6 @@ export class FileService {
 
       await this.repo.create({
         id: incoming.id,
-        deletionId: incoming.deletion_id,
         viewId: randomUUID(),
         filename: incoming.filename,
         path: this.buildPath(incoming.filename),
@@ -127,8 +102,6 @@ export class FileService {
         downloadCount: Number(incoming.download_count ?? 0),
         deleted: Boolean(incoming.deleted),
         createdAt: incoming.created_at ? new Date(incoming.created_at) : new Date(),
-        expiresAt: incoming.expires_at ? new Date(incoming.expires_at) : null,
-        deleteAfterDownload: Boolean(incoming.delete_after_download),
       });
     }
   }
@@ -158,7 +131,6 @@ export class FileService {
 
       await this.repo.create({
         id: entry.name,
-        deletionId: randomUUID(),
         viewId: randomUUID(),
         filename: entry.name,
         path,
@@ -166,8 +138,6 @@ export class FileService {
         downloadCount: 0,
         deleted: false,
         createdAt: stats.mtime,
-        expiresAt: null,
-        deleteAfterDownload: false,
       });
       added += 1;
     }

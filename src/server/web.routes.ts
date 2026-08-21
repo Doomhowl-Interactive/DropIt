@@ -31,7 +31,6 @@ export function webRoutes(
         data: {
           filename: file.filename,
           downloadId: file.id,
-          deleteId: file.deletionId,
           origin: requestOrigin(req),
         },
       });
@@ -60,9 +59,7 @@ export function webRoutes(
         filename: file.filename,
         size: humanSize(file.size),
         createdAt: formatTimestamp(file.createdAt),
-        expiresAt: file.expiresAt ? formatTimestamp(file.expiresAt) : 'NEVER',
         downloadCount: file.downloadCount,
-        deleteAfterDownload: file.deleteAfterDownload,
         deleted: file.deleted,
       }));
 

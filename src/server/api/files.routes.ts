@@ -19,15 +19,12 @@ import {
 function toExportRecord(file: FileRecord): FileExportRecord {
   return {
     id: file.id,
-    deletionId: file.deletionId,
     viewId: file.viewId,
     filename: file.filename,
     size: file.size,
     downloadCount: file.downloadCount,
     deleted: file.deleted,
     createdAt: file.createdAt.toISOString(),
-    expiresAt: file.expiresAt ? file.expiresAt.toISOString() : null,
-    deleteAfterDownload: file.deleteAfterDownload,
   };
 }
 
@@ -92,23 +89,17 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
         return;
       }
 
-      const duration = Number(req.body?.['duration'] ?? -1);
-      const expiresAt =
-        Number.isFinite(duration) && duration > 0 ? new Date(Date.now() + duration * 1000) : null;
-
       try {
         const record = await files.registerUpload({
           folderId,
           originalName: file.originalname,
           path: file.path,
           size: file.size,
-          expiresAt,
         });
 
         res.json(
           UploadResponseSchema.parse({
             id: record.id,
-            deletion_id: record.deletionId,
             filename: record.filename,
             size: record.size,
             view_key: record.viewId,
@@ -116,21 +107,6 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
         );
       } catch (err) {
         res.status(500).json({ error: (err as Error).message });
-      }
-    },
-  );
-
-  // Public-facing deletion link: renders a page rather than JSON.
-  router.get(
-    '/delete/:del_id',
-    authMiddleware(auth),
-    requireRole('admin'),
-    async (req: Request, res: Response) => {
-      try {
-        await files.deleteFileByDeletionId(param(req, 'del_id'));
-        await render(req, res, { page: 'deleted' }, 200);
-      } catch {
-        await render(req, res, { page: 'file-not-found' }, 200);
       }
     },
   );

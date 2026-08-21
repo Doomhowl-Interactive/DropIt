@@ -16,7 +16,6 @@ export function testToken(overrides: Partial<ApiToken> = {}): ApiToken {
     userId: 1,
     createdAt: new Date(),
     lastUsedAt: null,
-    expiresAt: null,
     revokedAt: null,
     ...overrides,
   };

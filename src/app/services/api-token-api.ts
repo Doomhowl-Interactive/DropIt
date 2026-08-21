@@ -27,8 +27,8 @@ export class ApiTokenApi {
   }
 
   /** The response carries the plaintext secret; it is not recoverable later. */
-  async create(name: string, expiresInDays: number | null): Promise<CreatedApiToken> {
-    const request: CreateApiTokenRequest = { name, expiresInDays };
+  async create(name: string): Promise<CreatedApiToken> {
+    const request: CreateApiTokenRequest = { name };
     const body = await firstValueFrom(this.http.post(BASE, request));
     return CreatedApiTokenSchema.parse(body);
   }

@@ -43,21 +43,6 @@
         />
       </div>
 
-      <div class="flex flex-col gap-1 w-40">
-        <label for="token-expiry" class="text-xs font-bold uppercase">Expires (days)</label>
-        <input
-          id="token-expiry"
-          pInputText
-          type="number"
-          min="1"
-          class="w-full"
-          placeholder="never"
-          [ngModel]="newExpiryDays()"
-          (ngModelChange)="newExpiryDays.set($event)"
-          name="tokenExpiry"
-        />
-      </div>
-
       <button type="submit" pButton [disabled]="busy() || !newName().trim()">
         <span pButtonLabel>Issue_Token</span>
       </button>
@@ -72,7 +57,6 @@
           <th>Prefix</th>
           <th>Created</th>
           <th>Last_Used</th>
-          <th>Expires</th>
           <th>Status</th>
           <th>System_Actions</th>
         </tr>
@@ -83,7 +67,6 @@
           <td class="whitespace-nowrap italic text-surface-500">{{ token.prefix }}…</td>
           <td class="text-[11px] leading-tight">{{ token.createdAt }}</td>
           <td class="text-[11px] leading-tight">{{ token.lastUsedAt }}</td>
-          <td class="text-[11px] leading-tight text-red-600">{{ token.expiresAt }}</td>
           <td>
             @if (token.revoked) {
               <p-tag value="REVOKED" severity="danger" />
@@ -109,7 +92,7 @@
       </ng-template>
       <ng-template #emptymessage>
         <tr>
-          <td colspan="7" class="text-center py-10 font-bold uppercase italic">No tokens issued</td>
+          <td colspan="6" class="text-center py-10 font-bold uppercase italic">No tokens issued</td>
         </tr>
       </ng-template>
     </p-table>

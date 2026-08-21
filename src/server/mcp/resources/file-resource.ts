@@ -8,7 +8,7 @@ export const FILE_URI_SCHEME = 'dropit://files/';
 /**
  * Exposes stored files as browsable MCP resources, so a client can offer them
  * as attachable context without the model having to call `get_file` first.
- * Only live files are listed — deleted and expired ones are not attachable.
+ * Only live files are listed — deleted ones are not attachable.
  */
 export const fileResource = defineMcpResource({
   name: 'file',
@@ -18,12 +18,9 @@ export const fileResource = defineMcpResource({
 
   async list(ctx) {
     const records = await ctx.files.getAllFiles();
-    const now = Date.now();
 
     return records
-      .filter(
-        (record) => !record.deleted && !(record.expiresAt && record.expiresAt.getTime() <= now),
-      )
+      .filter((record) => !record.deleted)
       .map((record) => ({
         uri: `${FILE_URI_SCHEME}${record.id}`,
         name: record.filename,

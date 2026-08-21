@@ -33,7 +33,6 @@ describe('upload_file', () => {
     expect(structured['filename']).toBe('note.txt');
     expect(structured['size']).toBe(10);
     expect(structured['share_url']).toMatch(new RegExp(`^${TEST_ORIGIN}/f/`));
-    expect(structured['expires_at']).toBeNull();
 
     const record = await files.getFileById(String(structured['id']));
     expect(readFileSync(record.path, 'utf8')).toBe('hello drop');
@@ -49,25 +48,6 @@ describe('upload_file', () => {
 
     const record = await files.getFileById(String(structuredOf(result)['id']));
     expect(readFileSync(record.path, 'utf8')).toBe('plain');
-  });
-
-  it('honours an expiry and the delete-after-download flag', async () => {
-    const result = await callTool(
-      uploadFileTool,
-      {
-        filename: 'note.txt',
-        content: 'x',
-        encoding: 'utf8',
-        expires_in_seconds: 60,
-        delete_after_download: true,
-      },
-      ctx,
-    );
-
-    const record = await files.getFileById(String(structuredOf(result)['id']));
-
-    expect(record.deleteAfterDownload).toBe(true);
-    expect(record.expiresAt?.getTime()).toBeGreaterThan(Date.now());
   });
 
   it('neutralises a traversal filename', async () => {

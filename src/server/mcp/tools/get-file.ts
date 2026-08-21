@@ -13,8 +13,7 @@ export const getFileTool = defineMcpTool({
 
   description:
     'Returns the contents of a stored file. Text comes back inline; anything else comes back ' +
-    'as a base64 resource. Reading a file this way does not count as a download and will not ' +
-    'consume a delete-after-download file.',
+    'as a base64 resource. Reading a file this way does not count as a download.',
 
   inputSchema: {
     id: z
@@ -29,7 +28,7 @@ export const getFileTool = defineMcpTool({
     const record = await resolveLiveFile(ctx.files, args.id).catch(() => null);
     if (!record) {
       return toolError(
-        `No live file with id "${args.id}" — it may be deleted, expired or unknown.`,
+        `No live file with id "${args.id}" — it may be deleted or unknown.`,
       );
     }
 

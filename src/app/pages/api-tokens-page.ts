@@ -43,7 +43,6 @@ export class ApiTokensPage {
   protected readonly endpoint = computed(() => this.data().endpoint);
 
   protected readonly newName = signal('');
-  protected readonly newExpiryDays = signal('');
   protected readonly busy = signal(false);
   protected readonly error = signal(this.data().error ?? '');
 
@@ -62,12 +61,11 @@ export class ApiTokensPage {
     this.error.set('');
 
     try {
-      const created = await this.api.create(name, this.parseExpiry());
+      const created = await this.api.create(name);
 
       this.tokens.update((tokens) => [created.token, ...tokens]);
       this.issuedSecret.set(created.secret);
       this.newName.set('');
-      this.newExpiryDays.set('');
     } catch (err) {
       this.error.set(this.messageFor(err, 'Could not create the token.'));
     } finally {
@@ -93,11 +91,6 @@ export class ApiTokensPage {
 
   protected dismissSecret(): void {
     this.issuedSecret.set(null);
-  }
-
-  private parseExpiry(): number | null {
-    const days = Number(this.newExpiryDays().trim());
-    return Number.isFinite(days) && days > 0 ? days : null;
   }
 
   private messageFor(err: unknown, fallback: string): string {

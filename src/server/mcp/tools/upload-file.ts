@@ -17,7 +17,6 @@ export const uploadFileTool = defineMcpTool({
     'Stores a file and returns a shareable link for it.',
     'Text content can be sent as-is with encoding="utf8"; anything else must be base64.',
     'The returned share link is public — anyone holding it can download the file.',
-    'The deletion link is admin-only and will not work from an MCP client.',
   ].join(' '),
 
   inputSchema: {
@@ -27,16 +26,6 @@ export const uploadFileTool = defineMcpTool({
       .enum(['base64', 'utf8'])
       .default('base64')
       .describe('How `content` is encoded. Use "utf8" only for plain text.'),
-    expires_in_seconds: z
-      .number()
-      .int()
-      .positive()
-      .optional()
-      .describe('Delete the file automatically after this many seconds. Omit to keep it forever.'),
-    delete_after_download: z
-      .boolean()
-      .default(false)
-      .describe('Delete the file as soon as it has been downloaded once.'),
   },
 
   outputSchema: {
@@ -45,7 +34,6 @@ export const uploadFileTool = defineMcpTool({
     size: z.number(),
     share_url: z.string(),
     download_url: z.string(),
-    expires_at: z.string().nullable(),
   },
 
   async handler(args, ctx) {
@@ -75,17 +63,11 @@ export const uploadFileTool = defineMcpTool({
     try {
       await writeFile(path, bytes);
 
-      const expiresAt = args.expires_in_seconds
-        ? new Date(Date.now() + args.expires_in_seconds * 1000)
-        : null;
-
       const record = await ctx.files.registerUpload({
         folderId,
         originalName: filename,
         path,
         size: bytes.length,
-        expiresAt,
-        deleteAfterDownload: args.delete_after_download,
       });
 
       const links = shareLinks(record, ctx.origin);
@@ -98,11 +80,7 @@ export const uploadFileTool = defineMcpTool({
               `Uploaded ${record.filename} (${humanSize(record.size)}).`,
               `Share link: ${links.share}`,
               `Direct download: ${links.download}`,
-              expiresAt ? `Expires: ${expiresAt.toISOString()}` : 'Never expires.',
-              args.delete_after_download ? 'Deletes itself after the first download.' : '',
-            ]
-              .filter(Boolean)
-              .join('\n'),
+            ].join('\n'),
           },
         ],
         structuredContent: {
@@ -111,7 +89,6 @@ export const uploadFileTool = defineMcpTool({
           size: record.size,
           share_url: links.share,
           download_url: links.download,
-          expires_at: expiresAt?.toISOString() ?? null,
         },
       };
     } catch (err) {

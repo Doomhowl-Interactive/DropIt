@@ -15,7 +15,6 @@ export type { ApiTokenRow, CreatedApiToken, DashboardFileRow };
 export interface CompletePageData {
   filename: string;
   downloadId: string;
-  deleteId: string;
   /** Absolute origin the visitor reached us on, e.g. `https://drop.example`. */
   origin: string;
 }
@@ -39,7 +38,6 @@ export type PageContext =
   | { page: 'login'; error?: boolean }
   | { page: 'complete'; data: CompletePageData }
   | { page: 'file-not-found' }
-  | { page: 'deleted' }
   | { page: 'dashboard'; data: DashboardPageData }
   | { page: 'api-tokens'; data: ApiTokensPageData }
   | { page: 'change-password' }

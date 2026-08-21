@@ -40,7 +40,6 @@ export type AdminCheckResponse = z.infer<typeof AdminCheckResponseSchema>;
 
 export const UploadResponseSchema = z.object({
   id: z.string(),
-  deletion_id: z.string(),
   filename: z.string(),
   size: z.number(),
   view_key: z.string(),
@@ -50,15 +49,12 @@ export type UploadResponse = z.infer<typeof UploadResponseSchema>;
 /** A file record as it's allowed to leave the server — no on-disk `path`. */
 export const FileExportRecordSchema = z.object({
   id: z.string(),
-  deletionId: z.string(),
   viewId: z.string(),
   filename: z.string(),
   size: z.number(),
   downloadCount: z.number(),
   deleted: z.boolean(),
   createdAt: z.string(),
-  expiresAt: z.string().nullable(),
-  deleteAfterDownload: z.boolean(),
 });
 export type FileExportRecord = z.infer<typeof FileExportRecordSchema>;
 
@@ -68,10 +64,7 @@ export type FileExportResponse = z.infer<typeof FileExportResponseSchema>;
 /** The legacy, snake_cased shape `/dashboard/import` accepts. */
 export const ImportFileRecordSchema = z.object({
   id: z.string(),
-  deletion_id: z.string(),
   filename: z.string(),
-  expires_at: z.string().optional(),
-  delete_after_download: z.boolean().optional(),
   size: z.number(),
   download_count: z.number(),
   deleted: z.boolean(),
@@ -91,9 +84,7 @@ export const DashboardFileRowSchema = z.object({
   filename: z.string(),
   size: z.string(),
   createdAt: z.string(),
-  expiresAt: z.string(),
   downloadCount: z.number(),
-  deleteAfterDownload: z.boolean(),
   deleted: z.boolean(),
 });
 export type DashboardFileRow = z.infer<typeof DashboardFileRowSchema>;
@@ -103,7 +94,6 @@ export type DashboardFileRow = z.infer<typeof DashboardFileRowSchema>;
 // ---------------------------------------------------------------------------
 
 export const MAX_TOKEN_NAME_LENGTH = 60;
-export const MAX_TOKEN_EXPIRY_DAYS = 3650;
 
 /**
  * A token as the server is willing to describe it. Shared by the SSR page
@@ -115,7 +105,6 @@ export const ApiTokenRowSchema = z.object({
   prefix: z.string(),
   createdAt: z.string(),
   lastUsedAt: z.string(),
-  expiresAt: z.string(),
   revoked: z.boolean(),
 });
 export type ApiTokenRow = z.infer<typeof ApiTokenRowSchema>;
@@ -125,7 +114,6 @@ export type ApiTokensListResponse = z.infer<typeof ApiTokensListResponseSchema>;
 
 export const CreateApiTokenRequestSchema = z.object({
   name: z.string().trim().min(1).max(MAX_TOKEN_NAME_LENGTH),
-  expiresInDays: z.number().int().positive().max(MAX_TOKEN_EXPIRY_DAYS).nullable().optional(),
 });
 export type CreateApiTokenRequest = z.infer<typeof CreateApiTokenRequestSchema>;
 

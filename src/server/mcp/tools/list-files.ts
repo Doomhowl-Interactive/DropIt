@@ -11,7 +11,7 @@ export const listFilesTool = defineMcpTool({
   title: 'List stored files',
 
   description:
-    'Lists the files held by Drop.it, newest first, with their share links, sizes and expiry. ' +
+    'Lists the files held by Drop.it, newest first, with their share links and sizes. ' +
     'Deleted files are included and flagged so their ids can still be recognised.',
 
   inputSchema: {
@@ -35,7 +35,6 @@ export const listFilesTool = defineMcpTool({
         filename: z.string(),
         size: z.number(),
         created_at: z.string(),
-        expires_at: z.string().nullable(),
         download_count: z.number(),
         deleted: z.boolean(),
         share_url: z.string(),
@@ -56,7 +55,6 @@ export const listFilesTool = defineMcpTool({
       filename: record.filename,
       size: record.size,
       created_at: record.createdAt.toISOString(),
-      expires_at: record.expiresAt?.toISOString() ?? null,
       download_count: record.downloadCount,
       deleted: record.deleted,
       share_url: shareLinks(record, ctx.origin).share,
@@ -69,7 +67,6 @@ export const listFilesTool = defineMcpTool({
         humanSize(record.size),
         `${record.downloadCount} downloads`,
         `created ${formatTimestamp(record.createdAt)}`,
-        record.expiresAt ? `expires ${formatTimestamp(record.expiresAt)}` : 'never expires',
       ];
       if (record.deleted) parts.push('DELETED');
       return `- ${parts.join(' | ')}`;

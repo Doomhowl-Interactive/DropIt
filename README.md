@@ -1,7 +1,7 @@
 # Drop.it
 
-A no-design file drop: upload a file, hand out the download link, keep the
-deletion link to yourself. Angular 21 with server-side rendering; the same
+A no-design file drop: upload a file, hand out the download link. Angular 21
+with server-side rendering; the same
 Node process serves the pages, the API and an MCP endpoint.
 
 ## Running it
@@ -85,7 +85,7 @@ render the same markup without a second round trip. See
 | Verb | Route                                | Description                                              |
 | ---- | ------------------------------------ | -------------------------------------------------------- |
 | GET  | `/`                                  | Uploader                                                 |
-| GET  | `/f/:id`                             | Share page with the download and deletion links          |
+| GET  | `/f/:id`                             | Share page with the download link                        |
 | GET  | `/login`                             | Admin sign-in page                                       |
 | GET  | `/dashboard?page=N`                  | Paginated file console (admin)                           |
 | GET  | `/logout`                            | Clears the session and redirects to `/` (admin)          |
@@ -98,7 +98,6 @@ render the same markup without a second round trip. See
 | POST | `/api/files/upload`                  | Multipart upload (admin)                                 |
 | GET  | `/api/files/view/:id`                | Streams a file inline                                    |
 | GET  | `/api/files/download/:id`            | Streams a file inline                                    |
-| GET  | `/api/files/delete/:del_id`          | Soft-deletes and shows a confirmation (admin)            |
 | GET  | `/api/files/dashboard/`              | Lists all file records (admin)                           |
 | GET  | `/api/files/dashboard/export`        | Exports all file records (admin)                         |
 | POST | `/api/files/dashboard/import`        | Imports file records (admin)                             |

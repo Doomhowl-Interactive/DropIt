@@ -21,16 +21,13 @@ export async function createTestDb(): Promise<Db> {
   await client.exec(`
     CREATE TABLE file_records (
       id text PRIMARY KEY NOT NULL,
-      deletion_id text,
       view_id text,
       filename text,
       path text,
       size integer,
       download_count integer,
       deleted boolean,
-      created_at text,
-      expires_at text,
-      delete_after_download boolean DEFAULT false
+      created_at text
     );
     CREATE TABLE users (
       id serial PRIMARY KEY NOT NULL,
@@ -51,7 +48,6 @@ export async function createTestDb(): Promise<Db> {
       user_id integer NOT NULL,
       created_at text,
       last_used_at text,
-      expires_at text,
       revoked_at text
     );
     CREATE UNIQUE INDEX idx_api_tokens_token_hash ON api_tokens (token_hash);

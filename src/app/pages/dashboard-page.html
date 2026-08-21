@@ -59,7 +59,6 @@
           <th>Size</th>
           <th>Timeline (In/Out)</th>
           <th>Hits</th>
-          <th>Burn</th>
           <th>Status</th>
           <th>System_Actions</th>
         </tr>
@@ -79,18 +78,9 @@
 
           <td class="text-[11px] leading-tight">
             <span class="block"><strong>CRT:</strong> {{ file.createdAt }}</span>
-            <span class="block text-red-600"><strong>EXP:</strong> {{ file.expiresAt }}</span>
           </td>
 
           <td class="text-center font-black text-lg">{{ file.downloadCount }}</td>
-
-          <td>
-            @if (file.deleteAfterDownload) {
-              <p-tag value="YES" severity="warn" />
-            } @else {
-              <p-tag value="NO" severity="secondary" />
-            }
-          </td>
 
           <td>
             @if (file.deleted) {
@@ -140,7 +130,7 @@
       </ng-template>
       <ng-template #emptymessage>
         <tr>
-          <td colspan="7" class="text-center py-10 font-bold uppercase italic">
+          <td colspan="6" class="text-center py-10 font-bold uppercase italic">
             Zero files in buffer
           </td>
         </tr>

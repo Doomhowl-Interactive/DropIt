@@ -59,33 +59,18 @@ describe('FileService', () => {
   });
 
   describe('registerUpload', () => {
-    it('stores the record with fresh deletion and view keys', async () => {
+    it('stores the record with a fresh view key', async () => {
       const record = await register();
 
-      expect(record.deletionId).toMatch(UUID);
       expect(record.viewId).toMatch(UUID);
-      expect(record.deletionId).not.toBe(record.viewId);
       await expect(repo.getById(record.id)).resolves.toMatchObject({ filename: 'report.pdf' });
     });
 
-    it('starts at zero downloads, undeleted and never-expiring', async () => {
+    it('starts at zero downloads and undeleted', async () => {
       const record = await register();
 
       expect(record.downloadCount).toBe(0);
       expect(record.deleted).toBe(false);
-      expect(record.expiresAt).toBeNull();
-      expect(record.deleteAfterDownload).toBe(false);
-    });
-
-    it('keeps an explicit expiry and burn-after-reading flag', async () => {
-      const expiresAt = new Date('2026-09-01T00:00:00.000Z');
-      const record = await register({ expiresAt, deleteAfterDownload: true });
-
-      expect(record.expiresAt).toEqual(expiresAt);
-      await expect(repo.getById(record.id)).resolves.toMatchObject({
-        expiresAt,
-        deleteAfterDownload: true,
-      });
     });
   });
 
@@ -108,32 +93,6 @@ describe('FileService', () => {
       await expect(service.downloadFile(id)).rejects.toThrow(FileNotFoundError);
       await expect(repo.getById(id)).resolves.toMatchObject({ downloadCount: 0 });
     });
-
-    it('throws once the expiry has passed', async () => {
-      const { id } = await register({ expiresAt: new Date(Date.now() - 1000) });
-      await expect(service.downloadFile(id)).rejects.toThrow(FileNotFoundError);
-    });
-
-    it('treats an expiry exactly at now as expired', async () => {
-      vi.useFakeTimers();
-      vi.setSystemTime(new Date('2026-08-11T12:00:00.000Z'));
-
-      const { id } = await register({ expiresAt: new Date('2026-08-11T12:00:00.000Z') });
-      await expect(service.downloadFile(id)).rejects.toThrow(FileNotFoundError);
-    });
-
-    it('still serves a file whose expiry is in the future', async () => {
-      const { id } = await register({ expiresAt: new Date(Date.now() + 60_000) });
-      await expect(service.downloadFile(id)).resolves.toMatchObject({ id });
-    });
-
-    it('soft-deletes a burn-after-reading file once served', async () => {
-      const { id } = await register({ deleteAfterDownload: true });
-
-      await expect(service.downloadFile(id)).resolves.toMatchObject({ id });
-      await expect(repo.getById(id)).resolves.toMatchObject({ deleted: true, downloadCount: 1 });
-      await expect(service.downloadFile(id)).rejects.toThrow(FileNotFoundError);
-    });
   });
 
   describe('deleteFileById', () => {
@@ -153,26 +112,6 @@ describe('FileService', () => {
       await service.deleteFileById(id);
 
       await expect(service.deleteFileById(id)).rejects.toThrow(FileNotFoundError);
-    });
-  });
-
-  describe('deleteFileByDeletionId', () => {
-    it('soft-deletes via the private deletion key', async () => {
-      const { id, deletionId } = await register();
-
-      await expect(service.deleteFileByDeletionId(deletionId)).resolves.toMatchObject({ id });
-      await expect(repo.getById(id)).resolves.toMatchObject({ deleted: true });
-    });
-
-    it('throws for an unknown deletion key', async () => {
-      await expect(service.deleteFileByDeletionId('nope')).rejects.toThrow(FileNotFoundError);
-    });
-
-    it('throws when the file is already deleted', async () => {
-      const { deletionId } = await register();
-      await service.deleteFileByDeletionId(deletionId);
-
-      await expect(service.deleteFileByDeletionId(deletionId)).rejects.toThrow(FileNotFoundError);
     });
   });
 
@@ -202,13 +141,10 @@ describe('FileService', () => {
   });
 
   describe('read-through accessors', () => {
-    it('exposes lookups by id, deletion id and view id', async () => {
+    it('exposes lookups by id and view id', async () => {
       const record = await register();
 
       await expect(service.getFileById(record.id)).resolves.toMatchObject({ id: record.id });
-      await expect(service.getFileByDeletionId(record.deletionId)).resolves.toMatchObject({
-        id: record.id,
-      });
       await expect(service.getFileByViewId(record.viewId)).resolves.toMatchObject({
         id: record.id,
       });
@@ -233,7 +169,6 @@ describe('FileService', () => {
   describe('importFiles', () => {
     const incoming = (overrides: Partial<ImportFileRecord> = {}): ImportFileRecord => ({
       id: 'imported-1',
-      deletion_id: 'del-imported-1',
       filename: 'legacy.bin',
       size: 1234,
       download_count: 7,
@@ -247,7 +182,6 @@ describe('FileService', () => {
 
       const record = await repo.getById('imported-1');
       expect(record).toMatchObject({
-        deletionId: 'del-imported-1',
         filename: 'legacy.bin',
         size: 1234,
         downloadCount: 7,
@@ -256,17 +190,6 @@ describe('FileService', () => {
       });
       expect(record.viewId).toMatch(UUID);
       expect(record.path).toBe(join(storageDir, 'legacy.bin'));
-    });
-
-    it('carries over the expiry and the burn-after-reading flag', async () => {
-      await service.importFiles([
-        incoming({ expires_at: '2026-12-31T00:00:00.000Z', delete_after_download: true }),
-      ]);
-
-      await expect(repo.getById('imported-1')).resolves.toMatchObject({
-        expiresAt: new Date('2026-12-31T00:00:00.000Z'),
-        deleteAfterDownload: true,
-      });
     });
 
     it('leaves an existing record untouched', async () => {
@@ -280,7 +203,7 @@ describe('FileService', () => {
     });
 
     it('imports several records at once', async () => {
-      await service.importFiles([incoming(), incoming({ id: 'imported-2', deletion_id: 'd2' })]);
+      await service.importFiles([incoming(), incoming({ id: 'imported-2' })]);
       await expect(repo.getAll()).resolves.toHaveLength(2);
     });
 
@@ -292,7 +215,6 @@ describe('FileService', () => {
     it('defaults the missing numeric and date fields', async () => {
       const bare = {
         id: 'bare',
-        deletion_id: 'd',
         filename: 'x',
       } as unknown as ImportFileRecord;
       await service.importFiles([bare]);
@@ -327,10 +249,7 @@ describe('FileService', () => {
         size: 'stray bytes'.length,
         downloadCount: 0,
         deleted: false,
-        expiresAt: null,
-        deleteAfterDownload: false,
       });
-      expect(record.deletionId).toMatch(UUID);
       expect(record.viewId).toMatch(UUID);
     });
 

@@ -14,7 +14,6 @@ export function toApiTokenRow(token: ApiToken): ApiTokenRow {
     prefix: token.prefix,
     createdAt: token.createdAt ? formatTimestamp(token.createdAt) : 'UNKNOWN',
     lastUsedAt: token.lastUsedAt ? formatTimestamp(token.lastUsedAt) : 'NEVER',
-    expiresAt: token.expiresAt ? formatTimestamp(token.expiresAt) : 'NEVER',
     revoked: token.revokedAt !== null,
   };
 }

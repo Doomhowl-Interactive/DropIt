@@ -5,15 +5,12 @@ export interface ShareLinks {
   share: string;
   /** Streams the bytes directly; counts as a download. */
   download: string;
-  /** Deletes the file. Requires an admin browser session, same as the UI. */
-  delete: string;
 }
 
-/** The three URLs the web UI shows on its "file ready" page, for a given origin. */
+/** The URLs the web UI shows on its "file ready" page, for a given origin. */
 export function shareLinks(record: FileRecord, origin: string): ShareLinks {
   return {
     share: `${origin}/f/${record.viewId}`,
     download: `${origin}/api/files/download/${record.id}`,
-    delete: `${origin}/api/files/delete/${record.deletionId}`,
   };
 }

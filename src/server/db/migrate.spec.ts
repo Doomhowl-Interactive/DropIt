@@ -33,8 +33,9 @@ describe('migrate', () => {
     expect(allSql).toContain('`idx_api_tokens_revoked_at`');
   });
 
-  it('creates the file_records columns', () => {
-    expect(allSql).toContain('`expires_at`');
-    expect(allSql).toContain('`delete_after_download` boolean DEFAULT false');
+  it('drops the removed deletion-link and expiry columns', () => {
+    expect(allSql).toContain('DROP COLUMN `deletion_id`');
+    expect(allSql).toContain('DROP COLUMN `expires_at`');
+    expect(allSql).toContain('DROP COLUMN `delete_after_download`');
   });
 });

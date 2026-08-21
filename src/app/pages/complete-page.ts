@@ -26,11 +26,6 @@ export class CompletePage {
     return data ? `${data.origin}/api/files/view/${data.downloadId}` : '';
   });
 
-  protected readonly deleteUrl = computed(() => {
-    const data = this.data();
-    return data ? `${data.origin}/api/files/delete/${data.deleteId}` : '';
-  });
-
   constructor() {
     usePage({ title: 'Send.it - File Ready', bodyClass: CENTERED_BODY });
   }

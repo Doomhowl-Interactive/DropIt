@@ -19,7 +19,6 @@ export interface ApiToken {
   userId: number;
   createdAt: Date | null;
   lastUsedAt: Date | null;
-  expiresAt: Date | null;
   revokedAt: Date | null;
 }
 
@@ -34,7 +33,6 @@ function mapRow(row: Row): ApiToken {
     userId: row.userId,
     createdAt: fromDbDate(row.createdAt),
     lastUsedAt: fromDbDate(row.lastUsedAt),
-    expiresAt: fromDbDate(row.expiresAt),
     revokedAt: fromDbDate(row.revokedAt),
   };
 }
@@ -51,7 +49,6 @@ export class ApiTokenRepository {
       userId: token.userId,
       createdAt: token.createdAt ? toDbDate(token.createdAt) : null,
       lastUsedAt: null,
-      expiresAt: token.expiresAt ? toDbDate(token.expiresAt) : null,
       revokedAt: null,
     });
     return token;
