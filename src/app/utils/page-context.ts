@@ -42,6 +42,7 @@ export type PageContext =
   | { page: 'deleted' }
   | { page: 'dashboard'; data: DashboardPageData }
   | { page: 'api-tokens'; data: ApiTokensPageData }
+  | { page: 'change-password' }
   | { page: 'error' };
 
 export const PAGE_CONTEXT_KEY = 'dropit.pageContext';

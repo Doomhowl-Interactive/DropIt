@@ -101,6 +101,7 @@ render the same markup without a second round trip. See
 | GET  | `/api/files/dashboard/download/:id`  | Streams an admin file by database ID (admin)             |
 | GET  | `/api/files/dashboard/:id`           | Streams an admin file by database ID (admin)             |
 | GET  | `/dashboard/tokens`                  | API token console (admin)                                |
+| GET  | `/dashboard/password`                | Change-password screen (admin)                           |
 | GET  | `/api/tokens`                        | Lists API tokens (admin)                                 |
 | POST | `/api/tokens`                        | Issues an API token, returning it once (admin)           |
 | POST | `/api/tokens/:id/revoke`             | Revokes an API token (admin)                             |
