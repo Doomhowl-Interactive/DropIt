@@ -24,7 +24,7 @@ COPY --from=builder /app/drizzle ./drizzle
 
 # Default for a plain `docker run`; docker-compose and fly.toml point this at
 # its own mount.
-RUN mkdir -p /app/uploads && chown -R node:node /app
+RUN mkdir -p /app/uploads && chown -R node:node /app/uploads
 
 USER node
 

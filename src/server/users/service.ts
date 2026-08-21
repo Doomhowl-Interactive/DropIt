@@ -2,8 +2,8 @@ import { checkPassword, hashPassword } from '../security/password';
 import { UserNotFoundError, UserRepository, type User } from './repository';
 
 export class InvalidPasswordError extends Error {
-  constructor() {
-    super('invalid password');
+  constructor(msg?: string) {
+    super(msg || 'invalid password');
     this.name = 'InvalidPasswordError';
   }
 }
@@ -42,10 +42,10 @@ export class UserService {
     const user = await this.repo.findById(userId);
 
     if (!validNewPassword(newPassword)) {
-      throw new InvalidPasswordError();
+      throw new InvalidPasswordError('At least 6 characters with an upper, a lower and a digit.');
     }
     if (await checkPassword(newPassword, user.passwordHash)) {
-      throw new InvalidPasswordError();
+      throw new InvalidPasswordError('Password does not match.');
     }
 
     user.passwordHash = await hashPassword(newPassword);
