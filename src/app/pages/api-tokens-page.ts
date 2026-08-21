@@ -50,7 +50,7 @@ export class ApiTokensPage {
   protected readonly issuedSecret = signal<string | null>(null);
 
   constructor() {
-    usePage({ title: 'API Tokens', bodyClass: 'min-h-screen p-4' });
+    usePage({ title: 'API tokens', bodyClass: 'min-h-screen p-4' });
   }
 
   protected async create(): Promise<void> {

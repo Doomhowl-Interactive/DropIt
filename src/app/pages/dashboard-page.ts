@@ -37,7 +37,7 @@ export class DashboardPage {
   protected readonly totalPages = computed(() => this.data().totalPages);
 
   protected readonly modalOpen = signal(false);
-  protected readonly modalTitle = signal('CONFIRM_WIPE');
+  protected readonly modalTitle = signal('Confirm wipe');
   protected readonly modalMessage = signal(
     'Awaiting system confirmation for permanent data erasure.',
   );

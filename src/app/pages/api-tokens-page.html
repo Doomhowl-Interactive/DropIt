@@ -7,14 +7,14 @@
 <div class="max-w-7xl mx-auto">
   <header class="mb-6 pb-4 flex justify-between items-start">
     <div>
-      <h1 class="text-4xl font-black uppercase tracking-tighter leading-none">API_Tokens</h1>
+      <h1 class="text-4xl font-black uppercase tracking-tighter leading-none">API tokens</h1>
       <p class="text-sm mt-2 text-surface-500">
         Long-lived tokens for the API and MCP endpoint.
       </p>
     </div>
     <div class="flex flex-col items-end gap-2">
-      <a href="/dashboard" class="text-sm font-bold underline">← BACK_TO_DASHBOARD</a>
-      <a href="/logout" class="text-sm font-bold underline text-red-600">LOGOUT_SESSION</a>
+      <a href="/dashboard" class="text-sm font-bold underline">← Back to dashboard</a>
+      <a href="/logout" class="text-sm font-bold underline text-red-600">Logout session</a>
     </div>
   </header>
 
@@ -44,7 +44,7 @@
       </div>
 
       <button type="submit" pButton [disabled]="busy() || !newName().trim()">
-        <span pButtonLabel>Issue_Token</span>
+        <span pButtonLabel>Issue token</span>
       </button>
     </form>
   </p-card>
@@ -56,9 +56,9 @@
           <th>Label</th>
           <th>Prefix</th>
           <th>Created</th>
-          <th>Last_Used</th>
+          <th>Last used</th>
           <th>Status</th>
-          <th>System_Actions</th>
+          <th>System actions</th>
         </tr>
       </ng-template>
       <ng-template #body let-token>
