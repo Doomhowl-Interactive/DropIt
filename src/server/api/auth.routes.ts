@@ -5,12 +5,14 @@ import { InvalidPasswordError, type AuthService } from '../auth/service';
 import { parseBody } from '../util';
 import {
   AdminCheckResponseSchema,
-  ChangePasswordRequestSchema,
-  ChangePasswordResponseSchema,
   LoginRequestSchema,
   LoginResponseSchema,
   MeResponseSchema,
 } from '../../shared/types';
+import {
+  ChangePasswordRequestSchema,
+  ChangePasswordResponseSchema,
+} from '../../shared/change-password.types';
 
 export function authRoutes(auth: AuthService, authDeps: AuthDeps = {}): Router {
   const router = Router();

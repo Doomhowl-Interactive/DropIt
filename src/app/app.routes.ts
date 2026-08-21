@@ -16,6 +16,11 @@ export const routes: Routes = [
   { path: 'login', component: LoginPage },
   { path: 'dashboard', component: DashboardPage },
   { path: 'dashboard/tokens', component: ApiTokensPage },
+  {
+    path: 'dashboard/password',
+    loadComponent: () =>
+      import('./pages/change-password-page').then((m) => m.ChangePasswordPage),
+  },
   { path: 'f/:id', component: FileViewPage },
   { path: '**', component: NotFoundPage },
 ];

@@ -279,6 +279,19 @@ describe('web routes', () => {
     });
   });
 
+  describe('GET /dashboard/password', () => {
+    it('renders the change-password page for an admin', async () => {
+      const response = await server.fetch('/dashboard/password', { headers: adminCookie() });
+
+      expect(response.status).toBe(200);
+      await expect(context(response)).resolves.toEqual({ page: 'change-password' });
+    });
+
+    it('is itself behind the admin guard', async () => {
+      expect((await server.fetch('/dashboard/password')).status).toBe(401);
+    });
+  });
+
   describe('GET /logout', () => {
     it('clears the cookie and redirects to the index', async () => {
       const response = await server.fetch('/logout', { headers: adminCookie() });

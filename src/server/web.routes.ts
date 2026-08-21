@@ -105,6 +105,10 @@ export function webRoutes(
     }
   });
 
+  router.get('/dashboard/password', ...adminOnly, (req, res) => {
+    render(req, res, { page: 'change-password' });
+  });
+
   router.get('/logout', ...adminOnly, (_req, res) => {
     res.clearCookie('auth_token', {
       path: '/',

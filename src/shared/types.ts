@@ -34,14 +34,6 @@ export type MeResponse = z.infer<typeof MeResponseSchema>;
 export const AdminCheckResponseSchema = z.object({ message: z.string() });
 export type AdminCheckResponse = z.infer<typeof AdminCheckResponseSchema>;
 
-export const ChangePasswordRequestSchema = z.object({
-  newPassword: z.string().min(1),
-});
-export type ChangePasswordRequest = z.infer<typeof ChangePasswordRequestSchema>;
-
-export const ChangePasswordResponseSchema = z.object({ message: z.string() });
-export type ChangePasswordResponse = z.infer<typeof ChangePasswordResponseSchema>;
-
 // ---------------------------------------------------------------------------
 // Files
 // ---------------------------------------------------------------------------
