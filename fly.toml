@@ -31,8 +31,9 @@ primary_region = 'fra'
   # same Node process and the same database pool it had before, and those connections are long
   # dead by the time anything wakes it. The first request in then blocks on a socket nobody is
   # listening to until the read times out — 110 seconds, measured — and the caller has usually
-  # given up by then. A stop is a real cold start, new process and new pool, for a couple of
-  # seconds of boot.
+  # given up by then. A stop is a real cold start, new process and new pool. The proxy holds
+  # the request while it boots, so a wake costs the caller about nine seconds and answers,
+  # rather than a couple of hundred milliseconds and a timeout.
   auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
