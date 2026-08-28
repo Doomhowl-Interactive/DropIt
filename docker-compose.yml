@@ -1,12 +1,3 @@
-# Coolify (prod) deployment — this is the default Docker Compose location
-# Coolify looks for. A bundled MySQL database is included; the app connects
-# to it via DATABASE_URL (or an external TiDB/MySQL instance if overridden).
-#
-# Coolify scans this file for ${VAR} references and turns each one into an
-# environment variable field in its UI, so set JWT_SECRET, MYSQL_PASSWORD,
-# MYSQL_ROOT_PASSWORD, ALLOWED_HOSTS and DOMAIN there rather than committing
-# values here.
-
 services:
   mysql:
     image: mysql:8.4
