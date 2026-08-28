@@ -15,7 +15,7 @@ npm run serve               # http://localhost:8080
 
 A MySQL database (or TiDB, which speaks the MySQL protocol) is required; the
 schema is created on boot. For local development you can bring one up with
-`docker compose up mysql`.
+`docker compose -f docker-compose.dev.yml up mysql`.
 
 For development with live reload:
 
@@ -41,10 +41,10 @@ schema is created on boot.
 
 ## Deploying
 
-**Docker**
+**Docker (local dev)**
 
 ```bash
-docker compose up --build
+docker compose -f docker-compose.dev.yml up --build
 ```
 
 Development command:
@@ -53,12 +53,18 @@ Development command:
 JWT_SECRET="secret" DATABASE_URL='mysql://dropit:dropit@localhost:3306/dropit' npm run start
 ```
 
-This also starts a MySQL container; see [docker-compose.yml](docker-compose.yml).
+This also starts a MySQL container; see [docker-compose.dev.yml](docker-compose.dev.yml).
 
 **Fly.io** — see the setup steps at the top of [fly.toml](fly.toml). Attach a
 managed MySQL/TiDB instance with `fly postgres attach` (TiDB) and set
 `DATABASE_URL` as a secret. Uploads live on a mounted volume, so keep the app
 to a single machine.
+
+**Coolify** — [docker-compose.yml](docker-compose.yml) is the prod deployment
+Coolify picks up by default. It has no bundled database; set `JWT_SECRET`,
+`DATABASE_URL` (an existing TiDB/MySQL instance) and `ALLOWED_HOSTS` as
+environment variables in the Coolify UI — it picks up the `${VAR}` references
+in the compose file as fields automatically.
 
 ## Layout
 

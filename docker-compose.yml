@@ -1,29 +1,29 @@
+# Coolify (prod) deployment — this is the default Docker Compose location
+# Coolify looks for. Unlike docker-compose.dev.yml (local dev), there is no
+# bundled database service here — the app connects to an existing TiDB (or
+# MySQL) instance via DATABASE_URL.
+#
+# Coolify scans this file for ${VAR} references and turns each one into an
+# environment variable field in its UI, so set JWT_SECRET, DATABASE_URL,
+# ALLOWED_HOSTS and DOMAIN there rather than committing values here.
+
 services:
   dropit:
     build: .
-    container_name: dropit
+    restart: unless-stopped
+
     ports:
       - '3400:3400'
 
     environment:
-      JWT_SECRET: 'supersecrettestkey'
       PORT: 3400
-      ADMIN_PASSWORD: 'Admin123!'
-
+      JWT_SECRET: ''
+      ADMIN_PASSWORD: ''
       DATABASE_URL: ''
-      STORAGE_DIR: ./uploads
-
-      DOMAIN: ''
-      USE_HTTPS: 'false'
+      STORAGE_DIR: /app/uploads
 
     volumes:
-      - ./uploads:/app/uploads
-
-    depends_on:
-      mysql:
-        condition: service_healthy
-
-    restart: unless-stopped
+      - dropit-uploads:/app/uploads
 
 volumes:
-  dropit-mysql:
+  dropit-uploads:
