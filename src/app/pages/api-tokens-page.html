@@ -1,6 +1,6 @@
 <app-token-secret-dialog
   [secret]="issuedSecret()"
-  [endpoint]="endpoint()"
+  [endpoint]="endpoint"
   (closed)="dismissSecret()"
 />
 
@@ -8,9 +8,7 @@
   <header class="mb-6 pb-4 flex justify-between items-start">
     <div>
       <h1 class="text-4xl font-black uppercase tracking-tighter leading-none">API tokens</h1>
-      <p class="text-sm mt-2 text-surface-500">
-        Long-lived tokens for the API and MCP endpoint.
-      </p>
+      <p class="text-sm mt-2 text-surface-500">Long-lived tokens for the API and MCP endpoint.</p>
     </div>
     <div class="flex flex-col items-end gap-2">
       <a href="/dashboard" class="text-sm font-bold underline">← Back to dashboard</a>
@@ -25,7 +23,7 @@
   <p-card styleClass="mb-6">
     <div class="flex flex-col gap-1 mb-4">
       <span class="text-xs font-bold uppercase">MCP Endpoint</span>
-      <code class="text-sm break-all">{{ endpoint() }}</code>
+      <code class="text-sm break-all">{{ endpoint }}</code>
     </div>
 
     <form class="flex flex-wrap gap-3 items-end" (submit)="$event.preventDefault(); create()">
@@ -50,7 +48,11 @@
   </p-card>
 
   <p-card>
-    <p-table [value]="tokens()" [tableStyle]="{ 'min-width': '50rem' }">
+    <p-table
+      [value]="tokens.value()"
+      [loading]="tokens.isLoading()"
+      [tableStyle]="{ 'min-width': '50rem' }"
+    >
       <ng-template #header>
         <tr>
           <th>Label</th>

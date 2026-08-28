@@ -3,7 +3,6 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import {
   ApiTokenRowSchema,
-  ApiTokensListResponseSchema,
   CreatedApiTokenSchema,
   type ApiTokenRow,
   type CreateApiTokenRequest,
@@ -13,18 +12,14 @@ import {
 const BASE = '/api/tokens';
 
 /**
- * Talks to the API token endpoints. Every response is validated against the
- * same Zod schema the server used to build it, so a shape mismatch surfaces
- * here instead of downstream.
+ * The token mutations. Reading the list is a `httpResource` on the page
+ * itself; only the writes need a service. Every response is validated against
+ * the same Zod schema the server used to build it, so a shape mismatch
+ * surfaces here instead of downstream.
  */
 @Injectable({ providedIn: 'root' })
 export class ApiTokenApi {
   private readonly http = inject(HttpClient);
-
-  async list(): Promise<ApiTokenRow[]> {
-    const body = await firstValueFrom(this.http.get(BASE));
-    return ApiTokensListResponseSchema.parse(body);
-  }
 
   /** The response carries the plaintext secret; it is not recoverable later. */
   async create(name: string): Promise<CreatedApiToken> {
