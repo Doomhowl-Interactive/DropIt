@@ -250,56 +250,6 @@ export const openapiSpec = {
         },
       },
     },
-    '/files/dashboard/export': {
-      get: {
-        tags: ['files-dashboard'],
-        summary: 'Export all file records (admin)',
-        responses: {
-          '200': {
-            description: 'OK',
-            content: {
-              'application/json': {
-                schema: { type: 'array', items: { $ref: '#/components/schemas/FileRecord' } },
-              },
-            },
-          },
-          '401': { description: 'Unauthorized' },
-          '403': { description: 'Forbidden' },
-          '500': { description: 'Server error' },
-        },
-      },
-    },
-    '/files/dashboard/import': {
-      post: {
-        tags: ['files-dashboard'],
-        summary: 'Import file records (admin)',
-        requestBody: {
-          required: true,
-          content: {
-            'application/json': {
-              schema: { type: 'array', items: { $ref: '#/components/schemas/FileRecord' } },
-            },
-          },
-        },
-        responses: {
-          '200': {
-            description: 'Imported',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: { imported: { type: 'integer' } },
-                },
-              },
-            },
-          },
-          '400': { description: 'Invalid JSON' },
-          '401': { description: 'Unauthorized' },
-          '403': { description: 'Forbidden' },
-          '500': { description: 'Server error' },
-        },
-      },
-    },
     '/files/dashboard/orphans': {
       post: {
         tags: ['files-dashboard'],

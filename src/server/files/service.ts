@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import type { Readable } from 'node:stream';
 import { FileNotFoundError, FileRepository, type FileRecord } from './repository';
 import { LocalFileStorage, type FileStorage, type StoredObjectBody } from './storage';
-import type { ImportFileRecord } from '../../shared/types';
 
 export interface UploadedFile {
   /** Unique upload id; doubles as the record id. */
@@ -148,24 +147,6 @@ export class FileService {
     return this.repo.getAll();
   }
 
-  async importFiles(records: ImportFileRecord[]): Promise<void> {
-    for (const incoming of records) {
-      const existing = await this.repo.getById(incoming.id).catch(() => null);
-      if (existing) continue;
-
-      await this.repo.create({
-        id: incoming.id,
-        viewId: randomUUID(),
-        filename: incoming.filename,
-        path: this.storage.locationOf(incoming.filename),
-        size: Number(incoming.size ?? 0),
-        downloadCount: Number(incoming.download_count ?? 0),
-        deleted: Boolean(incoming.deleted),
-        createdAt: incoming.created_at ? new Date(incoming.created_at) : new Date(),
-      });
-    }
-  }
-
   /**
    * Registers objects that are in storage but have no database row — leftovers
    * of an interrupted upload. Returns how many orphans were picked up.
@@ -214,4 +195,3 @@ export class FileService {
 
 export { FileNotFoundError };
 export type { FileRecord };
-export type { ImportFileRecord };

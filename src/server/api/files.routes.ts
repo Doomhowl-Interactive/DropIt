@@ -2,7 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { pipeline } from 'node:stream/promises';
 import multer from 'multer';
 import { authMiddleware, requireRole, type AuthDeps } from '../middleware/auth';
-import { param, parseBody, safeFilename } from '../util';
+import { param, safeFilename } from '../util';
 import type { FileService } from '../files/service';
 import type { FileRecord } from '../files/repository';
 import type { RenderPage } from '../render';
@@ -10,8 +10,6 @@ import { guessMimeType } from '../mcp/content';
 import {
   FileDeleteResponseSchema,
   FileExportResponseSchema,
-  ImportRequestSchema,
-  ImportResponseSchema,
   OrphansResponseSchema,
   UploadResponseSchema,
   type FileExportRecord,
@@ -166,25 +164,10 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
   const dashboard = Router();
   dashboard.use(authMiddleware(auth), requireRole('admin'));
 
-  const listAll = async (_req: Request, res: Response): Promise<void> => {
+  dashboard.get('/', async (_req, res) => {
     try {
       const records = await files.getAllFiles();
       res.json(FileExportResponseSchema.parse(records.map(toExportRecord)));
-    } catch (err) {
-      res.status(500).json({ error: (err as Error).message });
-    }
-  };
-
-  dashboard.get('/', listAll);
-  dashboard.get('/export', listAll);
-
-  dashboard.post('/import', async (req, res) => {
-    const records = parseBody(res, ImportRequestSchema, req.body, 'invalid JSON');
-    if (!records) return;
-
-    try {
-      await files.importFiles(records);
-      res.json(ImportResponseSchema.parse({ imported: records.length }));
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }

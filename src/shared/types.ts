@@ -61,23 +61,6 @@ export type FileExportRecord = z.infer<typeof FileExportRecordSchema>;
 export const FileExportResponseSchema = z.array(FileExportRecordSchema);
 export type FileExportResponse = z.infer<typeof FileExportResponseSchema>;
 
-/** The legacy, snake_cased shape `/dashboard/import` accepts. */
-export const ImportFileRecordSchema = z.object({
-  id: z.string(),
-  filename: z.string(),
-  size: z.number(),
-  download_count: z.number(),
-  deleted: z.boolean(),
-  created_at: z.string(),
-});
-export type ImportFileRecord = z.infer<typeof ImportFileRecordSchema>;
-
-export const ImportRequestSchema = z.array(ImportFileRecordSchema);
-export type ImportRequest = z.infer<typeof ImportRequestSchema>;
-
-export const ImportResponseSchema = z.object({ imported: z.number() });
-export type ImportResponse = z.infer<typeof ImportResponseSchema>;
-
 /** How many loose files `/dashboard/orphans` registered. */
 export const OrphansResponseSchema = z.object({ added: z.number() });
 export type OrphansResponse = z.infer<typeof OrphansResponseSchema>;
