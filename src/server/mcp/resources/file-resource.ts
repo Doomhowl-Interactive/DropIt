@@ -1,6 +1,6 @@
 import { config } from '../../config';
 import { humanSize } from '../../util';
-import { guessMimeType, looksLikeText, readFileBytes, resolveLiveFile } from '../content';
+import { guessMimeType, looksLikeText, resolveLiveFile } from '../content';
 import { defineMcpResource } from '../types';
 
 export const FILE_URI_SCHEME = 'dropit://files/';
@@ -41,7 +41,7 @@ export const fileResource = defineMcpResource({
       );
     }
 
-    const bytes = await readFileBytes(record);
+    const bytes = await ctx.files.readFileBytes(record);
     const mimeType = guessMimeType(record.filename);
 
     return {

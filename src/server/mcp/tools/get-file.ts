@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { config } from '../../config';
 import { humanSize } from '../../util';
-import { guessMimeType, looksLikeText, readFileBytes, resolveLiveFile } from '../content';
+import { guessMimeType, looksLikeText, resolveLiveFile } from '../content';
 import { shareLinks } from '../links';
 import { toolError } from '../result';
 import { defineMcpTool } from '../types';
@@ -42,9 +42,9 @@ export const getFileTool = defineMcpTool({
 
     let bytes: Buffer;
     try {
-      bytes = await readFileBytes(record);
+      bytes = await ctx.files.readFileBytes(record);
     } catch (err) {
-      return toolError(`Could not read ${record.filename} from disk: ${(err as Error).message}`);
+      return toolError(`Could not read ${record.filename} from storage: ${(err as Error).message}`);
     }
 
     const uri = `dropit://files/${record.id}`;

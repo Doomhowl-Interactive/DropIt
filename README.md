@@ -36,8 +36,10 @@ Uploading and the admin console both require that account (`/login`).
 ## Configuration
 
 Everything is environment driven; see [.env.example](.env.example) for the full
-list. Storage is MySQL/TiDB, at the connection string in `DATABASE_URL`; the
-schema is created on boot.
+list. Records live in MySQL/TiDB, at the connection string in `DATABASE_URL`;
+the schema is created on boot. Uploaded bytes go wherever `STORAGE_DRIVER`
+points: `local` writes them to `STORAGE_DIR`, `s3` writes them to the
+S3-compatible bucket in `S3_BUCKET` (setting that bucket is enough to switch).
 
 ## Deploying
 
@@ -57,8 +59,9 @@ This also starts a MySQL container; see [docker-compose.dev.yml](docker-compose.
 
 **Fly.io** — see the setup steps at the top of [fly.toml](fly.toml). Attach a
 managed MySQL/TiDB instance with `fly postgres attach` (TiDB) and set
-`DATABASE_URL` as a secret. Uploads live on a mounted volume, so keep the app
-to a single machine.
+`DATABASE_URL` as a secret. With the default local storage, uploads live on a
+mounted volume, so keep the app to a single machine; point `S3_BUCKET` at a
+bucket instead and the machines stop holding any state.
 
 **Coolify** — [docker-compose.yml](docker-compose.yml) is the prod deployment
 Coolify picks up by default. It bundles a MySQL database; set `JWT_SECRET`,

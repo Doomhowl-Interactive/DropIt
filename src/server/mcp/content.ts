@@ -1,5 +1,4 @@
-import { readFile } from 'node:fs/promises';
-import { extname, resolve } from 'node:path';
+import { extname } from 'node:path';
 import { FileNotFoundError, type FileRecord, type FileService } from '../files/service';
 
 const MIME_TYPES: Record<string, string> = {
@@ -63,8 +62,4 @@ export async function resolveLiveFile(files: FileService, id: string): Promise<F
   if (record.deleted) throw new FileNotFoundError();
 
   return record;
-}
-
-export async function readFileBytes(record: FileRecord): Promise<Buffer> {
-  return readFile(resolve(record.path));
 }
