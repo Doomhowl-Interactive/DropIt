@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express';
+import { pipeline } from 'node:stream/promises';
 import multer from 'multer';
 import { authMiddleware, requireRole, type AuthDeps } from '../middleware/auth';
 import { param, parseBody, safeFilename } from '../util';
@@ -7,6 +8,7 @@ import type { FileRecord } from '../files/repository';
 import type { RenderPage } from '../render';
 import { guessMimeType } from '../mcp/content';
 import {
+  FileDeleteResponseSchema,
   FileExportResponseSchema,
   ImportRequestSchema,
   ImportResponseSchema,
@@ -107,8 +109,9 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
       res.status(206);
     }
 
-    object.body.on('error', () => res.destroy());
-    object.body.pipe(res);
+    // pipeline destroys both streams when either side closes or errors,
+    // unlike `pipe` which leaves the source dangling on a client disconnect.
+    await pipeline(object.body, res);
   };
 
   const download = async (req: Request, res: Response): Promise<void> => {
@@ -195,25 +198,29 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
   });
 
   dashboard.post('/delete/fr/:id', async (req, res) => {
+    const id = param(req, 'id');
+
     try {
-      await files.getFileById(param(req, 'id'));
+      await files.getFileById(id);
     } catch {
       res.status(404).json({ error: 'file not found' });
       return;
     }
 
     try {
-      await files.forceDelete(param(req, 'id'));
-      res.redirect(303, '/dashboard');
+      await files.forceDelete(id);
+      res.json(FileDeleteResponseSchema.parse({ id, deleted: true }));
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }
   });
 
   dashboard.post('/delete/:id', async (req, res) => {
+    const id = param(req, 'id');
+
     try {
-      await files.deleteFileById(param(req, 'id'));
-      res.redirect(303, '/dashboard');
+      await files.deleteFileById(id);
+      res.json(FileDeleteResponseSchema.parse({ id, deleted: true }));
     } catch {
       res.status(404).json({ error: 'file not found' });
     }

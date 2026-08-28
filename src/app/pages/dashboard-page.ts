@@ -10,7 +10,8 @@ import { DialogModule } from 'primeng/dialog';
 import { UploadZone } from '../components/upload-zone/upload-zone';
 import { FormatBytesPipe } from '../utils/format-bytes.pipe';
 import { HttpClient, httpResource } from '@angular/common/http';
-import { FileExportResponseSchema } from '../../shared/types';
+import { map } from 'rxjs';
+import { FileDeleteResponseSchema, FileExportResponseSchema } from '../../shared/types';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -39,18 +40,24 @@ export class DashboardPage {
 
   protected deleteFile(fileId: string) {
     console.log(`Deleting ${fileId}...`);
-    this.httpClient.post(`/api/files/dashboard/delete/fr/${fileId}`, {}).subscribe({
-      error: (e) => this.handleError(e),
-      complete: () => this.files.reload(),
-    });
+    this.httpClient
+      .post(`/api/files/dashboard/delete/fr/${fileId}`, {})
+      .pipe(map((body) => FileDeleteResponseSchema.parse(body)))
+      .subscribe({
+        error: (e) => this.handleError(e),
+        complete: () => this.files.reload(),
+      });
   }
 
   protected deactivateFile(fileId: string) {
     console.log(`Deactivating ${fileId}...`);
-    this.httpClient.post(`/api/files/dashboard/delete/${fileId}`, {}).subscribe({
-      error: (e) => this.handleError(e),
-      complete: () => this.files.reload(),
-    });
+    this.httpClient
+      .post(`/api/files/dashboard/delete/${fileId}`, {})
+      .pipe(map((body) => FileDeleteResponseSchema.parse(body)))
+      .subscribe({
+        error: (e) => this.handleError(e),
+        complete: () => this.files.reload(),
+      });
   }
 
   protected addOrphans() {
