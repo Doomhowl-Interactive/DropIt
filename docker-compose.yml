@@ -1,53 +1,63 @@
+# Coolify (prod) deployment — this is the default Docker Compose location
+# Coolify looks for. Unlike docker-compose.dev.yml (local dev), there is no
+# bundled database service here — the app connects to an existing TiDB (or
+# MySQL) instance via DATABASE_URL.
+#
+# Coolify scans this file for ${VAR} references and turns each one into an
+# environment variable field in its UI, so set JWT_SECRET, DATABASE_URL,
+# ALLOWED_HOSTS and DOMAIN there rather than committing values here.
+
 services:
   dropit:
     build: .
-    container_name: dropit
+    restart: unless-stopped
+
     ports:
       - '8080:8080'
 
     environment:
-      JWT_SECRET: supersecretkey
+      JWT_SECRET: ${JWT_SECRET}
       PORT: 8080
-      ADMIN_PASSWORD: ''
 
-      DATABASE_URL: mysql://dropit:dropit@mysql:3306/dropit
-      STORAGE_DIR: ./uploads
+      # TiDB speaks the MySQL protocol, e.g.:
+      #   mysql://user:pass@host:4000/dropit
+      # TiDB Cloud requires TLS; append this query string to DATABASE_URL:
+      #   ?ssl=%7B%22rejectUnauthorized%22%3Atrue%7D
+      # For CA-verified TLS instead, mount the provider's PEM (Coolify ->
+      # Storages) and add a DATABASE_SSL_CA env var pointing at its path.
+      DATABASE_URL: ${DATABASE_URL}
 
-      DOMAIN: ''
-      USE_HTTPS: 'false'
+      STORAGE_DIR: /app/uploads
 
-      # Comma-separated Host allow-list; "*" accepts anything.
-      ALLOWED_HOSTS: '*'
-      # Set to true when a reverse proxy in front terminates TLS.
-      TRUST_PROXY_HEADERS: 'false'
+      DOMAIN: ${DOMAIN:-}
+      USE_HTTPS: 'true'
+      # Coolify's proxy terminates TLS in front of this container.
+      TRUST_PROXY_HEADERS: 'true'
+
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+
+      MCP_ENABLED: ${MCP_ENABLED:-true}
+      MCP_MAX_BODY: ${MCP_MAX_BODY:-35mb}
+      MCP_MAX_UPLOAD_BYTES: ${MCP_MAX_UPLOAD_BYTES:-26214400}
+      MCP_ALLOWED_ORIGINS: ${MCP_ALLOWED_ORIGINS:-}
 
     volumes:
-      - ./uploads:/app/uploads
+      - dropit-uploads:/app/uploads
 
-    depends_on:
-      mysql:
-        condition: service_healthy
-
-    restart: unless-stopped
-
-  mysql:
-    image: mysql:8.4
-    container_name: dropit-mysql
-    environment:
-      MYSQL_USER: dropit
-      MYSQL_PASSWORD: dropit
-      MYSQL_DATABASE: dropit
-      MYSQL_ROOT_PASSWORD: dropit
-    volumes:
-      - dropit-mysql:/var/lib/mysql
     healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-uroot', '-pdropit']
-      interval: 5s
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://127.0.0.1:8080/ping',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 30s
       timeout: 5s
-      retries: 10
-    restart: unless-stopped
-    ports:
-      - 3306:3306
+      retries: 3
+      start_period: 10s
 
 volumes:
-  dropit-mysql:
+  dropit-uploads:
