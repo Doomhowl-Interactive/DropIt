@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -6,9 +7,13 @@ import { DividerModule } from 'primeng/divider';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
-import { PageDataService, usePage } from '../utils/page';
 import type { DashboardPageData } from '../utils/page-context';
 import { UploadZone } from '../components/upload-zone/upload-zone';
+import { FormatBytesPipe } from '../utils/format-bytes.pipe';
+import { HttpClient, httpResource } from '@angular/common/http';
+import { FileExportResponseSchema } from '../../shared/types';
+import z from 'zod';
+import { FormSubmittedEvent } from '@angular/forms';
 
 const EMPTY: DashboardPageData = { files: [], page: 1, totalPages: 0 };
 
@@ -18,6 +23,8 @@ const EMPTY: DashboardPageData = { files: [], page: 1, totalPages: 0 };
   host: { style: 'display: contents' },
   imports: [
     RouterLink,
+    DatePipe,
+    FormatBytesPipe,
     CardModule,
     ButtonModule,
     DividerModule,
@@ -28,42 +35,30 @@ const EMPTY: DashboardPageData = { files: [], page: 1, totalPages: 0 };
   ],
 })
 export class DashboardPage {
-  private readonly context = inject(PageDataService).context;
+  private httpClient = inject(HttpClient);
 
-  private readonly data = computed<DashboardPageData>(() =>
-    this.context?.page === 'dashboard' ? this.context.data : EMPTY,
-  );
+  protected files = httpResource(() => ({ url: '/api/files/dashboard' }), {
+    parse: (value) => FileExportResponseSchema.parse(value),
+  });
 
-  protected readonly files = computed(() => this.data().files);
-  protected readonly page = computed(() => this.data().page);
-  protected readonly totalPages = computed(() => this.data().totalPages);
-
-  protected readonly modalOpen = signal(false);
-  protected readonly modalTitle = signal('Confirm wipe');
-  protected readonly modalMessage = signal(
-    'Awaiting system confirmation for permanent data erasure.',
-  );
-
-  private pendingForm: HTMLFormElement | null = null;
-
-  /** Holds the submit back until the operator confirms in the modal. */
-  protected openConfirm(event: Event, title: string, message: string): boolean {
-    event.preventDefault();
-
-    this.pendingForm = event.target as HTMLFormElement;
-    this.modalTitle.set(title);
-    this.modalMessage.set(message);
-    this.modalOpen.set(true);
-
-    return false;
+  protected deleteFile(fileId: string) {
+    console.log(`Deleting ${fileId}...`);
+    this.httpClient.post(`/api/files/dashboard/delete/fr/${fileId}`, {}).subscribe({
+      error: (e) => this.handleError(e),
+      complete: () => this.files?.reload(),
+    });
   }
 
-  protected closeModal(): void {
-    this.modalOpen.set(false);
-    this.pendingForm = null;
+  protected deactivateFile(fileId: string) {
+    console.log(`Deactivating ${fileId}...`);
+    this.httpClient.post(`/api/files/dashboard/delete/${fileId}`, {}).subscribe({
+      error: (e) => this.handleError(e),
+      complete: () => this.files?.reload(),
+    });
   }
 
-  protected confirm(): void {
-    this.pendingForm?.submit();
+  private handleError(err: any) {
+    console.error(err);
+    alert('Failed to process file action.');
   }
 }
