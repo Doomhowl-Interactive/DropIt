@@ -7,6 +7,7 @@ import type { FileService } from '../files/service';
 import type { FileRecord } from '../files/repository';
 import type { RenderPage } from '../render';
 import { guessMimeType } from '../mcp/content';
+import { isNotFoundError } from '../files/storage';
 import {
   FileDeleteResponseSchema,
   FileExportResponseSchema,
@@ -26,6 +27,32 @@ function toExportRecord(file: FileRecord): FileExportRecord {
     deleted: file.deleted,
     createdAt: file.createdAt.toISOString(),
   };
+}
+
+/**
+ * Content types a browser executes in the origin it loaded them from. Uploads
+ * are served back from this application's own origin, and `/view/:id` needs no
+ * token, so these are handed over as downloads rather than rendered in place.
+ */
+const ACTIVE_TYPES = new Set([
+  'text/html',
+  'application/xhtml+xml',
+  'image/svg+xml',
+  'text/xml',
+  'application/xml',
+]);
+
+/** Names the response and decides whether the browser may render it in place. */
+function setContentHeaders(res: Response, record: FileRecord, contentType: string): void {
+  // Stored types can carry parameters, as in `text/html; charset=utf-8`.
+  const essence = contentType.split(';')[0].trim().toLowerCase();
+  const disposition = ACTIVE_TYPES.has(essence) ? 'attachment' : 'inline';
+
+  res.setHeader(
+    'Content-Disposition',
+    `${disposition}; filename="${safeFilename(record.filename)}"`,
+  );
+  res.type(contentType);
 }
 
 interface UploadRequest extends Request {
@@ -53,9 +80,19 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
       (req as UploadRequest).uploadFolderId = target.folderId;
 
       files
-        .writeUploadStream(target.path, file.stream, file.mimetype)
+        // The content type follows from the name we store, never from the
+        // `mimetype` multer lifted out of the request: that is the uploader's
+        // word for it, and it comes back out again on a public, same-origin URL.
+        .writeUploadStream(target.path, file.stream, guessMimeType(file.originalname))
         .then((size) => cb(null, { path: target.path, size }))
-        .catch((err: Error) => cb(err));
+        .catch((err: Error) => {
+          // multer only hands `_removeFile` the files it already stored, so
+          // without this a stream that dies partway leaves its bytes behind.
+          void files
+            .removeUpload(target.path)
+            .catch(() => undefined)
+            .then(() => cb(err));
+        });
     },
 
     _removeFile(_req, file, cb) {
@@ -76,13 +113,18 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
    * `Range` header passed on to the store.
    */
   const serve = async (record: FileRecord, req: Request, res: Response): Promise<void> => {
-    res.setHeader('Content-Disposition', `inline; filename="${safeFilename(record.filename)}"`);
     res.setHeader('X-Content-Type-Options', 'nosniff');
 
     const localPath = files.filePath(record);
     if (localPath) {
+      // Type the response before handing it over: left to itself `sendFile`
+      // consults a far broader mime table than `guessMimeType`, and would
+      // resolve names such as `.htm` to a type we just decided not to inline.
+      setContentHeaders(res, record, guessMimeType(record.filename));
       res.sendFile(localPath, (err) => {
         if (err && !res.headersSent) {
+          // The disposition above described the file, not this page.
+          res.removeHeader('Content-Disposition');
           void render(req, res, { page: 'file-not-found' }, 200);
         }
       });
@@ -92,14 +134,22 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
     let object;
     try {
       object = await files.openFile(record, req.headers.range);
-    } catch {
+    } catch (err) {
+      // Only a missing object is the visitor's 404. A store that is unreachable
+      // or refusing our credentials is our failure, and reporting it as a
+      // successfully rendered page would hide the outage from every caller.
+      if (!isNotFoundError(err)) {
+        res.status(502).json({ error: 'storage unavailable' });
+        return;
+      }
+
       await render(req, res, { page: 'file-not-found' }, 200);
       return;
     }
 
     // Prefer the content type the store recorded for the object; fall back to
     // the stored filename when the backend doesn't track one (local files).
-    res.type(object.contentType ?? guessMimeType(record.filename));
+    setContentHeaders(res, record, object.contentType ?? guessMimeType(record.filename));
     res.setHeader('Accept-Ranges', 'bytes');
     res.setHeader('Content-Length', String(object.size));
     if (object.modifiedAt) res.setHeader('Last-Modified', object.modifiedAt.toUTCString());

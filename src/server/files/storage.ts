@@ -162,3 +162,17 @@ export function parseRange(
   if (start > end || start >= totalSize) return null;
   return { start, end };
 }
+
+/**
+ * Whether a storage failure means "that object is not here", as opposed to the
+ * store being unreachable or refusing our credentials. Local storage raises a
+ * POSIX `ENOENT`; the S3 SDK reports `NoSuchKey`/`NotFound` and a 404 status.
+ */
+export function isNotFoundError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+
+  const { code, name } = err as { code?: unknown; name?: unknown };
+  if (code === 'ENOENT' || name === 'NoSuchKey' || name === 'NotFound') return true;
+
+  return (err as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode === 404;
+}
