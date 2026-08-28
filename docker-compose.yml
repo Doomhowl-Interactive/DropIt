@@ -1,16 +1,40 @@
 # Coolify (prod) deployment — this is the default Docker Compose location
-# Coolify looks for. Unlike docker-compose.dev.yml (local dev), there is no
-# bundled database service here — the app connects to an existing TiDB (or
-# MySQL) instance via DATABASE_URL.
+# Coolify looks for. A bundled MySQL database is included; the app connects
+# to it via DATABASE_URL (or an external TiDB/MySQL instance if overridden).
 #
 # Coolify scans this file for ${VAR} references and turns each one into an
-# environment variable field in its UI, so set JWT_SECRET, DATABASE_URL,
-# ALLOWED_HOSTS and DOMAIN there rather than committing values here.
+# environment variable field in its UI, so set JWT_SECRET, MYSQL_PASSWORD,
+# MYSQL_ROOT_PASSWORD, ALLOWED_HOSTS and DOMAIN there rather than committing
+# values here.
 
 services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+
+    environment:
+      MYSQL_DATABASE: dropit
+      MYSQL_USER: dropit
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+    volumes:
+      - dropit-mysql:/var/lib/mysql
+
+    healthcheck:
+      test: [ 'CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-u', 'root', '-p${MYSQL_ROOT_PASSWORD}' ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
   dropit:
     build: .
     restart: unless-stopped
+
+    depends_on:
+      mysql:
+        condition: service_healthy
 
     ports:
       - '3400:3400'
@@ -19,7 +43,7 @@ services:
       PORT: 3400
       JWT_SECRET: ${JWT_SECRET}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: ${DATABASE_URL:-mysql://dropit:${MYSQL_PASSWORD}@mysql:3306/dropit}
 
       STORAGE_DIR: /app/uploads
       STATIC_DIR: ./static
@@ -31,3 +55,4 @@ services:
 
 volumes:
   dropit-uploads:
+  dropit-mysql:

@@ -61,10 +61,11 @@ managed MySQL/TiDB instance with `fly postgres attach` (TiDB) and set
 to a single machine.
 
 **Coolify** — [docker-compose.yml](docker-compose.yml) is the prod deployment
-Coolify picks up by default. It has no bundled database; set `JWT_SECRET`,
-`DATABASE_URL` (an existing TiDB/MySQL instance) and `ALLOWED_HOSTS` as
-environment variables in the Coolify UI — it picks up the `${VAR}` references
-in the compose file as fields automatically.
+Coolify picks up by default. It bundles a MySQL database; set `JWT_SECRET`,
+`MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD` and `ALLOWED_HOSTS` as environment
+variables in the Coolify UI — it picks up the `${VAR}` references in the
+compose file as fields automatically. `DATABASE_URL` defaults to the bundled
+MySQL instance; override it to use an external TiDB/MySQL instance instead.
 
 ## Layout
 
