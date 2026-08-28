@@ -104,7 +104,7 @@ async function createApp(): Promise<Express> {
 
   app.use('/api', api);
 
-  app.use(webRoutes(files, apiTokens, render, authDeps));
+  app.use(webRoutes(files, render, authDeps));
 
   /** Anything left over is "nothing to see here". */
   app.use((req: Request, res: Response, next: NextFunction) => {
