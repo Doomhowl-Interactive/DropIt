@@ -17,10 +17,14 @@ services:
 
     environment:
       PORT: 3400
-      JWT_SECRET: ''
-      ADMIN_PASSWORD: ''
-      DATABASE_URL: ''
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      DATABASE_URL: ${DATABASE_URL}
+
       STORAGE_DIR: /app/uploads
+      STATIC_DIR: ./static
+      MCP_MAX_BODY: 35mb
+      MCP_MAX_UPLOAD_BYTES: 26214400
 
     volumes:
       - dropit-uploads:/app/uploads

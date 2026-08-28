@@ -66,17 +66,7 @@ async function createApp(): Promise<Express> {
   app.disable('x-powered-by');
   app.use(cookieParser());
 
-  /**
-   * Mounted ahead of the app-wide body parser so it can bring its own, far
-   * larger limit — MCP uploads arrive base64-encoded inside the request body,
-   * and the 1mb cap below would silently reduce them to ~750 KB of file.
-   *
-   * It sits outside `/api` on purpose: MCP clients authenticate with a bearer
-   * token rather than a cookie.
-   */
-  if (config.mcpEnabled) {
-    app.use('/mcp', mcpRoutes({ files, tokens: apiTokens }));
-  }
+  app.use('/mcp', mcpRoutes({ files, tokens: apiTokens }));
 
   // Uploads are streamed to disk by multer, so only small bodies land here.
   app.use(express.json({ limit: '1mb' }));

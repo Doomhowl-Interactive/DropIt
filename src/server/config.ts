@@ -41,10 +41,6 @@ export const config = {
     return process.env['TRUST_PROXY_HEADERS'] === 'true';
   },
 
-  /** Serve the MCP endpoint at /mcp. */
-  get mcpEnabled(): boolean {
-    return (process.env['MCP_ENABLED'] ?? 'true') !== 'false';
-  },
   /**
    * Body limit for /mcp. Files arrive base64-encoded inside the JSON-RPC
    * envelope, so this has to be roughly 4/3 of the largest upload allowed.
