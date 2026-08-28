@@ -78,6 +78,10 @@ export type ImportRequest = z.infer<typeof ImportRequestSchema>;
 export const ImportResponseSchema = z.object({ imported: z.number() });
 export type ImportResponse = z.infer<typeof ImportResponseSchema>;
 
+/** What the dashboard's delete routes answer with, so the SPA never has to follow a redirect. */
+export const FileDeleteResponseSchema = z.object({ id: z.string(), deleted: z.boolean() });
+export type FileDeleteResponse = z.infer<typeof FileDeleteResponseSchema>;
+
 // ---------------------------------------------------------------------------
 // API tokens
 // ---------------------------------------------------------------------------
