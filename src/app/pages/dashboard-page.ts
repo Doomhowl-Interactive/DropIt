@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
@@ -16,6 +17,7 @@ const EMPTY: DashboardPageData = { files: [], page: 1, totalPages: 0 };
   templateUrl: './dashboard-page.html',
   host: { style: 'display: contents' },
   imports: [
+    RouterLink,
     CardModule,
     ButtonModule,
     DividerModule,
@@ -43,10 +45,6 @@ export class DashboardPage {
   );
 
   private pendingForm: HTMLFormElement | null = null;
-
-  constructor() {
-    usePage({ title: 'Dashboard', bodyClass: 'min-h-screen p-4' });
-  }
 
   /** Holds the submit back until the operator confirms in the modal. */
   protected openConfirm(event: Event, title: string, message: string): boolean {
