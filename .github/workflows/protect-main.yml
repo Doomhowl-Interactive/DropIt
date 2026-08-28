@@ -4,15 +4,21 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - '**'
 
 jobs:
   check-branch:
     runs-on: ubuntu-latest
     steps:
       - name: Check branch
+        env:
+          # GITHUB_HEAD_REF is set on pull_request events, GITHUB_REF_NAME on push events
+          BRANCH: ${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
         run: |
-          if [[ ${GITHUB_HEAD_REF} != staging ]] && ! [[ ${GITHUB_HEAD_REF} =~ ^hotfix/ ]]; 
+          if [[ $BRANCH != staging ]] && ! [[ $BRANCH =~ ^hotfix/ ]];
           then
-            echo "Error: Pull request must come from 'staging' or 'hotfix/' branch"
+            echo "Error: Branch must be 'staging' or 'hotfix/' (got '$BRANCH')"
             exit 1
           fi
