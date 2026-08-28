@@ -85,10 +85,12 @@ src/
 static/                 logo and favicon, served from /static
 ```
 
-Page data is computed in Express, passed to Angular through `REQUEST_CONTEXT`,
-and replayed to the browser via `TransferState` — so the server and the client
-render the same markup without a second round trip. See
-[src/shared/page-context.ts](src/shared/page-context.ts).
+Per-request page data the client cannot fetch for itself is computed in Express,
+passed to Angular through `REQUEST_CONTEXT`, and replayed to the browser via
+`TransferState` — so the server and the client render the same markup without a
+second round trip. See
+[src/app/utils/page-context.ts](src/app/utils/page-context.ts). The admin
+consoles instead read `/api/*` through `httpResource`.
 
 ## Routes
 
@@ -97,7 +99,7 @@ render the same markup without a second round trip. See
 | GET  | `/`                                  | Uploader                                                 |
 | GET  | `/f/:id`                             | Share page with the download link                        |
 | GET  | `/login`                             | Admin sign-in page                                       |
-| GET  | `/dashboard?page=N`                  | Paginated file console (admin)                           |
+| GET  | `/dashboard`                         | File console (admin)                                     |
 | GET  | `/logout`                            | Clears the session and redirects to `/` (admin)          |
 | GET  | `/api`                               | Swagger UI for the API                                   |
 | GET  | `/api/openapi.json`                  | Raw OpenAPI spec                                         |
