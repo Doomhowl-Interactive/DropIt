@@ -34,3 +34,10 @@ and rewritten in Angular. Does not have all features!
 | POST | `/api/tokens/:id/revoke`             | Revokes an API token (admin)                             |
 | POST | `/mcp`                               | MCP endpoint, Streamable HTTP (API bearer token)         |
 | GET  | `/ping`                              | Health check                                             |
+
+## Configuration
+
+Storage is selected by `STORAGE_DRIVER` (`local` or `s3`). An explicit value
+always wins: `STORAGE_DRIVER=local` keeps local storage even when `S3_BUCKET`
+is set. When `STORAGE_DRIVER` is unset, setting `S3_BUCKET` switches storage
+to S3; otherwise local storage is used. See `.env.example` for all variables.
