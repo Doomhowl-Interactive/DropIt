@@ -19,7 +19,14 @@
       <app-upload-zone />
     </div>
     <div class="mt-4 flex items-center gap-3">
-      <button type="submit" pButton severity="secondary" size="small" [outlined]="true">
+      <button
+        type="button"
+        pButton
+        severity="secondary"
+        size="small"
+        [outlined]="true"
+        (click)="addOrphans()"
+      >
         <span pButtonLabel>Add orphans</span>
       </button>
       <span class="text-xs italic text-surface-500">
@@ -76,7 +83,7 @@
                 type="submit"
                 severity="secondary"
                 [outlined]="true"
-                [disabled]="!file.active"
+                [disabled]="file.deleted"
                 size="small"
                 (click)="deactivateFile(file.id)"
               >

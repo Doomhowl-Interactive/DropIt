@@ -53,7 +53,7 @@ export class DashboardPage {
     });
   }
 
-  protected addOprhans() {
+  protected addOrphans() {
     this.httpClient.post(`/api/files/dashboard/orphans`, {}).subscribe({
       error: (e) => this.handleError(e),
       complete: () => this.files.reload(),
