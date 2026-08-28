@@ -1,96 +1,7 @@
 # Drop.it
 
-A no-design file drop: upload a file, hand out the download link. Angular 21
-with server-side rendering; the same
-Node process serves the pages, the API and an MCP endpoint.
-
-## Running it
-
-```bash
-npm install
-cp .env.example .env        # set JWT_SECRET and DATABASE_URL
-npm run build
-npm run serve               # http://localhost:8080
-```
-
-A MySQL database (or TiDB, which speaks the MySQL protocol) is required; the
-schema is created on boot. For local development you can bring one up with
-`docker compose -f docker-compose.dev.yml up mysql`.
-
-For development with live reload:
-
-```bash
-npm start                   # ng serve, SSR included
-```
-
-On first boot an `admin` account is created. Its password comes from
-`ADMIN_PASSWORD`, or — when that is empty — a random one is generated and
-printed to the log **once**:
-
-```
-Admin user created with random password: kC4t9kYxqheQfuVa
-```
-
-Uploading and the admin console both require that account (`/login`).
-
-## Configuration
-
-Everything is environment driven; see [.env.example](.env.example) for the full
-list. Records live in MySQL/TiDB, at the connection string in `DATABASE_URL`;
-the schema is created on boot. Uploaded bytes go wherever `STORAGE_DRIVER`
-points: `local` writes them to `STORAGE_DIR`, `s3` writes them to the
-S3-compatible bucket in `S3_BUCKET` (setting that bucket is enough to switch).
-
-## Deploying
-
-**Docker (local dev)**
-
-```bash
-docker compose -f docker-compose.dev.yml up --build
-```
-
-Development command:
-
-```bash
-JWT_SECRET="secret" DATABASE_URL='mysql://dropit:dropit@localhost:3306/dropit' npm run start
-```
-
-This also starts a MySQL container; see [docker-compose.dev.yml](docker-compose.dev.yml).
-
-**Fly.io** — see the setup steps at the top of [fly.toml](fly.toml). Attach a
-managed MySQL/TiDB instance with `fly postgres attach` (TiDB) and set
-`DATABASE_URL` as a secret. With the default local storage, uploads live on a
-mounted volume, so keep the app to a single machine; point `S3_BUCKET` at a
-bucket instead and the machines stop holding any state.
-
-**Coolify** — [docker-compose.yml](docker-compose.yml) is the prod deployment
-Coolify picks up by default. It bundles a MySQL database; set `JWT_SECRET`,
-`MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD` and `ALLOWED_HOSTS` as environment
-variables in the Coolify UI — it picks up the `${VAR}` references in the
-compose file as fields automatically. `DATABASE_URL` defaults to the bundled
-MySQL instance; override it to use an external TiDB/MySQL instance instead.
-
-## Layout
-
-```
-src/
-  index.html            shell document
-  styles.css            global styles (page CSS + Tailwind)
-  main.ts               browser bootstrap
-  main.server.ts        server bootstrap
-  server.ts             Express wiring: static files, API, pages
-  app/                  Angular pages and helpers
-  server/               API, persistence, auth, uploads
-  shared/               types crossing the server/client boundary
-static/                 logo and favicon, served from /static
-```
-
-Per-request page data the client cannot fetch for itself is computed in Express,
-passed to Angular through `REQUEST_CONTEXT`, and replayed to the browser via
-`TransferState` — so the server and the client render the same markup without a
-second round trip. See
-[src/app/utils/page-context.ts](src/app/utils/page-context.ts). The admin
-consoles instead read `/api/*` through `httpResource`.
+File uploading service, forked off [ReSendit](https://git.brammie15.dev/brammie15/ReSendit)
+and rewritten in Angular. Does not have all features!
 
 ## Routes
 
@@ -125,5 +36,3 @@ consoles instead read `/api/*` through `httpResource`.
 | POST | `/api/tokens/:id/revoke`             | Revokes an API token (admin)                             |
 | POST | `/mcp`                               | MCP endpoint, Streamable HTTP (API bearer token)         |
 | GET  | `/ping`                              | Health check                                             |
-
-Forked off [ReSendit](https://git.brammie15.dev/brammie15/ReSendit).
