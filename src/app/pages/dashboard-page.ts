@@ -7,13 +7,10 @@ import { DividerModule } from 'primeng/divider';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
-import type { DashboardPageData } from '../utils/page-context';
 import { UploadZone } from '../components/upload-zone/upload-zone';
 import { FormatBytesPipe } from '../utils/format-bytes.pipe';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { FileExportResponseSchema } from '../../shared/types';
-
-const EMPTY: DashboardPageData = { files: [], page: 1, totalPages: 0 };
 
 @Component({
   selector: 'app-dashboard-page',
@@ -35,15 +32,16 @@ const EMPTY: DashboardPageData = { files: [], page: 1, totalPages: 0 };
 export class DashboardPage {
   private httpClient = inject(HttpClient);
 
-  protected files = httpResource(() => ({ url: '/api/files/dashboard' }), {
+  protected readonly files = httpResource(() => ({ url: '/api/files/dashboard' }), {
     parse: (value) => FileExportResponseSchema.parse(value),
+    defaultValue: [],
   });
 
   protected deleteFile(fileId: string) {
     console.log(`Deleting ${fileId}...`);
     this.httpClient.post(`/api/files/dashboard/delete/fr/${fileId}`, {}).subscribe({
       error: (e) => this.handleError(e),
-      complete: () => this.files?.reload(),
+      complete: () => this.files.reload(),
     });
   }
 
@@ -51,14 +49,14 @@ export class DashboardPage {
     console.log(`Deactivating ${fileId}...`);
     this.httpClient.post(`/api/files/dashboard/delete/${fileId}`, {}).subscribe({
       error: (e) => this.handleError(e),
-      complete: () => this.files?.reload(),
+      complete: () => this.files.reload(),
     });
   }
 
   protected addOprhans() {
     this.httpClient.post(`/api/files/dashboard/orphans`, {}).subscribe({
       error: (e) => this.handleError(e),
-      complete: () => this.files?.reload(),
+      complete: () => this.files.reload(),
     });
   }
 
