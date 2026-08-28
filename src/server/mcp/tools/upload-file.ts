@@ -1,10 +1,9 @@
-import { randomUUID } from 'node:crypto';
-import { rm, writeFile } from 'node:fs/promises';
-import { basename, extname, join } from 'node:path';
+import { basename } from 'node:path';
 import { z } from 'zod';
 
 import { config } from '../../config';
 import { humanSize, safeFilename } from '../../util';
+import { guessMimeType } from '../content';
 import { shareLinks } from '../links';
 import { toolError } from '../result';
 import { defineMcpTool } from '../types';
@@ -57,18 +56,10 @@ export const uploadFileTool = defineMcpTool({
       );
     }
 
-    const { folderId, folderPath } = ctx.files.createUploadFolder();
-    const path = join(folderPath, randomUUID() + extname(filename));
-
     try {
-      await writeFile(path, bytes);
-
-      const record = await ctx.files.registerUpload({
-        folderId,
-        originalName: filename,
-        path,
-        size: bytes.length,
-      });
+      // Storage cleans up after itself when the record cannot be written, so
+      // a failed upload never leaves stray bytes behind.
+      const record = await ctx.files.storeUpload(filename, bytes, guessMimeType(filename));
 
       const links = shareLinks(record, ctx.origin);
 
@@ -92,8 +83,6 @@ export const uploadFileTool = defineMcpTool({
         },
       };
     } catch (err) {
-      // Never leave an orphaned file behind when the record was not written.
-      await rm(path, { force: true }).catch(() => undefined);
       return toolError(`Upload failed: ${(err as Error).message}`);
     }
   },

@@ -15,6 +15,7 @@ import { createAdminUser } from './server/bootstrap';
 import { config } from './server/config';
 import { connect } from './server/db/db';
 import { migrate } from './server/db/migrate';
+import { createFileStorage } from './server/files/create-storage';
 import { FileRepository } from './server/files/repository';
 import { FileService } from './server/files/service';
 import { mcpRoutes } from './server/mcp/routes';
@@ -57,11 +58,13 @@ async function createApp(): Promise<Express> {
 
   const users = new UserService(new UserRepository(db));
   const auth = new AuthService(users);
-  const files = new FileService(new FileRepository(db), config.storageDir);
+  const files = new FileService(new FileRepository(db), createFileStorage());
   const apiTokens = new ApiTokenService(new ApiTokenRepository(db));
   const authDeps = { tokens: apiTokens, users };
 
   await createAdminUser(users);
+
+  console.log(`Uploads are stored in ${storageSummary()}`);
 
   app.disable('x-powered-by');
   app.use(cookieParser());
@@ -104,6 +107,14 @@ async function createApp(): Promise<Express> {
   });
 
   return app;
+}
+
+/** One line describing where uploads land, for the boot log. */
+function storageSummary(): string {
+  if (config.storageDriver !== 's3') return `the local directory ${resolve(config.storageDir)}`;
+
+  const { bucket, prefix, endpoint } = config.s3;
+  return `the S3 bucket ${bucket}/${prefix} on ${endpoint || 'AWS'}`;
 }
 
 /**

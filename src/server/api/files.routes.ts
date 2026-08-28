@@ -1,5 +1,4 @@
-import { randomUUID } from 'node:crypto';
-import { extname, resolve } from 'node:path';
+import { extname } from 'node:path';
 import { Router, type Request, type Response } from 'express';
 import multer from 'multer';
 import { authMiddleware, requireRole, type AuthDeps } from '../middleware/auth';
@@ -35,38 +34,87 @@ interface UploadRequest extends Request {
 export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDeps = {}): Router {
   const router = Router();
 
-  const storage = multer.diskStorage({
-    destination(req, _file, cb) {
+  /**
+   * Streams the upload straight into whichever backend is configured, rather
+   * than to a fixed directory: `FileService` hands out the location and multer
+   * only reports back what it stored.
+   */
+  const storage: multer.StorageEngine = {
+    _handleFile(req, file, cb) {
+      let target: { folderId: string; path: string };
       try {
-        const { folderId, folderPath } = files.createUploadFolder();
-        (req as UploadRequest).uploadFolderId = folderId;
-        cb(null, folderPath);
+        target = files.createUploadTarget(file.originalname);
       } catch (err) {
-        cb(err as Error, '');
+        cb(err as Error);
+        return;
       }
+
+      (req as UploadRequest).uploadFolderId = target.folderId;
+
+      files
+        .writeUploadStream(target.path, file.stream, file.mimetype)
+        .then((size) => cb(null, { path: target.path, size }))
+        .catch((err: Error) => cb(err));
     },
-    filename(_req, file, cb) {
-      cb(null, randomUUID() + extname(file.originalname));
+
+    _removeFile(_req, file, cb) {
+      files.removeUpload(file.path).then(
+        () => cb(null),
+        (err: Error) => cb(err),
+      );
     },
-  });
+  };
 
   const upload = multer({ storage, defParamCharset: 'utf8' });
 
-  /** Streams a stored file inline, or shows the "file not found" page. */
-  const serve = (record: FileRecord, req: Request, res: Response): void => {
+  /**
+   * Streams a stored file inline, or shows the "file not found" page.
+   *
+   * Local files go through `res.sendFile`, which brings conditional requests
+   * and range handling with it; remote objects are streamed, with the client's
+   * `Range` header passed on to the store.
+   */
+  const serve = async (record: FileRecord, req: Request, res: Response): Promise<void> => {
     res.setHeader('Content-Disposition', `inline; filename="${safeFilename(record.filename)}"`);
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.sendFile(resolve(record.path), (err) => {
-      if (err && !res.headersSent) {
-        void render(req, res, { page: 'file-not-found' }, 200);
-      }
-    });
+
+    const localPath = files.filePath(record);
+    if (localPath) {
+      res.sendFile(localPath, (err) => {
+        if (err && !res.headersSent) {
+          void render(req, res, { page: 'file-not-found' }, 200);
+        }
+      });
+      return;
+    }
+
+    let object;
+    try {
+      object = await files.openFile(record, req.headers.range);
+    } catch {
+      await render(req, res, { page: 'file-not-found' }, 200);
+      return;
+    }
+
+    // Deliberately derived from the stored filename and not from the type the
+    // uploader claimed, so both backends serve a given file identically.
+    res.type(extname(record.filename));
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Content-Length', String(object.size));
+    if (object.modifiedAt) res.setHeader('Last-Modified', object.modifiedAt.toUTCString());
+    if (object.contentRange) {
+      res.setHeader('Content-Range', object.contentRange);
+      res.status(206);
+    }
+
+    object.body.on('error', () => res.destroy());
+    object.body.pipe(res);
   };
 
   const download = async (req: Request, res: Response): Promise<void> => {
     try {
       const record = await files.downloadFile(param(req, 'id'));
-      serve(record, req, res);
+      await serve(record, req, res);
     } catch {
       await render(req, res, { page: 'file-not-found' }, 200);
     }
@@ -175,7 +223,7 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
   const dashboardServe = async (req: Request, res: Response): Promise<void> => {
     try {
       const record = await files.getFileById(param(req, 'id'));
-      serve(record, req, res);
+      await serve(record, req, res);
     } catch {
       res.status(404).json({ error: 'file not found' });
     }
