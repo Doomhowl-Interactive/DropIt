@@ -78,17 +78,6 @@ export type ImportRequest = z.infer<typeof ImportRequestSchema>;
 export const ImportResponseSchema = z.object({ imported: z.number() });
 export type ImportResponse = z.infer<typeof ImportResponseSchema>;
 
-/** A row as rendered on the SSR dashboard page — display-formatted, not raw. */
-export const DashboardFileRowSchema = z.object({
-  id: z.string(),
-  filename: z.string(),
-  size: z.string(),
-  createdAt: z.string(),
-  downloadCount: z.number(),
-  deleted: z.boolean(),
-});
-export type DashboardFileRow = z.infer<typeof DashboardFileRowSchema>;
-
 // ---------------------------------------------------------------------------
 // API tokens
 // ---------------------------------------------------------------------------
@@ -96,8 +85,8 @@ export type DashboardFileRow = z.infer<typeof DashboardFileRowSchema>;
 export const MAX_TOKEN_NAME_LENGTH = 60;
 
 /**
- * A token as the server is willing to describe it. Shared by the SSR page
- * data and the JSON API — note the absence of `tokenHash`.
+ * A token as the server is willing to describe it — note the absence of
+ * `tokenHash`.
  */
 export const ApiTokenRowSchema = z.object({
   id: z.string(),

@@ -8,29 +8,20 @@
  * Everything in here must stay JSON-serializable.
  */
 
-import type { ApiTokenRow, CreatedApiToken, DashboardFileRow } from '../../shared/types';
+import type { ApiTokenRow, CreatedApiToken } from '../../shared/types';
 
-export type { ApiTokenRow, CreatedApiToken, DashboardFileRow };
-
-export interface DashboardPageData {
-  files: DashboardFileRow[];
-  page: number;
-  totalPages: number;
-  error?: string;
-}
+export type { ApiTokenRow, CreatedApiToken };
 
 export interface ApiTokensPageData {
-  tokens: ApiTokenRow[];
   /** Absolute URL of the MCP endpoint, ready to paste into a client config. */
   endpoint: string;
-  error?: string;
 }
 
 export type PageContext =
   | { page: 'index' }
   | { page: 'login'; error?: boolean }
   | { page: 'file-not-found' }
-  | { page: 'dashboard'; data: DashboardPageData }
+  | { page: 'dashboard' }
   | { page: 'api-tokens'; data: ApiTokensPageData }
   | { page: 'change-password' }
   | { page: 'error' };
