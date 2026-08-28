@@ -38,8 +38,8 @@
   <p-divider />
 
   <p-card header="{{ files.value().length }} files">
-    @if (files.error(); as error) {
-      <p>Error: {{ error }}</p>
+    @if (files.error()) {
+      <p>Error: Could not load the file list.</p>
     }
     <p-table
       [value]="files.value()"
