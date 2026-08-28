@@ -11,7 +11,11 @@ import { UploadZone } from '../components/upload-zone/upload-zone';
 import { FormatBytesPipe } from '../utils/format-bytes.pipe';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { map } from 'rxjs';
-import { FileDeleteResponseSchema, FileExportResponseSchema } from '../../shared/types';
+import {
+  FileDeleteResponseSchema,
+  FileExportResponseSchema,
+  OrphansResponseSchema,
+} from '../../shared/types';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -61,10 +65,13 @@ export class DashboardPage {
   }
 
   protected addOrphans() {
-    this.httpClient.post(`/api/files/dashboard/orphans`, {}).subscribe({
-      error: (e) => this.handleError(e),
-      complete: () => this.files.reload(),
-    });
+    this.httpClient
+      .post(`/api/files/dashboard/orphans`, {})
+      .pipe(map((body) => OrphansResponseSchema.parse(body)))
+      .subscribe({
+        error: (e) => this.handleError(e),
+        complete: () => this.files.reload(),
+      });
   }
 
   private handleError(err: any) {

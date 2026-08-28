@@ -12,6 +12,7 @@ import {
   FileExportResponseSchema,
   ImportRequestSchema,
   ImportResponseSchema,
+  OrphansResponseSchema,
   UploadResponseSchema,
   type FileExportRecord,
 } from '../../shared/types';
@@ -190,8 +191,8 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
 
   dashboard.post('/orphans', async (_req, res) => {
     try {
-      await files.addOrphans();
-      res.redirect(303, '/dashboard');
+      const added = await files.addOrphans();
+      res.json(OrphansResponseSchema.parse({ added }));
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }
