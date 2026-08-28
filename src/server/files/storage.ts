@@ -40,12 +40,6 @@ export interface FileStorage {
   /** Allocates an unused location for a new object named `filename`. */
   locationFor(filename: string): string;
 
-  /**
-   * Where an object stored under exactly `name` would live. Used when records
-   * are imported from an export and their bytes are already in the store.
-   */
-  locationOf(name: string): string;
-
   write(location: string, bytes: Buffer, contentType?: string): Promise<void>;
 
   /** Streams an upload in; returns the number of bytes actually stored. */
@@ -82,7 +76,7 @@ export class LocalFileStorage implements FileStorage {
     return this.locationOf(randomUUID() + extname(filename));
   }
 
-  locationOf(name: string): string {
+  private locationOf(name: string): string {
     return join(this.dir, name);
   }
 

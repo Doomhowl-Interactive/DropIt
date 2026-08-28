@@ -47,7 +47,7 @@ export class S3FileStorage implements FileStorage {
     return this.locationOf(randomUUID() + extname(filename));
   }
 
-  locationOf(name: string): string {
+  private locationOf(name: string): string {
     return this.prefix + name;
   }
 
