@@ -1,4 +1,3 @@
-import { extname } from 'node:path';
 import { Router, type Request, type Response } from 'express';
 import multer from 'multer';
 import { authMiddleware, requireRole, type AuthDeps } from '../middleware/auth';
@@ -6,6 +5,7 @@ import { param, parseBody, safeFilename } from '../util';
 import type { FileService } from '../files/service';
 import type { FileRecord } from '../files/repository';
 import type { RenderPage } from '../render';
+import { guessMimeType } from '../mcp/content';
 import {
   FileExportResponseSchema,
   ImportRequestSchema,
@@ -96,9 +96,9 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
       return;
     }
 
-    // Deliberately derived from the stored filename and not from the type the
-    // uploader claimed, so both backends serve a given file identically.
-    res.type(extname(record.filename));
+    // Prefer the content type the store recorded for the object; fall back to
+    // the stored filename when the backend doesn't track one (local files).
+    res.type(object.contentType ?? guessMimeType(record.filename));
     res.setHeader('Accept-Ranges', 'bytes');
     res.setHeader('Content-Length', String(object.size));
     if (object.modifiedAt) res.setHeader('Last-Modified', object.modifiedAt.toUTCString());
