@@ -11,6 +11,6 @@ export interface ShareLinks {
 export function shareLinks(record: FileRecord, origin: string): ShareLinks {
   return {
     share: `${origin}/f/${record.viewId}`,
-    download: `${origin}/api/files/download/${record.id}`,
+    download: `${origin}/api/files/view/${record.id}`,
   };
 }

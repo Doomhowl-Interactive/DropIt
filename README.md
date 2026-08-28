@@ -107,7 +107,6 @@ render the same markup without a second round trip. See
 | POST | `/api/auth/change-password`          | Changes the authenticated user's password                |
 | POST | `/api/files/upload`                  | Multipart upload (admin)                                 |
 | GET  | `/api/files/view/:id`                | Streams a file inline                                    |
-| GET  | `/api/files/download/:id`            | Streams a file inline                                    |
 | GET  | `/api/files/dashboard/`              | Lists all file records (admin)                           |
 | GET  | `/api/files/dashboard/export`        | Exports all file records (admin)                         |
 | POST | `/api/files/dashboard/import`        | Imports file records (admin)                             |

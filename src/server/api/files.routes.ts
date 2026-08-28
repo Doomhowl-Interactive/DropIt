@@ -120,7 +120,6 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
     }
   };
 
-  router.get('/download/:id', download);
   router.get('/view/:id', download);
 
   router.post(
