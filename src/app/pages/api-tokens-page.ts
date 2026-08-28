@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -10,9 +11,7 @@ import { TagModule } from 'primeng/tag';
 import { TokenSecretDialog } from '../components/token-secret-dialog/token-secret-dialog';
 import { PageDataService, usePage } from '../utils/page';
 import { ApiTokenApi } from '../services/api-token-api';
-import type { ApiTokenRow, ApiTokensPageData } from '../utils/page-context';
-
-const EMPTY: ApiTokensPageData = { tokens: [], endpoint: '' };
+import { ApiTokensListResponseSchema, type ApiTokenRow } from '../../shared/types';
 
 @Component({
   selector: 'app-api-tokens-page',
@@ -34,17 +33,23 @@ export class ApiTokensPage {
   private readonly api = inject(ApiTokenApi);
   private readonly context = inject(PageDataService).context;
 
-  private readonly data = computed<ApiTokensPageData>(() =>
-    this.context?.page === 'api-tokens' ? this.context.data : EMPTY,
-  );
+  /** Absolute MCP endpoint URL — only the SSR layer knows the request origin. */
+  protected readonly endpoint =
+    this.context?.page === 'api-tokens' ? this.context.data.endpoint : '';
 
-  /** Seeded from the server render, then kept up to date locally. */
-  protected readonly tokens = signal<ApiTokenRow[]>(this.data().tokens);
-  protected readonly endpoint = computed(() => this.data().endpoint);
+  protected readonly tokens = httpResource(() => ({ url: '/api/tokens' }), {
+    parse: (value) => ApiTokensListResponseSchema.parse(value),
+    defaultValue: [],
+  });
 
   protected readonly newName = signal('');
-  protected readonly busy = signal(false);
-  protected readonly error = signal(this.data().error ?? '');
+  protected readonly issuing = signal(false);
+  protected readonly actionError = signal('');
+
+  protected readonly busy = computed(() => this.issuing() || this.tokens.isLoading());
+  protected readonly error = computed(
+    () => this.actionError() || (this.tokens.error() ? 'Could not load the tokens.' : ''),
+  );
 
   /** Non-null only while a freshly created secret is waiting to be copied. */
   protected readonly issuedSecret = signal<string | null>(null);
@@ -57,35 +62,39 @@ export class ApiTokensPage {
     const name = this.newName().trim();
     if (!name || this.busy()) return;
 
-    this.busy.set(true);
-    this.error.set('');
+    this.issuing.set(true);
+    this.actionError.set('');
 
     try {
       const created = await this.api.create(name);
 
-      this.tokens.update((tokens) => [created.token, ...tokens]);
+      // A resource's value is writable, so a mutation can fold its own result
+      // in instead of paying for a refetch.
+      this.tokens.value.update((tokens) => [created.token, ...tokens]);
       this.issuedSecret.set(created.secret);
       this.newName.set('');
     } catch (err) {
-      this.error.set(this.messageFor(err, 'Could not create the token.'));
+      this.actionError.set(this.messageFor(err, 'Could not create the token.'));
     } finally {
-      this.busy.set(false);
+      this.issuing.set(false);
     }
   }
 
   protected async revoke(token: ApiTokenRow): Promise<void> {
     if (token.revoked || this.busy()) return;
 
-    this.busy.set(true);
-    this.error.set('');
+    this.issuing.set(true);
+    this.actionError.set('');
 
     try {
       const updated = await this.api.revoke(token.id);
-      this.tokens.update((tokens) => tokens.map((row) => (row.id === updated.id ? updated : row)));
+      this.tokens.value.update((tokens) =>
+        tokens.map((row) => (row.id === updated.id ? updated : row)),
+      );
     } catch (err) {
-      this.error.set(this.messageFor(err, 'Could not revoke the token.'));
+      this.actionError.set(this.messageFor(err, 'Could not revoke the token.'));
     } finally {
-      this.busy.set(false);
+      this.issuing.set(false);
     }
   }
 
