@@ -291,9 +291,19 @@ export const openapiSpec = {
     '/files/dashboard/orphans': {
       post: {
         tags: ['files-dashboard'],
-        summary: 'Register loose files on disk that are missing from the database, then redirect to /dashboard',
+        summary: 'Register loose files on disk that are missing from the database',
         responses: {
-          '303': { description: 'Redirect to /dashboard' },
+          '200': {
+            description: 'How many loose files were registered',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: { added: { type: 'integer' } },
+                },
+              },
+            },
+          },
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
           '500': { description: 'Server error' },
