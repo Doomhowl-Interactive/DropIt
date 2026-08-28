@@ -30,80 +30,79 @@
 
   <p-divider />
 
-  <p-card header="{{ files.value()?.length ?? 0 }} files">
+  <p-card header="{{ files.value().length }} files">
     @if (files.error(); as error) {
       <p>Error: {{ error }}</p>
     }
-    @if (files.value(); as files) {
-      <p-table [value]="files" [tableStyle]="{ 'min-width': '60rem' }">
-        <ng-template #header>
-          <tr>
-            <th>File identifier</th>
-            <th>Size</th>
-            <th>Timeline (In/Out)</th>
-            <th>Downloads</th>
-            <th>Status</th>
-            <th>System actions</th>
-          </tr>
-        </ng-template>
-        <ng-template #body let-file>
-          <tr>
-            <td class="font-medium">
-              <a href="/api/files/dashboard/download/{{ file.id }}" target="_blank">{{
-                file.filename
-              }}</a>
-            </td>
+    <p-table
+      [value]="files.value()"
+      [loading]="files.isLoading()"
+      [tableStyle]="{ 'min-width': '60rem' }"
+    >
+      <ng-template #header>
+        <tr>
+          <th>File identifier</th>
+          <th>Size</th>
+          <th>Timeline (In/Out)</th>
+          <th>Downloads</th>
+          <th>Status</th>
+          <th>System actions</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-file>
+        <tr>
+          <td class="font-medium">
+            <a href="/api/files/dashboard/download/{{ file.id }}" target="_blank">{{
+              file.filename
+            }}</a>
+          </td>
 
-            <td>{{ file.size | formatBytes }}</td>
-            <td>CRT: {{ file.createdAt | date: 'yyyy-MM-dd HH:mm' }}</td>
-            <td>{{ file.downloadCount }}</td>
+          <td>{{ file.size | formatBytes }}</td>
+          <td>CRT: {{ file.createdAt | date: 'yyyy-MM-dd HH:mm' }}</td>
+          <td>{{ file.downloadCount }}</td>
 
-            <td>
-              @if (file.deleted) {
-                <p-tag value="OFFLINE" severity="danger" />
-              } @else {
-                <p-tag value="ONLINE" severity="success" />
-              }
-            </td>
+          <td>
+            @if (file.deleted) {
+              <p-tag value="OFFLINE" severity="danger" />
+            } @else {
+              <p-tag value="ONLINE" severity="success" />
+            }
+          </td>
 
-            <td>
-              <div class="flex gap-2">
-                <button
-                  pButton
-                  type="submit"
-                  severity="secondary"
-                  [outlined]="true"
-                  [disabled]="!file.active"
-                  size="small"
-                  (click)="deactivateFile(file.id)"
-                >
-                  <span pButtonLabel>Deactivate</span>
-                </button>
-                <button
-                  pButton
-                  type="submit"
-                  severity="danger"
-                  [outlined]="true"
-                  [disabled]="file.deleted"
-                  size="small"
-                  (click)="deleteFile(file.id)"
-                >
-                  <span pButtonLabel>Delete</span>
-                </button>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template #emptymessage>
-          <tr>
-            <td colspan="6" class="text-center py-10 font-bold uppercase italic">No files yet.</td>
-          </tr>
-        </ng-template>
-      </p-table>
-    }
-    @if (files.isLoading()) {
-      <p>Loading...</p>
-    }
+          <td>
+            <div class="flex gap-2">
+              <button
+                pButton
+                type="submit"
+                severity="secondary"
+                [outlined]="true"
+                [disabled]="!file.active"
+                size="small"
+                (click)="deactivateFile(file.id)"
+              >
+                <span pButtonLabel>Deactivate</span>
+              </button>
+              <button
+                pButton
+                type="submit"
+                severity="danger"
+                [outlined]="true"
+                [disabled]="file.deleted"
+                size="small"
+                (click)="deleteFile(file.id)"
+              >
+                <span pButtonLabel>Delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="6" class="text-center py-10 font-bold uppercase italic">No files yet.</td>
+        </tr>
+      </ng-template>
+    </p-table>
   </p-card>
 
   <footer></footer>
