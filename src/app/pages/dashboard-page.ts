@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
@@ -12,8 +12,6 @@ import { UploadZone } from '../components/upload-zone/upload-zone';
 import { FormatBytesPipe } from '../utils/format-bytes.pipe';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { FileExportResponseSchema } from '../../shared/types';
-import z from 'zod';
-import { FormSubmittedEvent } from '@angular/forms';
 
 const EMPTY: DashboardPageData = { files: [], page: 1, totalPages: 0 };
 
@@ -52,6 +50,13 @@ export class DashboardPage {
   protected deactivateFile(fileId: string) {
     console.log(`Deactivating ${fileId}...`);
     this.httpClient.post(`/api/files/dashboard/delete/${fileId}`, {}).subscribe({
+      error: (e) => this.handleError(e),
+      complete: () => this.files?.reload(),
+    });
+  }
+
+  protected addOprhans() {
+    this.httpClient.post(`/api/files/dashboard/orphans`, {}).subscribe({
       error: (e) => this.handleError(e),
       complete: () => this.files?.reload(),
     });

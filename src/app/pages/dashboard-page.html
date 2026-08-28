@@ -1,4 +1,4 @@
-<div class="max-w-7xl mx-auto">
+<div class="max-w-7xl mx-auto pt-10">
   <header class="mb-6 pb-4 flex justify-between items-start">
     <div>
       <h1 class="text-4xl font-black uppercase tracking-tighter leading-none">System dashboard</h1>
@@ -19,11 +19,9 @@
       <app-upload-zone />
     </div>
     <div class="mt-4 flex items-center gap-3">
-      <form action="/api/files/dashboard/orphans" method="POST">
-        <button type="submit" pButton severity="secondary" size="small" [outlined]="true">
-          <span pButtonLabel>Add orphans</span>
-        </button>
-      </form>
+      <button type="submit" pButton severity="secondary" size="small" [outlined]="true">
+        <span pButtonLabel>Add orphans</span>
+      </button>
       <span class="text-xs italic text-surface-500">
         Scans storage for loose files that missed the database and registers them.
       </span>
