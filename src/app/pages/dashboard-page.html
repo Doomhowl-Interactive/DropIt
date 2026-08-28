@@ -1,32 +1,13 @@
-<p-dialog
-  header="{{ modalTitle() }}"
-  [modal]="true"
-  [dismissableMask]="true"
-  [visible]="modalOpen()"
-  (onHide)="closeModal()"
-  [style]="{ width: '28rem' }"
->
-  <div id="modal-message" class="text-sm mb-6">{{ modalMessage() }}</div>
-  <div class="flex justify-end gap-2">
-    <button pButton severity="secondary" [outlined]="true" (click)="closeModal()">
-      <span pButtonLabel>ABORT</span>
-    </button>
-    <button id="modal-confirm-btn" pButton severity="danger" (click)="confirm()">
-      <span pButtonLabel>EXECUTE</span>
-    </button>
-  </div>
-</p-dialog>
-
 <div class="max-w-7xl mx-auto">
   <header class="mb-6 pb-4 flex justify-between items-start">
     <div>
       <h1 class="text-4xl font-black uppercase tracking-tighter leading-none">System dashboard</h1>
     </div>
     <div class="flex flex-col items-end gap-2">
-      <a href="/" class="text-sm font-bold underline">← Back</a>
-      <a href="/dashboard/tokens" class="text-sm font-bold underline">API tokens</a>
+      <a routerLink="/" class="text-sm font-bold underline">← Back</a>
+      <a routerLink="/dashboard/tokens" class="text-sm font-bold underline">API tokens</a>
       <a href="/api" class="text-sm font-bold underline">Swagger API spec</a>
-      <a href="/dashboard/password" class="text-sm font-bold underline" size="small"
+      <a routerLink="/dashboard/password" class="text-sm font-bold underline" size="small"
         >Change password</a
       >
       <a href="/logout" class="text-sm font-bold underline text-red-600">Logout</a>
@@ -141,12 +122,12 @@
   <div class="mt-6 flex justify-between items-center pt-4">
     <div class="flex gap-4">
       @if (page() > 1) {
-        <a href="?page={{ page() - 1 }}" pButton severity="secondary">
+        <a [routerLink]="[]" [queryParams]="{ page: page() - 1 }" pButton severity="secondary">
           <span pButtonLabel>Prev page</span>
         </a>
       }
       @if (page() < totalPages()) {
-        <a href="?page={{ page() + 1 }}" pButton severity="secondary">
+        <a [routerLink]="[]" [queryParams]="{ page: page() + 1 }" pButton severity="secondary">
           <span pButtonLabel>Next page</span>
         </a>
       }
