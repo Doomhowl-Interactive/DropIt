@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { config } from '../../config';
 import { humanSize, safeFilename } from '../../util';
 import { guessMimeType } from '../content';
-import { shareLinks } from '../links';
+import { fileUrl } from '../links';
 import { toolError } from '../result';
 import { defineMcpTool } from '../types';
 
@@ -32,7 +32,6 @@ export const uploadFileTool = defineMcpTool({
     filename: z.string(),
     size: z.number(),
     share_url: z.string(),
-    download_url: z.string(),
   },
 
   async handler(args, ctx) {
@@ -61,7 +60,7 @@ export const uploadFileTool = defineMcpTool({
       // a failed upload never leaves stray bytes behind.
       const record = await ctx.files.storeUpload(filename, bytes, guessMimeType(filename));
 
-      const links = shareLinks(record, ctx.origin);
+      const url = fileUrl(record, ctx.origin);
 
       return {
         content: [
@@ -69,8 +68,7 @@ export const uploadFileTool = defineMcpTool({
             type: 'text' as const,
             text: [
               `Uploaded ${record.filename} (${humanSize(record.size)}).`,
-              `Share link: ${links.share}`,
-              `Direct download: ${links.download}`,
+              `Share link: ${url}`,
             ].join('\n'),
           },
         ],
@@ -78,8 +76,7 @@ export const uploadFileTool = defineMcpTool({
           id: record.id,
           filename: record.filename,
           size: record.size,
-          share_url: links.share,
-          download_url: links.download,
+          share_url: url,
         },
       };
     } catch (err) {

@@ -46,8 +46,8 @@ export function looksLikeText(bytes: Buffer): boolean {
 }
 
 /**
- * Resolves a file by its download id, falling back to its view id — an agent
- * that was handed a share link only has the latter.
+ * Resolves a file by its download id, falling back to its view id — share
+ * links carry the download id, but older ones handed out a view id.
  *
  * Deliberately *not* `FileService.downloadFile`: that books a download, which
  * would make an agent merely looking at a file distort the download count.

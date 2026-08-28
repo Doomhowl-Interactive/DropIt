@@ -1,16 +1,6 @@
 import type { FileRecord } from '../files/service';
 
-export interface ShareLinks {
-  /** The page a human should be sent to. */
-  share: string;
-  /** Streams the bytes directly; counts as a download. */
-  download: string;
-}
-
-/** The URLs the web UI shows on its "file ready" page, for a given origin. */
-export function shareLinks(record: FileRecord, origin: string): ShareLinks {
-  return {
-    share: `${origin}/f/${record.viewId}`,
-    download: `${origin}/api/files/view/${record.id}`,
-  };
+/** The public URL that streams a stored file — what a share link points at. */
+export function fileUrl(record: FileRecord, origin: string): string {
+  return `${origin}/api/files/view/${record.id}`;
 }

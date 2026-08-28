@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { formatTimestamp, humanSize } from '../../util';
-import { shareLinks } from '../links';
+import { fileUrl } from '../links';
 import { defineMcpTool } from '../types';
 
 const MAX_PAGE_SIZE = 100;
@@ -57,7 +57,7 @@ export const listFilesTool = defineMcpTool({
       created_at: record.createdAt.toISOString(),
       download_count: record.downloadCount,
       deleted: record.deleted,
-      share_url: shareLinks(record, ctx.origin).share,
+      share_url: fileUrl(record, ctx.origin),
     }));
 
     const lines = records.map((record) => {

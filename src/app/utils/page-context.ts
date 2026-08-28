@@ -12,13 +12,6 @@ import type { ApiTokenRow, CreatedApiToken, DashboardFileRow } from '../../share
 
 export type { ApiTokenRow, CreatedApiToken, DashboardFileRow };
 
-export interface CompletePageData {
-  filename: string;
-  downloadId: string;
-  /** Absolute origin the visitor reached us on, e.g. `https://drop.example`. */
-  origin: string;
-}
-
 export interface DashboardPageData {
   files: DashboardFileRow[];
   page: number;
@@ -36,7 +29,6 @@ export interface ApiTokensPageData {
 export type PageContext =
   | { page: 'index' }
   | { page: 'login'; error?: boolean }
-  | { page: 'complete'; data: CompletePageData }
   | { page: 'file-not-found' }
   | { page: 'dashboard'; data: DashboardPageData }
   | { page: 'api-tokens'; data: ApiTokensPageData }

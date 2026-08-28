@@ -95,7 +95,6 @@ render the same markup without a second round trip. See
 | Verb | Route                                | Description                                              |
 | ---- | ------------------------------------ | -------------------------------------------------------- |
 | GET  | `/`                                  | Uploader                                                 |
-| GET  | `/f/:id`                             | Share page with the download link                        |
 | GET  | `/login`                             | Admin sign-in page                                       |
 | GET  | `/dashboard?page=N`                  | Paginated file console (admin)                           |
 | GET  | `/logout`                            | Clears the session and redirects to `/` (admin)          |
