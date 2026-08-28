@@ -303,10 +303,20 @@ export const openapiSpec = {
     '/files/dashboard/delete/{id}': {
       post: {
         tags: ['files-dashboard'],
-        summary: 'Soft-delete a file and redirect to /dashboard',
+        summary: 'Soft-delete a file',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
-          '303': { description: 'Redirect to /dashboard' },
+          '200': {
+            description: 'The file was soft-deleted',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: { id: { type: 'string' }, deleted: { type: 'boolean' } },
+                },
+              },
+            },
+          },
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
           '404': { description: 'File not found' },
@@ -316,10 +326,20 @@ export const openapiSpec = {
     '/files/dashboard/delete/fr/{id}': {
       post: {
         tags: ['files-dashboard'],
-        summary: 'Permanently delete a file and redirect to /dashboard',
+        summary: 'Permanently delete a file',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
-          '303': { description: 'Redirect to /dashboard' },
+          '200': {
+            description: 'The file was permanently deleted',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: { id: { type: 'string' }, deleted: { type: 'boolean' } },
+                },
+              },
+            },
+          },
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
           '404': { description: 'File not found' },
