@@ -216,6 +216,7 @@ export const openapiSpec = {
         responses: {
           '200': { description: 'File stream, or the rendered "file not found" page' },
           '206': { description: 'Partial file stream, in answer to a Range request' },
+          '502': { description: 'Storage backend unavailable' },
         },
       },
     },
@@ -318,6 +319,7 @@ export const openapiSpec = {
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
           '404': { description: 'File not found' },
+          '502': { description: 'Storage backend unavailable' },
         },
       },
     },
@@ -332,6 +334,7 @@ export const openapiSpec = {
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
           '404': { description: 'File not found' },
+          '502': { description: 'Storage backend unavailable' },
         },
       },
     },
