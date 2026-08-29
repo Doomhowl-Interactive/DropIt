@@ -36,11 +36,12 @@ const browserDistFolder = join(import.meta.dirname, '../browser');
  *
  * Set `TRUST_PROXY_HEADERS=true` when running behind a TLS-terminating proxy
  * such as Fly.io so `X-Forwarded-*` is honoured instead of warned about.
+ *
+ * Built inside `createApp()` — not at module scope — so that the CLI's
+ * build-time import of this module (which must not touch the environment)
+ * neither reads an unset `ALLOWED_HOSTS` nor trips the `*` warning; by the
+ * time the engine exists, `.env` has been loaded.
  */
-const angularApp = new AngularNodeAppEngine({
-  allowedHosts: config.allowedHosts,
-  trustProxyHeaders: config.trustProxyHeaders,
-});
 
 async function createApp(): Promise<Express> {
   // Node reads .env itself; a missing file is not an error (as with godotenv).
@@ -51,6 +52,10 @@ async function createApp(): Promise<Express> {
   }
 
   const app = express();
+  const angularApp = new AngularNodeAppEngine({
+    allowedHosts: config.allowedHosts,
+    trustProxyHeaders: config.trustProxyHeaders,
+  });
   const render = createRenderer(angularApp);
 
   const db = await connect();
