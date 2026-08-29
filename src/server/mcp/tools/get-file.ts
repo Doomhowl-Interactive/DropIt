@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 import { config } from '../../config';
 import { humanSize } from '../../util';
-import { guessMimeType, looksLikeText, readFileBytes, resolveLiveFile } from '../content';
-import { shareLinks } from '../links';
+import { guessMimeType, looksLikeText, resolveLiveFile } from '../content';
+import { fileUrl } from '../links';
 import { toolError } from '../result';
 import { defineMcpTool } from '../types';
 
@@ -19,7 +19,9 @@ export const getFileTool = defineMcpTool({
     id: z
       .string()
       .min(1)
-      .describe('The file id from list_files or upload_file, or the id from a /f/<id> share link.'),
+      .describe(
+        'The file id from list_files or upload_file, or the id from a /api/files/view/<id> share link.',
+      ),
   },
 
   annotations: { readOnlyHint: true },
@@ -27,24 +29,22 @@ export const getFileTool = defineMcpTool({
   async handler(args, ctx) {
     const record = await resolveLiveFile(ctx.files, args.id).catch(() => null);
     if (!record) {
-      return toolError(
-        `No live file with id "${args.id}" — it may be deleted or unknown.`,
-      );
+      return toolError(`No live file with id "${args.id}" — it may be deleted or unknown.`);
     }
 
     if (record.size > config.mcpMaxUploadBytes) {
       return toolError(
         `${record.filename} is ${humanSize(record.size)}, over the ` +
           `${humanSize(config.mcpMaxUploadBytes)} limit for inline reads. ` +
-          `Download it directly instead: ${shareLinks(record, ctx.origin).download}`,
+          `Download it directly instead: ${fileUrl(record, ctx.origin)}`,
       );
     }
 
     let bytes: Buffer;
     try {
-      bytes = await readFileBytes(record);
+      bytes = await ctx.files.readFileBytes(record);
     } catch (err) {
-      return toolError(`Could not read ${record.filename} from disk: ${(err as Error).message}`);
+      return toolError(`Could not read ${record.filename} from storage: ${(err as Error).message}`);
     }
 
     const uri = `dropit://files/${record.id}`;

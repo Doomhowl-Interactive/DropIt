@@ -15,6 +15,7 @@ import { createAdminUser } from './server/bootstrap';
 import { config } from './server/config';
 import { connect } from './server/db/db';
 import { migrate } from './server/db/migrate';
+import { createFileStorage } from './server/files/create-storage';
 import { FileRepository } from './server/files/repository';
 import { FileService } from './server/files/service';
 import { mcpRoutes } from './server/mcp/routes';
@@ -35,11 +36,12 @@ const browserDistFolder = join(import.meta.dirname, '../browser');
  *
  * Set `TRUST_PROXY_HEADERS=true` when running behind a TLS-terminating proxy
  * such as Fly.io so `X-Forwarded-*` is honoured instead of warned about.
+ *
+ * Built inside `createApp()` — not at module scope — so that the CLI's
+ * build-time import of this module (which must not touch the environment)
+ * neither reads an unset `ALLOWED_HOSTS` nor trips the `*` warning; by the
+ * time the engine exists, `.env` has been loaded.
  */
-const angularApp = new AngularNodeAppEngine({
-  allowedHosts: config.allowedHosts,
-  trustProxyHeaders: config.trustProxyHeaders,
-});
 
 async function createApp(): Promise<Express> {
   // Node reads .env itself; a missing file is not an error (as with godotenv).
@@ -50,6 +52,10 @@ async function createApp(): Promise<Express> {
   }
 
   const app = express();
+  const angularApp = new AngularNodeAppEngine({
+    allowedHosts: config.allowedHosts,
+    trustProxyHeaders: config.trustProxyHeaders,
+  });
   const render = createRenderer(angularApp);
 
   const db = await connect();
@@ -57,11 +63,13 @@ async function createApp(): Promise<Express> {
 
   const users = new UserService(new UserRepository(db));
   const auth = new AuthService(users);
-  const files = new FileService(new FileRepository(db), config.storageDir);
+  const files = new FileService(new FileRepository(db), createFileStorage());
   const apiTokens = new ApiTokenService(new ApiTokenRepository(db));
   const authDeps = { tokens: apiTokens, users };
 
   await createAdminUser(users);
+
+  console.log(`Uploads are stored in ${storageSummary()}`);
 
   app.disable('x-powered-by');
   app.use(cookieParser());
@@ -104,6 +112,14 @@ async function createApp(): Promise<Express> {
   });
 
   return app;
+}
+
+/** One line describing where uploads land, for the boot log. */
+function storageSummary(): string {
+  if (config.storageDriver !== 's3') return `the local directory ${resolve(config.storageDir)}`;
+
+  const { bucket, prefix, endpoint } = config.s3;
+  return `the S3 bucket ${bucket}/${prefix} on ${endpoint || 'AWS'}`;
 }
 
 /**

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { config } from './config';
 import { authMiddleware, requireRole, type AuthDeps } from './middleware/auth';
 import { listTokenRows } from './tokens/view';
-import { formatTimestamp, humanSize, param, requestOrigin } from './util';
+import { formatTimestamp, humanSize, requestOrigin } from './util';
 import type { FileService } from './files/service';
 import type { ApiTokenService } from './tokens/service';
 import type { RenderPage } from './render';
@@ -22,22 +22,6 @@ export function webRoutes(
   router.get('/', (req, res) => render(req, res, { page: 'index' }));
 
   router.get('/login', (req, res) => render(req, res, { page: 'login' }));
-
-  router.get('/f/:id', async (req, res) => {
-    try {
-      const file = await files.getFileByViewId(param(req, 'id'));
-      await render(req, res, {
-        page: 'complete',
-        data: {
-          filename: file.filename,
-          downloadId: file.id,
-          origin: requestOrigin(req),
-        },
-      });
-    } catch {
-      await render(req, res, { page: 'file-not-found' }, 404);
-    }
-  });
 
   router.get('/ping', (_req, res) => res.json({ message: 'hello' }));
 

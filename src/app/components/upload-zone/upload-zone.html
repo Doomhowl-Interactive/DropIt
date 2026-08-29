@@ -1,56 +1,76 @@
-<div
-  id="drop-zone"
-  class="mb-4 border-2 border-dashed border-surface-300 rounded-md p-10 text-center cursor-pointer transition-colors"
-  [class.border-primary]="dragging()"
-  [class.bg-primary-50]="dragging()"
-  (click)="fileInput.click()"
-  (dragover)="onDragOver($event)"
-  (dragleave)="dragging.set(false)"
-  (drop)="onDrop($event)"
->
-  <input type="file" id="fileInput" class="hidden" #fileInput (change)="onFileSelected()" />
+@if (downloadUrl()) {
+  <div class="space-y-4">
+    <p-message severity="success" styleClass="w-full font-bold">UPLOAD COMPLETE</p-message>
 
-  <div id="dz-content">
-    <span id="dz-text" class="text-sm">{{ dropZoneText() }}</span>
+    <div>
+      <label class="text-[10px] font-bold block mb-1">DOWNLOAD LINK</label>
+      <p-inputgroup>
+        <input id="res-url" pInputText readonly class="text-sm" [value]="downloadUrl()" #resUrl />
+        <button pButton severity="secondary" (click)="copy(resUrl)">
+          <span pButtonLabel>COPY</span>
+        </button>
+      </p-inputgroup>
+    </div>
+
+    <button id="newUploadBtn" pButton class="w-full justify-center" (click)="reload()">
+      <span pButtonLabel>NEW UPLOAD</span>
+    </button>
+  </div>
+} @else {
+  <div
+    id="drop-zone"
+    class="mb-4 border-2 border-dashed border-surface-300 rounded-md p-10 text-center cursor-pointer transition-colors"
+    [class.border-primary]="dragging()"
+    [class.bg-primary-50]="dragging()"
+    (click)="fileInput.click()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="dragging.set(false)"
+    (drop)="onDrop($event)"
+  >
+    <input type="file" id="fileInput" class="hidden" #fileInput (change)="onFileSelected()" />
+
+    <div id="dz-content">
+      <span id="dz-text" class="text-sm">{{ dropZoneText() }}</span>
+    </div>
+
+    @if (uploading()) {
+      <div id="progress-container" class="mt-3">
+        <p-progressbar [value]="percent()" [showValue]="false" styleClass="h-2" />
+      </div>
+
+      <div class="flex justify-between items-center mt-1">
+        <div id="progress-text" class="text-[10px] font-bold">{{ percent() }}%</div>
+        <div id="stats-text" class="text-[10px] font-bold uppercase">
+          <span id="speed-text">{{ speed() }}</span>
+          <span class="mx-1 opacity-30">|</span>
+          <span id="eta-text">{{ eta() }}</span>
+        </div>
+      </div>
+    }
   </div>
 
-  @if (uploading()) {
-    <div id="progress-container" class="mt-3">
-      <p-progressbar [value]="percent()" [showValue]="false" styleClass="h-2" />
-    </div>
-
-    <div class="flex justify-between items-center mt-1">
-      <div id="progress-text" class="text-[10px] font-bold">{{ percent() }}%</div>
-      <div id="stats-text" class="text-[10px] font-bold uppercase">
-        <span id="speed-text">{{ speed() }}</span>
-        <span class="mx-1 opacity-30">|</span>
-        <span id="eta-text">{{ eta() }}</span>
-      </div>
-    </div>
-  }
-</div>
-
-<div class="space-y-4">
-  <button
-    id="uploadBtn"
-    pButton
-    class="w-full justify-center"
-    [disabled]="!selectedFile() || uploading()"
-    (click)="upload()"
-  >
-    <span pButtonLabel>{{ uploading() ? 'UPLOADING...' : 'UPLOAD' }}</span>
-  </button>
-
-  @if (uploading()) {
+  <div class="space-y-4">
     <button
-      id="cancelBtn"
+      id="uploadBtn"
       pButton
-      severity="danger"
-      [outlined]="true"
       class="w-full justify-center"
-      (click)="cancel($event)"
+      [disabled]="!selectedFile() || uploading()"
+      (click)="upload()"
     >
-      <span pButtonLabel>CANCEL UPLOAD</span>
+      <span pButtonLabel>{{ uploading() ? 'UPLOADING...' : 'UPLOAD' }}</span>
     </button>
-  }
-</div>
+
+    @if (uploading()) {
+      <button
+        id="cancelBtn"
+        pButton
+        severity="danger"
+        [outlined]="true"
+        class="w-full justify-center"
+        (click)="cancel($event)"
+      >
+        <span pButtonLabel>CANCEL UPLOAD</span>
+      </button>
+    }
+  </div>
+}

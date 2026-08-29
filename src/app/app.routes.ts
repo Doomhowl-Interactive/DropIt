@@ -1,15 +1,14 @@
 import { Routes } from '@angular/router';
 import { DashboardPage } from './pages/dashboard-page';
 import { NotFoundPage } from './pages/not-found-page/not-found.page';
-import { FileViewPage } from './pages/file-view-page';
 import { IndexPage } from './pages/index-page/index.page';
 import { LoginPage } from './pages/login-page/login.page';
 import { ApiTokensPage } from './pages/api-tokens-page';
 
 /**
- * The `api/...` entries exist because those endpoints answer with a page rather
- * than JSON (a deletion confirmation, or "file not found"). Declaring them
- * keeps the browser-side router in agreement with what the server rendered.
+ * Only the pages Express renders directly. Anything else — `/api/files/view/:id`
+ * answering with "file not found", say — falls through to the wildcard, which
+ * renders the same not-found page the server did.
  */
 export const routes: Routes = [
   { path: '', component: IndexPage },
@@ -18,9 +17,7 @@ export const routes: Routes = [
   { path: 'dashboard/tokens', component: ApiTokensPage },
   {
     path: 'dashboard/password',
-    loadComponent: () =>
-      import('./pages/change-password-page').then((m) => m.ChangePasswordPage),
+    loadComponent: () => import('./pages/change-password-page').then((m) => m.ChangePasswordPage),
   },
-  { path: 'f/:id', component: FileViewPage },
   { path: '**', component: NotFoundPage },
 ];

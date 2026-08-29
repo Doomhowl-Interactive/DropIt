@@ -40,9 +40,6 @@
             ],
             "server": "src/main.server.ts",
             "outputMode": "server",
-            "security": {
-              "allowedHosts": ["*"]
-            },
             "ssr": {
               "entry": "src/server.ts"
             }
@@ -85,22 +82,6 @@
             }
           },
           "defaultConfiguration": "development"
-        },
-        "test": {
-          "builder": "@angular/build:unit-test",
-          "options": {
-            "runnerConfig": true,
-            "coverage": true,
-            "coverageInclude": ["src/server/**/*.ts"],
-            "coverageExclude": ["src/**/*.spec.ts", "src/testing/**"],
-            "coverageReporters": ["text-summary", "html"],
-            "coverageThresholds": {
-              "statements": 80,
-              "branches": 80,
-              "functions": 80,
-              "lines": 80
-            }
-          }
         }
       }
     }

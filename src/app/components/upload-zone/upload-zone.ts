@@ -1,5 +1,8 @@
 import { Component, DOCUMENT, inject, signal, viewChild, type ElementRef } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { MessageModule } from 'primeng/message';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { formatBytes, formatTime } from '../../utils/format';
 import { UploadResponseSchema } from '../../../shared/types';
@@ -8,7 +11,7 @@ import { UploadResponseSchema } from '../../../shared/types';
   selector: 'app-upload-zone',
   templateUrl: './upload-zone.html',
   host: { style: 'display: contents' },
-  imports: [ButtonModule, ProgressBarModule],
+  imports: [ButtonModule, InputTextModule, InputGroupModule, MessageModule, ProgressBarModule],
 })
 export class UploadZone {
   private readonly document = inject(DOCUMENT);
@@ -20,6 +23,8 @@ export class UploadZone {
   protected readonly percent = signal(0);
   protected readonly speed = signal('0 KB/S');
   protected readonly eta = signal('--:--');
+  /** Absolute link to the finished upload, shown in place of the picker. */
+  protected readonly downloadUrl = signal('');
 
   private request: XMLHttpRequest | null = null;
 
@@ -76,19 +81,19 @@ export class UploadZone {
     };
 
     request.onload = () => {
-      if (request.status >= 200 && request.status < 300) {
-        try {
-          const data = UploadResponseSchema.parse(JSON.parse(request.responseText));
+      this.uploading.set(false);
 
-          // Hand off to the shareable view page.
-          this.document.location.href = `/f/${data.view_key}`;
-        } catch {
-          console.error('Invalid response:', request.responseText);
-          alert('Server error');
-        }
-      } else {
+      if (request.status < 200 || request.status >= 300) {
         alert('Upload failed');
-        this.uploading.set(false);
+        return;
+      }
+
+      try {
+        const data = UploadResponseSchema.parse(JSON.parse(request.responseText));
+        this.downloadUrl.set(`${this.document.location.origin}/api/files/view/${data.id}`);
+      } catch {
+        console.error('Invalid response:', request.responseText);
+        alert('Server error');
       }
     };
 
@@ -114,5 +119,11 @@ export class UploadZone {
 
   protected reload(): void {
     this.document.location.reload();
+  }
+
+  protected copy(input: HTMLInputElement): void {
+    input.select();
+    input.setSelectionRange(0, 99999); // mobile support
+    this.document.execCommand('copy');
   }
 }

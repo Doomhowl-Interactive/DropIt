@@ -1,5 +1,4 @@
-import { readFile } from 'node:fs/promises';
-import { extname, resolve } from 'node:path';
+import { extname } from 'node:path';
 import { FileNotFoundError, type FileRecord, type FileService } from '../files/service';
 
 const MIME_TYPES: Record<string, string> = {
@@ -47,8 +46,8 @@ export function looksLikeText(bytes: Buffer): boolean {
 }
 
 /**
- * Resolves a file by its download id, falling back to its view id — an agent
- * that was handed a share link only has the latter.
+ * Resolves a file by its download id, falling back to its view id — share
+ * links carry the download id, but older ones handed out a view id.
  *
  * Deliberately *not* `FileService.downloadFile`: that books a download, which
  * would make an agent merely looking at a file distort the download count.
@@ -63,8 +62,4 @@ export async function resolveLiveFile(files: FileService, id: string): Promise<F
   if (record.deleted) throw new FileNotFoundError();
 
   return record;
-}
-
-export async function readFileBytes(record: FileRecord): Promise<Buffer> {
-  return readFile(resolve(record.path));
 }

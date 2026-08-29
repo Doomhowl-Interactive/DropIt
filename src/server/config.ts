@@ -25,6 +25,35 @@ export const config = {
   get storageDir(): string {
     return process.env['STORAGE_DIR'] || './uploads';
   },
+
+  /**
+   * Where uploads are kept: `local` writes to `STORAGE_DIR`, `s3` writes to an
+   * S3-compatible bucket. Defaults to `s3` as soon as `S3_BUCKET` is set, so
+   * configuring a bucket is all it takes to switch.
+   */
+  get storageDriver(): 'local' | 's3' {
+    const configured = (process.env['STORAGE_DRIVER'] || '').trim().toLowerCase();
+    if (configured === 's3' || configured === 'local') return configured;
+    return config.s3.bucket ? 's3' : 'local';
+  },
+
+  /**
+   * S3-compatible object storage. `S3_ENDPOINT` is what points the client at
+   * MinIO, Cloudflare R2, Backblaze B2 or Garage instead of AWS; leave it
+   * empty for AWS itself. Credentials may be omitted, in which case the SDK's
+   * own chain (instance role, ~/.aws/credentials, AWS_*) applies.
+   */
+  get s3() {
+    return {
+      bucket: process.env['S3_BUCKET'] || '',
+      prefix: process.env['S3_PREFIX'] || '',
+      region: process.env['S3_REGION'] || 'us-east-1',
+      endpoint: process.env['S3_ENDPOINT'] || '',
+      accessKeyId: process.env['S3_ACCESS_KEY_ID'] || '',
+      secretAccessKey: process.env['S3_SECRET_ACCESS_KEY'] || '',
+      forcePathStyle: parseBoolean(process.env['S3_FORCE_PATH_STYLE']),
+    };
+  },
   get staticDir(): string {
     return process.env['STATIC_DIR'] || './static';
   },
@@ -57,6 +86,12 @@ export const config = {
     return splitList(process.env['MCP_ALLOWED_ORIGINS'] ?? '');
   },
 };
+
+/** Tri-state flag: `undefined` when unset, so a default can still apply. */
+function parseBoolean(value: string | undefined): boolean | undefined {
+  if (value === undefined || value.trim() === '') return undefined;
+  return value.trim().toLowerCase() === 'true';
+}
 
 function splitList(value: string): string[] {
   return value

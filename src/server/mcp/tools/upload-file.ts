@@ -1,11 +1,10 @@
-import { randomUUID } from 'node:crypto';
-import { rm, writeFile } from 'node:fs/promises';
-import { basename, extname, join } from 'node:path';
+import { basename } from 'node:path';
 import { z } from 'zod';
 
 import { config } from '../../config';
 import { humanSize, safeFilename } from '../../util';
-import { shareLinks } from '../links';
+import { guessMimeType } from '../content';
+import { fileUrl } from '../links';
 import { toolError } from '../result';
 import { defineMcpTool } from '../types';
 
@@ -33,7 +32,6 @@ export const uploadFileTool = defineMcpTool({
     filename: z.string(),
     size: z.number(),
     share_url: z.string(),
-    download_url: z.string(),
   },
 
   async handler(args, ctx) {
@@ -57,20 +55,12 @@ export const uploadFileTool = defineMcpTool({
       );
     }
 
-    const { folderId, folderPath } = ctx.files.createUploadFolder();
-    const path = join(folderPath, randomUUID() + extname(filename));
-
     try {
-      await writeFile(path, bytes);
+      // Storage cleans up after itself when the record cannot be written, so
+      // a failed upload never leaves stray bytes behind.
+      const record = await ctx.files.storeUpload(filename, bytes, guessMimeType(filename));
 
-      const record = await ctx.files.registerUpload({
-        folderId,
-        originalName: filename,
-        path,
-        size: bytes.length,
-      });
-
-      const links = shareLinks(record, ctx.origin);
+      const url = fileUrl(record, ctx.origin);
 
       return {
         content: [
@@ -78,8 +68,7 @@ export const uploadFileTool = defineMcpTool({
             type: 'text' as const,
             text: [
               `Uploaded ${record.filename} (${humanSize(record.size)}).`,
-              `Share link: ${links.share}`,
-              `Direct download: ${links.download}`,
+              `Share link: ${url}`,
             ].join('\n'),
           },
         ],
@@ -87,13 +76,10 @@ export const uploadFileTool = defineMcpTool({
           id: record.id,
           filename: record.filename,
           size: record.size,
-          share_url: links.share,
-          download_url: links.download,
+          share_url: url,
         },
       };
     } catch (err) {
-      // Never leave an orphaned file behind when the record was not written.
-      await rm(path, { force: true }).catch(() => undefined);
       return toolError(`Upload failed: ${(err as Error).message}`);
     }
   },
