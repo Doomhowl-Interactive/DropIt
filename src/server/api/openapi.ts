@@ -213,8 +213,9 @@ export const openapiSpec = {
         security: [],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
-          '200': { description: 'File stream, or the rendered "file not found" page' },
+          '200': { description: 'File stream' },
           '206': { description: 'Partial file stream, in answer to a Range request' },
+          '404': { description: 'Rendered "file not found" page' },
           '502': { description: 'Storage backend unavailable' },
         },
       },
