@@ -20,7 +20,6 @@ import {
 function toExportRecord(file: FileRecord): FileExportRecord {
   return {
     id: file.id,
-    viewId: file.viewId,
     filename: file.filename,
     size: file.size,
     downloadCount: file.downloadCount,
@@ -56,7 +55,7 @@ function setContentHeaders(res: Response, record: FileRecord, contentType: strin
 }
 
 interface UploadRequest extends Request {
-  uploadFolderId?: string;
+  uploadId?: string;
 }
 
 export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDeps = {}): Router {
@@ -69,7 +68,7 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
    */
   const storage: multer.StorageEngine = {
     _handleFile(req, file, cb) {
-      let target: { folderId: string; path: string };
+      let target: { id: string; path: string };
       try {
         target = files.createUploadTarget(file.originalname);
       } catch (err) {
@@ -77,7 +76,7 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
         return;
       }
 
-      (req as UploadRequest).uploadFolderId = target.folderId;
+      (req as UploadRequest).uploadId = target.id;
 
       files
         // The content type follows from the name we store, never from the
@@ -181,16 +180,16 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
     upload.single('file'),
     async (req: Request, res: Response) => {
       const file = req.file;
-      const folderId = (req as UploadRequest).uploadFolderId;
+      const id = (req as UploadRequest).uploadId;
 
-      if (!file || !folderId) {
+      if (!file || !id) {
         res.status(400).json({ error: 'missing file' });
         return;
       }
 
       try {
         const record = await files.registerUpload({
-          folderId,
+          id,
           originalName: file.originalname,
           path: file.path,
           size: file.size,
@@ -201,7 +200,6 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
             id: record.id,
             filename: record.filename,
             size: record.size,
-            view_key: record.viewId,
           }),
         );
       } catch (err) {

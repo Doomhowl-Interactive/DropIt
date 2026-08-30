@@ -11,7 +11,6 @@ export class FileNotFoundError extends Error {
 
 export interface FileRecord {
   id: string;
-  viewId: string;
   filename: string;
   /** Location on disk; never exposed over JSON. */
   path: string;
@@ -26,7 +25,6 @@ type Row = typeof fileRecords.$inferSelect;
 function mapRow(row: Row): FileRecord {
   return {
     id: row.id,
-    viewId: row.viewId ?? '',
     filename: row.filename ?? '',
     path: row.path ?? '',
     size: row.size ?? 0,
@@ -42,7 +40,6 @@ export class FileRepository {
   async create(file: FileRecord): Promise<void> {
     await this.db.insert(fileRecords).values({
       id: file.id,
-      viewId: file.viewId,
       filename: file.filename,
       path: file.path,
       size: file.size,
@@ -62,20 +59,6 @@ export class FileRepository {
     if (!row) {
       throw new FileNotFoundError();
     }
-    return mapRow(row);
-  }
-
-  async getByIdOrNull(id: string): Promise<FileRecord | null> {
-    const [row] = await this.db.select().from(fileRecords).where(eq(fileRecords.id, id));
-    if (!row) {
-      return null;
-    }
-    return mapRow(row);
-  }
-
-  async getByViewId(viewId: string): Promise<FileRecord> {
-    const [row] = await this.db.select().from(fileRecords).where(eq(fileRecords.viewId, viewId));
-    if (!row) throw new FileNotFoundError();
     return mapRow(row);
   }
 

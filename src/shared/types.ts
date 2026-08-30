@@ -42,14 +42,12 @@ export const UploadResponseSchema = z.object({
   id: z.string(),
   filename: z.string(),
   size: z.number(),
-  view_key: z.string(),
 });
 export type UploadResponse = z.infer<typeof UploadResponseSchema>;
 
 /** A file record as it's allowed to leave the server — no on-disk `path`. */
 export const FileExportRecordSchema = z.object({
   id: z.string(),
-  viewId: z.string(),
   filename: z.string(),
   size: z.number(),
   downloadCount: z.number(),
