@@ -1,5 +1,6 @@
-import { Component, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { HttpErrorResponse, httpResource } from '@angular/common/http';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -7,15 +8,13 @@ import { DividerModule } from 'primeng/divider';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
+import { MessageModule } from 'primeng/message';
 import { UploadZone } from '../components/upload-zone/upload-zone';
+import { FileDashboardApi } from '../services/file-dashboard-api';
 import { FormatBytesPipe } from '../utils/format-bytes.pipe';
-import { HttpClient, httpResource } from '@angular/common/http';
-import { map } from 'rxjs';
-import {
-  FileDeleteResponseSchema,
-  FileExportResponseSchema,
-  OrphansResponseSchema,
-} from '../../shared/types';
+import { FileExportResponseSchema } from '../../shared/types';
+
+type PendingFileAction = { id: string; mode: 'soft-delete' | 'force-delete' };
 
 @Component({
   selector: 'app-dashboard-page',
@@ -31,53 +30,70 @@ import {
     TableModule,
     TagModule,
     DialogModule,
+    MessageModule,
     UploadZone,
   ],
 })
 export class DashboardPage {
-  private httpClient = inject(HttpClient);
+  private readonly api = inject(FileDashboardApi);
 
   protected readonly files = httpResource(() => ({ url: '/api/files/dashboard' }), {
     parse: (value) => FileExportResponseSchema.parse(value),
     defaultValue: [],
   });
 
-  protected deleteFile(fileId: string) {
-    if (!confirm('Permanently delete this file? This action cannot be undone.')) return;
+  protected readonly modalOpen = signal(false);
+  protected readonly modalTitle = signal('Confirm action');
+  protected readonly modalMessage = signal('');
+  protected readonly mutating = signal(false);
+  protected readonly busy = computed(() => this.mutating() || this.files.isLoading());
+  protected readonly error = signal('');
+  private readonly pendingAction = signal<PendingFileAction | null>(null);
 
-    console.log(`Deleting ${fileId}...`);
-    this.httpClient
-      .post(`/api/files/dashboard/delete/fr/${fileId}`, {})
-      .pipe(map((body) => FileDeleteResponseSchema.parse(body)))
-      .subscribe({
-        error: (e) => this.handleError(e),
-        complete: () => this.files.reload(),
-      });
+  protected openConfirm(action: PendingFileAction, title: string, message: string): void {
+    this.pendingAction.set(action);
+    this.modalTitle.set(title);
+    this.modalMessage.set(message);
+    this.modalOpen.set(true);
   }
 
-  protected deactivateFile(fileId: string) {
-    console.log(`Deactivating ${fileId}...`);
-    this.httpClient
-      .post(`/api/files/dashboard/delete/${fileId}`, {})
-      .pipe(map((body) => FileDeleteResponseSchema.parse(body)))
-      .subscribe({
-        error: (e) => this.handleError(e),
-        complete: () => this.files.reload(),
-      });
+  protected closeModal(): void {
+    if (this.mutating()) return;
+    this.modalOpen.set(false);
+    this.pendingAction.set(null);
   }
 
-  protected addOrphans() {
-    this.httpClient
-      .post(`/api/files/dashboard/orphans`, {})
-      .pipe(map((body) => OrphansResponseSchema.parse(body)))
-      .subscribe({
-        error: (e) => this.handleError(e),
-        complete: () => this.files.reload(),
-      });
+  protected async addOrphans(): Promise<void> {
+    await this.run(() => this.api.addOrphans());
   }
 
-  private handleError(err: any) {
-    console.error(err);
-    alert('Failed to process file action.');
+  protected async confirm(): Promise<void> {
+    const action = this.pendingAction();
+    if (!action || this.mutating()) return;
+
+    await this.run(() =>
+      action.mode === 'soft-delete'
+        ? this.api.softDelete(action.id)
+        : this.api.forceDelete(action.id),
+    );
+  }
+
+  private async run(action: () => Promise<void>): Promise<void> {
+    if (this.mutating()) return;
+
+    this.mutating.set(true);
+    this.error.set('');
+
+    try {
+      await action();
+      this.modalOpen.set(false);
+      this.pendingAction.set(null);
+      this.files.reload();
+    } catch (err) {
+      const detail = err instanceof HttpErrorResponse ? err.error?.error : undefined;
+      this.error.set(typeof detail === 'string' ? detail : 'The dashboard action failed.');
+    } finally {
+      this.mutating.set(false);
+    }
   }
 }
