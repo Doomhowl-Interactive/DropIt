@@ -1,7 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { FileDeleteResponseSchema, OrphansResponseSchema } from '../../shared/types';
+import {
+  FileActiveResponseSchema,
+  FileDeleteResponseSchema,
+  OrphansResponseSchema,
+} from '../../shared/types';
 
 const BASE = '/api/files/dashboard';
 
@@ -13,15 +17,11 @@ export class FileDashboardApi {
     OrphansResponseSchema.parse(await firstValueFrom(this.http.post(`${BASE}/orphans`, null)));
   }
 
-  async softDelete(id: string): Promise<void> {
-    FileDeleteResponseSchema.parse(
-      await firstValueFrom(this.http.post(`${BASE}/delete/${encodeURIComponent(id)}`, null)),
-    );
-  }
-
-  async restore(id: string): Promise<void> {
-    FileDeleteResponseSchema.parse(
-      await firstValueFrom(this.http.post(`${BASE}/restore/${encodeURIComponent(id)}`, null)),
+  async setActive(id: string, active: boolean): Promise<void> {
+    FileActiveResponseSchema.parse(
+      await firstValueFrom(
+        this.http.patch(`${BASE}/${encodeURIComponent(id)}`, { active }),
+      ),
     );
   }
 

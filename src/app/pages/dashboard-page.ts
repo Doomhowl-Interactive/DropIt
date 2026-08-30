@@ -14,7 +14,7 @@ import { FileDashboardApi } from '../services/file-dashboard-api';
 import { FormatBytesPipe } from '../utils/format-bytes.pipe';
 import { FileExportResponseSchema } from '../../shared/types';
 
-type PendingFileAction = { id: string; mode: 'soft-delete' | 'force-delete' };
+type PendingFileAction = { id: string; mode: 'force-delete' };
 
 @Component({
   selector: 'app-dashboard-page',
@@ -68,18 +68,14 @@ export class DashboardPage {
   }
 
   protected async setFileActive(id: string, active: boolean): Promise<void> {
-    await this.run(() => (active ? this.api.restore(id) : this.api.softDelete(id)));
+    await this.run(() => this.api.setActive(id, active));
   }
 
   protected async confirm(): Promise<void> {
     const action = this.pendingAction();
     if (!action || this.mutating()) return;
 
-    await this.run(() =>
-      action.mode === 'soft-delete'
-        ? this.api.softDelete(action.id)
-        : this.api.forceDelete(action.id),
-    );
+    await this.run(() => this.api.forceDelete(action.id));
   }
 
   private async run(action: () => Promise<void>): Promise<void> {

@@ -63,9 +63,15 @@ export type FileExportResponse = z.infer<typeof FileExportResponseSchema>;
 export const OrphansResponseSchema = z.object({ added: z.number() });
 export type OrphansResponse = z.infer<typeof OrphansResponseSchema>;
 
-/** What the dashboard's delete routes answer with, so the SPA never has to follow a redirect. */
+/** What the dashboard's permanent delete route answers with. */
 export const FileDeleteResponseSchema = z.object({ id: z.string(), deleted: z.boolean() });
 export type FileDeleteResponse = z.infer<typeof FileDeleteResponseSchema>;
+
+export const FileActiveRequestSchema = z.object({ active: z.boolean() });
+export type FileActiveRequest = z.infer<typeof FileActiveRequestSchema>;
+
+export const FileActiveResponseSchema = z.object({ id: z.string(), active: z.boolean() });
+export type FileActiveResponse = z.infer<typeof FileActiveResponseSchema>;
 
 // ---------------------------------------------------------------------------
 // API tokens

@@ -117,18 +117,10 @@ export class FileService {
     return file;
   }
 
-  async deleteFileById(id: string): Promise<FileRecord> {
-    const file = await this.repo.getById(id);
-    if (file.deleted) throw new FileNotFoundError();
-
-    await this.repo.markDeleted(file);
-    return file;
-  }
-
-  async restoreFileById(id: string): Promise<FileRecord> {
+  async setFileActive(id: string, active: boolean): Promise<FileRecord> {
     const file = await this.repo.getById(id);
 
-    await this.repo.markActive(file);
+    await this.repo.setActive(file, active);
     return file;
   }
 
