@@ -23,7 +23,7 @@ and rewritten in Angular. Does not have all features!
 | GET  | `/api/files/dashboard/export`        | Exports all file records (admin)                         |
 | POST | `/api/files/dashboard/import`        | Imports file records (admin)                             |
 | POST | `/api/files/dashboard/orphans`       | Registers loose files on disk, then redirects (admin)    |
-| POST | `/api/files/dashboard/delete/:id`    | Soft-deletes a file and redirects to `/dashboard`        |
+| PATCH | `/api/files/dashboard/:id`          | Enables or disables a file (admin)                       |
 | POST | `/api/files/dashboard/delete/fr/:id` | Permanently deletes a file and redirects to `/dashboard` |
 | GET  | `/dashboard/tokens`                  | API token console (admin)                                |
 | GET  | `/dashboard/password`                | Change-password screen (admin)                           |

@@ -261,23 +261,36 @@ export const openapiSpec = {
         },
       },
     },
-    '/files/dashboard/delete/{id}': {
-      post: {
+    '/files/dashboard/{id}': {
+      patch: {
         tags: ['files-dashboard'],
-        summary: 'Soft-delete a file',
+        summary: 'Enable or disable a file',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['active'],
+                properties: { active: { type: 'boolean' } },
+              },
+            },
+          },
+        },
         responses: {
           '200': {
-            description: 'The file was soft-deleted',
+            description: 'The file state was updated',
             content: {
               'application/json': {
                 schema: {
                   type: 'object',
-                  properties: { id: { type: 'string' }, deleted: { type: 'boolean' } },
+                  properties: { id: { type: 'string' }, active: { type: 'boolean' } },
                 },
               },
             },
           },
+          '400': { description: 'Invalid active value' },
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
           '404': { description: 'File not found' },
@@ -305,29 +318,6 @@ export const openapiSpec = {
           '403': { description: 'Forbidden' },
           '404': { description: 'File not found' },
           '500': { description: 'Server error' },
-        },
-      },
-    },
-    '/files/dashboard/restore/{id}': {
-      post: {
-        tags: ['files-dashboard'],
-        summary: 'Restore a soft-deleted file',
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-        responses: {
-          '200': {
-            description: 'The file was restored',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: { id: { type: 'string' }, deleted: { type: 'boolean' } },
-                },
-              },
-            },
-          },
-          '401': { description: 'Unauthorized' },
-          '403': { description: 'Forbidden' },
-          '404': { description: 'File not found' },
         },
       },
     },

@@ -14,6 +14,8 @@ import type { RenderPage } from '../render';
 import { guessMimeType } from '../mcp/content';
 import { isNotFoundError } from '../files/storage';
 import {
+  FileActiveRequestSchema,
+  FileActiveResponseSchema,
   FileDeleteResponseSchema,
   FileExportResponseSchema,
   OrphansResponseSchema,
@@ -254,23 +256,18 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
     }
   });
 
-  dashboard.post('/delete/:id', async (req, res) => {
+  dashboard.patch('/:id', async (req, res) => {
     const id = param(req, 'id');
+    const parsed = FileActiveRequestSchema.safeParse(req.body);
 
-    try {
-      await files.deleteFileById(id);
-      res.json(FileDeleteResponseSchema.parse({ id, deleted: true }));
-    } catch {
-      res.status(404).json({ error: 'file not found' });
+    if (!parsed.success) {
+      res.status(400).json({ error: 'active must be a boolean' });
+      return;
     }
-  });
-
-  dashboard.post('/restore/:id', async (req, res) => {
-    const id = param(req, 'id');
 
     try {
-      await files.restoreFileById(id);
-      res.json(FileDeleteResponseSchema.parse({ id, deleted: false }));
+      await files.setFileActive(id, parsed.data.active);
+      res.json(FileActiveResponseSchema.parse({ id, active: parsed.data.active }));
     } catch {
       res.status(404).json({ error: 'file not found' });
     }

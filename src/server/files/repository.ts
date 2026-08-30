@@ -98,16 +98,13 @@ export class FileRepository {
       .where(eq(fileRecords.id, file.id));
   }
 
-  /** Soft delete: the row stays, the file stops being served. */
-  async markDeleted(file: FileRecord): Promise<void> {
-    file.deleted = true;
-    await this.db.update(fileRecords).set({ deleted: true }).where(eq(fileRecords.id, file.id));
-  }
-
-  /** Restores a soft-deleted row so the file can be served again. */
-  async markActive(file: FileRecord): Promise<void> {
-    file.deleted = false;
-    await this.db.update(fileRecords).set({ deleted: false }).where(eq(fileRecords.id, file.id));
+  /** Controls whether the row's file can be served. */
+  async setActive(file: FileRecord, active: boolean): Promise<void> {
+    file.deleted = !active;
+    await this.db
+      .update(fileRecords)
+      .set({ deleted: !active })
+      .where(eq(fileRecords.id, file.id));
   }
 
   /** Hard delete: the row is removed from the database. */
