@@ -67,6 +67,10 @@ export class DashboardPage {
     await this.run(() => this.api.addOrphans());
   }
 
+  protected async setFileActive(id: string, active: boolean): Promise<void> {
+    await this.run(() => (active ? this.api.restore(id) : this.api.softDelete(id)));
+  }
+
   protected async confirm(): Promise<void> {
     const action = this.pendingAction();
     if (!action || this.mutating()) return;
@@ -92,6 +96,7 @@ export class DashboardPage {
     } catch (err) {
       const detail = err instanceof HttpErrorResponse ? err.error?.error : undefined;
       this.error.set(typeof detail === 'string' ? detail : 'The dashboard action failed.');
+      this.files.reload();
     } finally {
       this.mutating.set(false);
     }

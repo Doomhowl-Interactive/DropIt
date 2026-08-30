@@ -265,6 +265,17 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
     }
   });
 
+  dashboard.post('/restore/:id', async (req, res) => {
+    const id = param(req, 'id');
+
+    try {
+      await files.restoreFileById(id);
+      res.json(FileDeleteResponseSchema.parse({ id, deleted: false }));
+    } catch {
+      res.status(404).json({ error: 'file not found' });
+    }
+  });
+
   router.use('/dashboard', dashboard);
   return router;
 }
