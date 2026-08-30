@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { HttpContext, HttpErrorResponse, httpResource } from '@angular/common/http';
+import { HttpErrorResponse, httpResource } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
@@ -12,7 +12,6 @@ import { MessageModule } from 'primeng/message';
 import { UploadZone } from '../components/upload-zone/upload-zone';
 import { FileDashboardApi } from '../services/file-dashboard-api';
 import { FormatBytesPipe } from '../utils/format-bytes.pipe';
-import { FORWARD_SSR_COOKIE } from '../utils/ssr-cookie-forward';
 import { FileExportResponseSchema } from '../../shared/types';
 
 type PendingFileAction = { id: string; mode: 'soft-delete' | 'force-delete' };
@@ -38,16 +37,10 @@ type PendingFileAction = { id: string; mode: 'soft-delete' | 'force-delete' };
 export class DashboardPage {
   private readonly api = inject(FileDashboardApi);
 
-  protected readonly files = httpResource(
-    () => ({
-      url: '/api/files/dashboard',
-      context: new HttpContext().set(FORWARD_SSR_COOKIE, true),
-    }),
-    {
-      parse: (value) => FileExportResponseSchema.parse(value),
-      defaultValue: [],
-    },
-  );
+  protected readonly files = httpResource(() => ({ url: '/api/files/dashboard' }), {
+    parse: (value) => FileExportResponseSchema.parse(value),
+    defaultValue: [],
+  });
 
   protected readonly modalOpen = signal(false);
   protected readonly modalTitle = signal('Confirm action');
