@@ -62,14 +62,6 @@ export class FileRepository {
     return mapRow(row);
   }
 
-  async getByIdOrNull(id: string): Promise<FileRecord | null> {
-    const [row] = await this.db.select().from(fileRecords).where(eq(fileRecords.id, id));
-    if (!row) {
-      return null;
-    }
-    return mapRow(row);
-  }
-
   async getPaginated(
     limit: number,
     offset: number,
