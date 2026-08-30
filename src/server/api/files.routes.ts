@@ -1,7 +1,12 @@
 import { Router, type Request, type Response } from 'express';
 import { pipeline } from 'node:stream/promises';
 import multer from 'multer';
-import { authMiddleware, requireRole, type AuthDeps } from '../middleware/auth';
+import {
+  authMiddleware,
+  optionalAuthMiddleware,
+  requireRole,
+  type AuthDeps,
+} from '../middleware/auth';
 import { param, safeFilename } from '../util';
 import type { FileService } from '../files/service';
 import type { FileRecord } from '../files/repository';
@@ -164,14 +169,16 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
 
   const download = async (req: Request, res: Response): Promise<void> => {
     try {
-      const record = await files.downloadFile(param(req, 'id'));
+      const id = param(req, 'id');
+      const record =
+        req.auth?.role === 'admin' ? await files.getFileById(id) : await files.downloadFile(id);
       await serve(record, req, res);
     } catch {
       await render(req, res, { page: 'file-not-found' }, 404);
     }
   };
 
-  router.get('/view/:id', download);
+  router.get('/view/:id', optionalAuthMiddleware(auth), download);
 
   router.post(
     '/upload',
@@ -257,18 +264,6 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
       res.status(404).json({ error: 'file not found' });
     }
   });
-
-  const dashboardServe = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const record = await files.getFileById(param(req, 'id'));
-      await serve(record, req, res);
-    } catch {
-      res.status(404).json({ error: 'file not found' });
-    }
-  };
-
-  dashboard.get('/download/:id', dashboardServe);
-  dashboard.get('/:id', dashboardServe);
 
   router.use('/dashboard', dashboard);
   return router;
