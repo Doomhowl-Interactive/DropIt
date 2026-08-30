@@ -45,6 +45,8 @@ export class ChangePasswordPage {
             await this.api.changePassword(this.passwordModel().newPassword);
             this.done.set(true);
             this.passwordModel.set({ newPassword: '', confirmPassword: '' });
+            this.passwordForm.newPassword().reset();
+            this.passwordForm.confirmPassword().reset();
           } catch (err) {
             this.error.set(this.messageFor(err, 'Could not change the password.'));
           }
