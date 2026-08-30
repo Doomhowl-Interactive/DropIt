@@ -70,7 +70,11 @@ export class ApiTokensPage {
 
       // A resource's value is writable, so a mutation can fold its own result
       // in instead of paying for a refetch.
-      this.tokens.value.update((tokens) => [created.token, ...tokens]);
+      if (this.tokens.hasValue()) {
+        this.tokens.value.update((tokens) => [created.token, ...tokens]);
+      } else {
+        this.tokens.reload();
+      }
       this.issuedSecret.set(created.secret);
       this.newName.set('');
     } catch (err) {
@@ -88,9 +92,13 @@ export class ApiTokensPage {
 
     try {
       const updated = await this.api.revoke(token.id);
-      this.tokens.value.update((tokens) =>
-        tokens.map((row) => (row.id === updated.id ? updated : row)),
-      );
+      if (this.tokens.hasValue()) {
+        this.tokens.value.update((tokens) =>
+          tokens.map((row) => (row.id === updated.id ? updated : row)),
+        );
+      } else {
+        this.tokens.reload();
+      }
     } catch (err) {
       this.actionError.set(this.messageFor(err, 'Could not revoke the token.'));
     } finally {

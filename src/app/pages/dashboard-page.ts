@@ -43,6 +43,8 @@ export class DashboardPage {
   });
 
   protected deleteFile(fileId: string) {
+    if (!confirm('Permanently delete this file? This action cannot be undone.')) return;
+
     console.log(`Deleting ${fileId}...`);
     this.httpClient
       .post(`/api/files/dashboard/delete/fr/${fileId}`, {})
