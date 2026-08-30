@@ -43,6 +43,13 @@ export function authMiddleware(deps: AuthDeps = {}): RequestHandler {
   };
 }
 
+/** Recognizes valid credentials when present without requiring authentication. */
+export function optionalAuthMiddleware(deps: AuthDeps = {}): RequestHandler {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    void authenticate(req, deps).then(() => next()).catch(next);
+  };
+}
+
 async function authenticate(req: Request, deps: AuthDeps): Promise<boolean> {
   const bearer = bearerToken(req);
 

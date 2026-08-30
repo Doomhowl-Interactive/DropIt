@@ -209,8 +209,8 @@ export const openapiSpec = {
     '/files/view/{id}': {
       get: {
         tags: ['files'],
-        summary: 'Stream a file inline',
-        security: [],
+        summary: 'Stream a file inline; admins may also view disabled files',
+        security: [{}, { bearerAuth: [] }, { cookieAuth: [] }],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           '200': { description: 'File stream' },
@@ -305,36 +305,6 @@ export const openapiSpec = {
           '403': { description: 'Forbidden' },
           '404': { description: 'File not found' },
           '500': { description: 'Server error' },
-        },
-      },
-    },
-    '/files/dashboard/download/{id}': {
-      get: {
-        tags: ['files-dashboard'],
-        summary: 'Stream an admin file by database ID (admin)',
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-        responses: {
-          '200': { description: 'File stream' },
-          '206': { description: 'Partial file stream, in answer to a Range request' },
-          '401': { description: 'Unauthorized' },
-          '403': { description: 'Forbidden' },
-          '404': { description: 'File not found' },
-          '502': { description: 'Storage backend unavailable' },
-        },
-      },
-    },
-    '/files/dashboard/{id}': {
-      get: {
-        tags: ['files-dashboard'],
-        summary: 'Stream an admin file by database ID (admin)',
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-        responses: {
-          '200': { description: 'File stream' },
-          '206': { description: 'Partial file stream, in answer to a Range request' },
-          '401': { description: 'Unauthorized' },
-          '403': { description: 'Forbidden' },
-          '404': { description: 'File not found' },
-          '502': { description: 'Storage backend unavailable' },
         },
       },
     },

@@ -18,15 +18,13 @@ and rewritten in Angular. Does not have all features!
 | GET  | `/api/auth/admin-check`              | Checks that the authenticated user is an admin           |
 | POST | `/api/auth/change-password`          | Changes the authenticated user's password                |
 | POST | `/api/files/upload`                  | Multipart upload (admin)                                 |
-| GET  | `/api/files/view/:id`                | Streams a file inline                                    |
+| GET  | `/api/files/view/:id`                | Streams a file; admins may view disabled files           |
 | GET  | `/api/files/dashboard/`              | Lists all file records (admin)                           |
 | GET  | `/api/files/dashboard/export`        | Exports all file records (admin)                         |
 | POST | `/api/files/dashboard/import`        | Imports file records (admin)                             |
 | POST | `/api/files/dashboard/orphans`       | Registers loose files on disk, then redirects (admin)    |
 | POST | `/api/files/dashboard/delete/:id`    | Soft-deletes a file and redirects to `/dashboard`        |
 | POST | `/api/files/dashboard/delete/fr/:id` | Permanently deletes a file and redirects to `/dashboard` |
-| GET  | `/api/files/dashboard/download/:id`  | Streams an admin file by database ID (admin)             |
-| GET  | `/api/files/dashboard/:id`           | Streams an admin file by database ID (admin)             |
 | GET  | `/dashboard/tokens`                  | API token console (admin)                                |
 | GET  | `/dashboard/password`                | Change-password screen (admin)                           |
 | GET  | `/api/tokens`                        | Lists API tokens (admin)                                 |
