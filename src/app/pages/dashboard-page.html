@@ -1,3 +1,30 @@
+<p-dialog
+  [header]="modalTitle()"
+  [modal]="true"
+  [closable]="!mutating()"
+  [dismissableMask]="!mutating()"
+  [visible]="modalOpen()"
+  (onHide)="closeModal()"
+  [style]="{ width: '28rem' }"
+>
+  <div class="text-sm mb-6">{{ modalMessage() }}</div>
+  <div class="flex justify-end gap-2">
+    <button
+      type="button"
+      pButton
+      severity="secondary"
+      [outlined]="true"
+      [disabled]="mutating()"
+      (click)="closeModal()"
+    >
+      <span pButtonLabel>Cancel</span>
+    </button>
+    <button type="button" pButton severity="danger" [disabled]="mutating()" (click)="confirm()">
+      <span pButtonLabel>Confirm</span>
+    </button>
+  </div>
+</p-dialog>
+
 <div class="max-w-7xl mx-auto pt-10">
   <header class="mb-6 pb-4 flex justify-between items-start">
     <div>
@@ -14,6 +41,10 @@
     </div>
   </header>
 
+  @if (error()) {
+    <p-message severity="error" styleClass="w-full mb-4">{{ error() }}</p-message>
+  }
+
   <p-card header="Upload">
     <div class="w-1/2">
       <app-upload-zone />
@@ -25,6 +56,7 @@
         severity="secondary"
         size="small"
         [outlined]="true"
+        [disabled]="busy()"
         (click)="addOrphans()"
       >
         <span pButtonLabel>Add orphans</span>
@@ -80,23 +112,35 @@
             <div class="flex gap-2">
               <button
                 pButton
-                type="submit"
+                type="button"
                 severity="secondary"
                 [outlined]="true"
-                [disabled]="file.deleted"
+                [disabled]="file.deleted || busy()"
                 size="small"
-                (click)="deactivateFile(file.id)"
+                (click)="
+                  openConfirm(
+                    { id: file.id, mode: 'soft-delete' },
+                    'Deactivate file',
+                    'Deactivate this file and remove it from active storage?'
+                  )
+                "
               >
                 <span pButtonLabel>Deactivate</span>
               </button>
               <button
                 pButton
-                type="submit"
+                type="button"
                 severity="danger"
                 [outlined]="true"
-                [disabled]="file.deleted"
+                [disabled]="busy()"
                 size="small"
-                (click)="deleteFile(file.id)"
+                (click)="
+                  openConfirm(
+                    { id: file.id, mode: 'force-delete' },
+                    'Permanently delete file',
+                    'Permanently delete this file? This action cannot be undone.'
+                  )
+                "
               >
                 <span pButtonLabel>Delete</span>
               </button>
