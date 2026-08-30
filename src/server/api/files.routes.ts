@@ -124,7 +124,7 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
         if (err && !res.headersSent) {
           // The disposition above described the file, not this page.
           res.removeHeader('Content-Disposition');
-          void render(req, res, { page: 'file-not-found' }, 200);
+          void render(req, res, { page: 'file-not-found' }, 404);
         }
       });
       return;
@@ -142,7 +142,7 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
         return;
       }
 
-      await render(req, res, { page: 'file-not-found' }, 200);
+      await render(req, res, { page: 'file-not-found' }, 404);
       return;
     }
 
@@ -167,7 +167,7 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
       const record = await files.downloadFile(param(req, 'id'));
       await serve(record, req, res);
     } catch {
-      await render(req, res, { page: 'file-not-found' }, 200);
+      await render(req, res, { page: 'file-not-found' }, 404);
     }
   };
 
