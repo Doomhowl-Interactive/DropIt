@@ -54,6 +54,7 @@ services:
       STATIC_DIR: ./static
       MCP_MAX_BODY: 35mb
       MCP_MAX_UPLOAD_BYTES: 26214400
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-false}
 
     volumes:
       - dropit-uploads:/app/uploads
