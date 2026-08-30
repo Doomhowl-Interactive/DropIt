@@ -1,5 +1,5 @@
 import { Component, DOCUMENT, inject, signal } from '@angular/core';
-import { FormField, FormRoot, form, required, submit } from '@angular/forms/signals';
+import { FormField, FormRoot, form, required } from '@angular/forms/signals';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -26,40 +26,37 @@ export class LoginPage {
 
   protected readonly failed = signal(false);
   private readonly credentialsModel = signal({ username: '', password: '' });
-  protected readonly credentialsForm = form(this.credentialsModel, (credentials) => {
-    required(credentials.username, { message: 'Username is required' });
-    required(credentials.password, { message: 'Password is required' });
-  });
-
-  protected async submit(event: Event): Promise<void> {
-    event.preventDefault();
-    this.failed.set(false);
-
-    try {
-      await submit(this.credentialsForm, {
+  protected readonly credentialsForm = form(
+    this.credentialsModel,
+    (credentials) => {
+      required(credentials.username, { message: 'Username is required' });
+      required(credentials.password, { message: 'Password is required' });
+    },
+    {
+      submission: {
         action: async () => {
-          const credentials = this.credentialsModel();
-          const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(credentials),
-          });
+          this.failed.set(false);
 
-          if (!response.ok) {
-            this.failed.set(true);
-            return [];
+          try {
+            const response = await fetch('/api/auth/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(this.credentialsModel()),
+            });
+
+            if (response.ok) {
+              this.document.location.href = '/dashboard';
+              return;
+            }
+          } catch {
+            // Display the same deliberately vague message for network and authentication failures.
           }
 
-          this.document.location.href = '/dashboard';
-          return [];
+          this.failed.set(true);
         },
-      });
-    } catch {
-      this.failed.set(true);
-    }
-  }
+      },
+    },
+  );
 
   protected goBack(): void {
     this.location.back();

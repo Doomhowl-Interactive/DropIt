@@ -14,7 +14,7 @@
       </div>
     </ng-template>
 
-    <form class="space-y-3" (submit)="submit($event)" [formRoot]="credentialsForm">
+    <form class="space-y-3" [formRoot]="credentialsForm">
       @if (failed()) {
         <p-message severity="error" styleClass="w-full mb-2">Access denied</p-message>
       }
@@ -59,7 +59,14 @@
         }
       </div>
 
-      <button type="submit" pButton class="w-full justify-center">Login</button>
+      <button
+        type="submit"
+        pButton
+        class="w-full justify-center"
+        [disabled]="credentialsForm().submitting()"
+      >
+        Login
+      </button>
     </form>
   </p-card>
 </div>

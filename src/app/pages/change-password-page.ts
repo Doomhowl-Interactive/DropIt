@@ -1,9 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { FormField, FormRoot, form, minLength, required, validate } from '@angular/forms/signals';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
+import { PasswordModule } from 'primeng/password';
 import { ZodError } from 'zod';
 
 import { AuthApi } from '../services/auth-api';
@@ -14,51 +15,46 @@ import { usePage } from '../utils/page';
   templateUrl: './change-password-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: 'display: contents' },
-  imports: [ButtonModule, CardModule, InputTextModule, MessageModule],
+  imports: [ButtonModule, CardModule, FormField, FormRoot, MessageModule, PasswordModule],
 })
 export class ChangePasswordPage {
   private readonly api = inject(AuthApi);
 
-  protected readonly newPassword = signal('');
-  protected readonly confirmPassword = signal('');
-  protected readonly busy = signal(false);
   protected readonly error = signal('');
   protected readonly done = signal(false);
+  private readonly passwordModel = signal({ newPassword: '', confirmPassword: '' });
+  protected readonly passwordForm = form(
+    this.passwordModel,
+    (passwords) => {
+      required(passwords.newPassword, { message: 'New password is required.' });
+      minLength(passwords.newPassword, 6, { message: 'Use at least 6 characters.' });
+      required(passwords.confirmPassword, { message: 'Password confirmation is required.' });
+      validate(passwords.confirmPassword, ({ value }) =>
+        value() === this.passwordModel().newPassword
+          ? undefined
+          : { kind: 'passwordMismatch', message: 'Passwords do not match.' },
+      );
+    },
+    {
+      submission: {
+        action: async () => {
+          this.error.set('');
+          this.done.set(false);
+
+          try {
+            await this.api.changePassword(this.passwordModel().newPassword);
+            this.done.set(true);
+            this.passwordModel.set({ newPassword: '', confirmPassword: '' });
+          } catch (err) {
+            this.error.set(this.messageFor(err, 'Could not change the password.'));
+          }
+        },
+      },
+    },
+  );
 
   constructor() {
     usePage({ title: 'Change Password', bodyClass: 'min-h-screen p-4' });
-  }
-
-  protected onNewPasswordInput(event: Event): void {
-    this.newPassword.set((event.target as HTMLInputElement).value);
-  }
-
-  protected onConfirmPasswordInput(event: Event): void {
-    this.confirmPassword.set((event.target as HTMLInputElement).value);
-  }
-
-  protected async change(): Promise<void> {
-    if (this.busy()) return;
-
-    if (this.newPassword() !== this.confirmPassword()) {
-      this.error.set('New password and confirmation do not match.');
-      return;
-    }
-
-    this.busy.set(true);
-    this.error.set('');
-    this.done.set(false);
-
-    try {
-      await this.api.changePassword(this.newPassword());
-      this.done.set(true);
-      this.newPassword.set('');
-      this.confirmPassword.set('');
-    } catch (err) {
-      this.error.set(this.messageFor(err, 'Could not change the password.'));
-    } finally {
-      this.busy.set(false);
-    }
   }
 
   private messageFor(err: unknown, fallback: string): string {
