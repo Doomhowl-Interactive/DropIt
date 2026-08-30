@@ -1,5 +1,8 @@
 /** Runtime configuration, read from the environment (see .env.example). */
 
+const JWT_SECRET_PLACEHOLDER = 'replace-with-deployment-specific-jwt-secret';
+const ADMIN_PASSWORD_PLACEHOLDER = 'replace-with-deployment-specific-admin-password';
+
 export const config = {
   get port(): number {
     return Number(process.env['PORT'] ?? 8080);
@@ -86,6 +89,22 @@ export const config = {
     return splitList(process.env['MCP_ALLOWED_ORIGINS'] ?? '');
   },
 };
+
+/** Prevent sample credentials from reaching a non-development server. */
+export function validateProductionSecrets(): void {
+  if (process.env['NODE_ENV'] === 'development') return;
+
+  const invalid = [
+    !config.jwtSecret || config.jwtSecret === JWT_SECRET_PLACEHOLDER ? 'JWT_SECRET' : '',
+    process.env['ADMIN_PASSWORD'] === ADMIN_PASSWORD_PLACEHOLDER ? 'ADMIN_PASSWORD' : '',
+  ].filter(Boolean);
+
+  if (invalid.length > 0) {
+    throw new Error(
+      `Refusing to start outside development: replace the placeholder value for ${invalid.join(', ')}.`,
+    );
+  }
+}
 
 /** Tri-state flag: `undefined` when unset, so a default can still apply. */
 function parseBoolean(value: string | undefined): boolean | undefined {

@@ -1,4 +1,5 @@
 import {
+  binary,
   boolean,
   index,
   int,
@@ -8,6 +9,7 @@ import {
   uniqueIndex,
   varchar,
 } from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
 
 /**
  * Dates are stored as free-form text rather than a Drizzle timestamp mode:
@@ -61,12 +63,20 @@ export const apiTokens = mysqlTable(
   ],
 );
 
-export const fileRecords = mysqlTable('file_records', {
-  id: varchar('id', { length: 64 }).primaryKey(),
-  filename: text('filename'),
-  path: text('path'),
-  size: int('size'),
-  downloadCount: int('download_count'),
-  deleted: boolean('deleted'),
-  createdAt: text('created_at'),
-});
+export const fileRecords = mysqlTable(
+  'file_records',
+  {
+    id: varchar('id', { length: 64 }).primaryKey(),
+    filename: text('filename'),
+    path: text('path'),
+    pathHash: binary('path_hash', { length: 32 }).generatedAlwaysAs(
+      sql`(unhex(sha2(\`path\`, 256)))`,
+      { mode: 'stored' },
+    ),
+    size: int('size'),
+    downloadCount: int('download_count'),
+    deleted: boolean('deleted'),
+    createdAt: text('created_at'),
+  },
+  (table) => [uniqueIndex('idx_file_records_path_hash').on(table.pathHash)],
+);

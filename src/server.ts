@@ -12,7 +12,7 @@ import { tokenRoutes } from './server/api/tokens.routes';
 import { openapiSpec } from './server/api/openapi';
 import { AuthService } from './server/auth/service';
 import { createAdminUser } from './server/bootstrap';
-import { config } from './server/config';
+import { config, validateProductionSecrets } from './server/config';
 import { connect } from './server/db/db';
 import { migrate } from './server/db/migrate';
 import { createFileStorage } from './server/files/create-storage';
@@ -50,6 +50,8 @@ async function createApp(): Promise<Express> {
   } catch {
     console.log('Error loading .env file');
   }
+
+  validateProductionSecrets();
 
   const app = express();
   const angularApp = new AngularNodeAppEngine({
