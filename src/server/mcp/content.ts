@@ -46,17 +46,14 @@ export function looksLikeText(bytes: Buffer): boolean {
 }
 
 /**
- * Resolves a file by its download id, falling back to its view id — share
- * links carry the download id, but older ones handed out a view id.
+ * Resolves a live file by its sole public id.
  *
  * Deliberately *not* `FileService.downloadFile`: that books a download, which
  * would make an agent merely looking at a file distort the download count.
  * The liveness checks are repeated here instead.
  */
 export async function resolveLiveFile(files: FileService, id: string): Promise<FileRecord> {
-  const record = await files
-    .getFileById(id)
-    .catch(() => files.getFileByViewId(id).catch(() => null));
+  const record = await files.getFileById(id).catch(() => null);
 
   if (!record) throw new FileNotFoundError();
   if (record.deleted) throw new FileNotFoundError();

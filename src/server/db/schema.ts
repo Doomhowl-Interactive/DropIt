@@ -63,7 +63,6 @@ export const apiTokens = mysqlTable(
 
 export const fileRecords = mysqlTable('file_records', {
   id: varchar('id', { length: 64 }).primaryKey(),
-  viewId: varchar('view_id', { length: 64 }),
   filename: text('filename'),
   path: text('path'),
   size: int('size'),

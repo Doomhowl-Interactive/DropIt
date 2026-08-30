@@ -4,8 +4,8 @@ import { FileNotFoundError, FileRepository, type FileRecord } from './repository
 import { LocalFileStorage, type FileStorage, type StoredObjectBody } from './storage';
 
 export interface UploadedFile {
-  /** Unique upload id; doubles as the record id. */
-  folderId: string;
+  /** UUIDv4 used as the file's sole public identifier. */
+  id: string;
   originalName: string;
   /** Storage location the bytes were written to. */
   path: string;
@@ -35,8 +35,8 @@ export class FileService {
    * opaque — a filesystem path for local storage, an object key for S3 — and
    * is handed straight back to `registerUpload`.
    */
-  createUploadTarget(originalName: string): { folderId: string; path: string } {
-    return { folderId: randomUUID(), path: this.storage.locationFor(originalName) };
+  createUploadTarget(originalName: string): { id: string; path: string } {
+    return { id: randomUUID(), path: this.storage.locationFor(originalName) };
   }
 
   /** Streams an upload into storage; returns the bytes actually stored. */
@@ -51,8 +51,7 @@ export class FileService {
 
   async registerUpload(upload: UploadedFile): Promise<FileRecord> {
     const record: FileRecord = {
-      id: upload.folderId,
-      viewId: randomUUID(),
+      id: upload.id,
       filename: upload.originalName,
       path: upload.path,
       size: upload.size,
@@ -74,11 +73,11 @@ export class FileService {
     bytes: Buffer,
     contentType?: string,
   ): Promise<FileRecord> {
-    const { folderId, path } = this.createUploadTarget(originalName);
+    const { id, path } = this.createUploadTarget(originalName);
 
     try {
       await this.storage.write(path, bytes, contentType);
-      return await this.registerUpload({ folderId, originalName, path, size: bytes.length });
+      return await this.registerUpload({ id, originalName, path, size: bytes.length });
     } catch (err) {
       await this.storage.remove(path).catch(() => undefined);
       throw err;
@@ -139,10 +138,6 @@ export class FileService {
     return this.repo.getById(id);
   }
 
-  getFileByViewId(viewId: string) {
-    return this.repo.getByViewId(viewId);
-  }
-
   getAllFiles() {
     return this.repo.getAll();
   }
@@ -168,16 +163,8 @@ export class FileService {
         continue;
       }
 
-      // The name doubles as the record id, so a name that is already taken
-      // would fail the insert.
-      if (await this.repo.getByIdOrNull(object.name).catch((e) => console.error(e))) {
-        console.log(`Skipping ${object.name} because that id is already taken`);
-        continue;
-      }
-
       await this.repo.create({
-        id: object.name,
-        viewId: randomUUID(),
+        id: randomUUID(),
         filename: object.name,
         path: object.location,
         size: object.size,
