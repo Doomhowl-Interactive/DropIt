@@ -5,7 +5,7 @@ import { formatBytes } from './format';
 @Pipe({ name: 'formatBytes' })
 export class FormatBytesPipe implements PipeTransform {
   transform(bytes: number | null | undefined, decimals?: number): string {
-    if (bytes == null || !Number.isFinite(bytes)) return '--';
+    if (bytes == null || !Number.isFinite(bytes) || bytes < 0) return '--';
     return formatBytes(bytes, decimals);
   }
 }

@@ -9,6 +9,13 @@ export class FileNotFoundError extends Error {
   }
 }
 
+export class FilePathAlreadyRegisteredError extends Error {
+  constructor(options?: ErrorOptions) {
+    super('file path already registered', options);
+    this.name = 'FilePathAlreadyRegisteredError';
+  }
+}
+
 export interface FileRecord {
   id: string;
   filename: string;
@@ -38,15 +45,22 @@ export class FileRepository {
   constructor(private readonly db: Db) {}
 
   async create(file: FileRecord): Promise<void> {
-    await this.db.insert(fileRecords).values({
-      id: file.id,
-      filename: file.filename,
-      path: file.path,
-      size: file.size,
-      downloadCount: file.downloadCount,
-      deleted: file.deleted,
-      createdAt: toDbDate(file.createdAt),
-    });
+    try {
+      await this.db.insert(fileRecords).values({
+        id: file.id,
+        filename: file.filename,
+        path: file.path,
+        size: file.size,
+        downloadCount: file.downloadCount,
+        deleted: file.deleted,
+        createdAt: toDbDate(file.createdAt),
+      });
+    } catch (error) {
+      if (isDuplicatePathError(error)) {
+        throw new FilePathAlreadyRegisteredError({ cause: error });
+      }
+      throw error;
+    }
   }
 
   async getAll(): Promise<FileRecord[]> {
@@ -94,4 +108,25 @@ export class FileRepository {
   async delete(file: FileRecord): Promise<void> {
     await this.db.delete(fileRecords).where(eq(fileRecords.id, file.id));
   }
+}
+
+function isDuplicatePathError(error: unknown): boolean {
+  let current = error;
+
+  while (current && typeof current === 'object') {
+    const candidate = current as {
+      cause?: unknown;
+      code?: unknown;
+      message?: unknown;
+      sqlMessage?: unknown;
+    };
+    const message = `${candidate.message ?? ''} ${candidate.sqlMessage ?? ''}`;
+
+    if (candidate.code === 'ER_DUP_ENTRY' && message.includes('idx_file_records_path_hash')) {
+      return true;
+    }
+    current = candidate.cause;
+  }
+
+  return false;
 }

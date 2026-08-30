@@ -49,7 +49,7 @@
 
   <p-card>
     <p-table
-      [value]="tokens.value()"
+      [value]="tokens.hasValue() ? tokens.value() : []"
       [loading]="tokens.isLoading()"
       [tableStyle]="{ 'min-width': '50rem' }"
     >

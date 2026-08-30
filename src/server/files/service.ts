@@ -1,6 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import type { Readable } from 'node:stream';
-import { FileNotFoundError, FileRepository, type FileRecord } from './repository';
+import {
+  FileNotFoundError,
+  FilePathAlreadyRegisteredError,
+  FileRepository,
+  type FileRecord,
+} from './repository';
 import { LocalFileStorage, type FileStorage, type StoredObjectBody } from './storage';
 
 export interface UploadedFile {
@@ -163,15 +168,23 @@ export class FileService {
         continue;
       }
 
-      await this.repo.create({
-        id: randomUUID(),
-        filename: object.name,
-        path: object.location,
-        size: object.size,
-        downloadCount: 0,
-        deleted: false,
-        createdAt: object.modifiedAt,
-      });
+      try {
+        await this.repo.create({
+          id: randomUUID(),
+          filename: object.name,
+          path: object.location,
+          size: object.size,
+          downloadCount: 0,
+          deleted: false,
+          createdAt: object.modifiedAt,
+        });
+      } catch (error) {
+        if (error instanceof FilePathAlreadyRegisteredError) {
+          registered.add(object.location);
+          continue;
+        }
+        throw error;
+      }
       registered.add(object.location);
       added += 1;
     }
