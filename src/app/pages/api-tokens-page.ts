@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormField, FormRoot, form, validate } from '@angular/forms/signals';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
@@ -21,7 +21,8 @@ import { ApiTokensListResponseSchema, type ApiTokenRow } from '../../shared/type
   imports: [
     ButtonModule,
     CardModule,
-    FormsModule,
+    FormField,
+    FormRoot,
     InputTextModule,
     MessageModule,
     TableModule,
@@ -42,11 +43,39 @@ export class ApiTokensPage {
     defaultValue: [],
   });
 
-  protected readonly newName = signal('');
   protected readonly issuing = signal(false);
   protected readonly actionError = signal('');
+  private readonly tokenModel = signal({ name: '' });
+  protected readonly tokenForm = form(
+    this.tokenModel,
+    (token) =>
+      validate(token.name, ({ value }) =>
+        value().trim() ? undefined : { kind: 'required', message: 'A token label is required.' },
+      ),
+    {
+      submission: {
+        action: async () => {
+          this.actionError.set('');
 
-  protected readonly busy = computed(() => this.issuing() || this.tokens.isLoading());
+          try {
+            const created = await this.api.create(this.tokenModel().name.trim());
+            if (this.tokens.hasValue()) {
+              this.tokens.value.update((tokens) => [created.token, ...tokens]);
+            } else {
+              this.tokens.reload();
+            }
+            this.issuedSecret.set(created.secret);
+            this.tokenModel.set({ name: '' });
+          } catch (err) {
+            this.actionError.set(this.messageFor(err, 'Could not create the token.'));
+          }
+        },
+      },
+    },
+  );
+  protected readonly busy = computed(
+    () => this.issuing() || this.tokenForm().submitting() || this.tokens.isLoading(),
+  );
   protected readonly error = computed(
     () => this.actionError() || (this.tokens.error() ? 'Could not load the tokens.' : ''),
   );
@@ -56,32 +85,6 @@ export class ApiTokensPage {
 
   constructor() {
     usePage({ title: 'API tokens', bodyClass: 'min-h-screen p-4' });
-  }
-
-  protected async create(): Promise<void> {
-    const name = this.newName().trim();
-    if (!name || this.busy()) return;
-
-    this.issuing.set(true);
-    this.actionError.set('');
-
-    try {
-      const created = await this.api.create(name);
-
-      // A resource's value is writable, so a mutation can fold its own result
-      // in instead of paying for a refetch.
-      if (this.tokens.hasValue()) {
-        this.tokens.value.update((tokens) => [created.token, ...tokens]);
-      } else {
-        this.tokens.reload();
-      }
-      this.issuedSecret.set(created.secret);
-      this.newName.set('');
-    } catch (err) {
-      this.actionError.set(this.messageFor(err, 'Could not create the token.'));
-    } finally {
-      this.issuing.set(false);
-    }
   }
 
   protected async revoke(token: ApiTokenRow): Promise<void> {
