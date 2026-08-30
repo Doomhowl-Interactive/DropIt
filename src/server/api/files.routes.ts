@@ -20,7 +20,6 @@ import {
 function toExportRecord(file: FileRecord): FileExportRecord {
   return {
     id: file.id,
-    viewId: file.viewId,
     filename: file.filename,
     size: file.size,
     downloadCount: file.downloadCount,
@@ -201,7 +200,6 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
             id: record.id,
             filename: record.filename,
             size: record.size,
-            view_key: record.viewId,
           }),
         );
       } catch (err) {

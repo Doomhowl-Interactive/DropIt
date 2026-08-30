@@ -52,7 +52,6 @@ export class FileService {
   async registerUpload(upload: UploadedFile): Promise<FileRecord> {
     const record: FileRecord = {
       id: upload.folderId,
-      viewId: randomUUID(),
       filename: upload.originalName,
       path: upload.path,
       size: upload.size,
@@ -139,10 +138,6 @@ export class FileService {
     return this.repo.getById(id);
   }
 
-  getFileByViewId(viewId: string) {
-    return this.repo.getByViewId(viewId);
-  }
-
   getAllFiles() {
     return this.repo.getAll();
   }
@@ -177,7 +172,6 @@ export class FileService {
 
       await this.repo.create({
         id: object.name,
-        viewId: randomUUID(),
         filename: object.name,
         path: object.location,
         size: object.size,

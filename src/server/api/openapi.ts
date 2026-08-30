@@ -194,7 +194,6 @@ export const openapiSpec = {
                     id: { type: 'string' },
                     filename: { type: 'string' },
                     size: { type: 'integer' },
-                    view_key: { type: 'string' },
                   },
                 },
               },
