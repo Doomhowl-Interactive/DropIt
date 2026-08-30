@@ -3,8 +3,8 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormField, FormRoot, form, minLength, required, validate } from '@angular/forms/signals';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
+import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
-import { PasswordModule } from 'primeng/password';
 import { ZodError } from 'zod';
 
 import { AuthApi } from '../services/auth-api';
@@ -15,7 +15,7 @@ import { usePage } from '../utils/page';
   templateUrl: './change-password-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: 'display: contents' },
-  imports: [ButtonModule, CardModule, FormField, FormRoot, MessageModule, PasswordModule],
+  imports: [ButtonModule, CardModule, FormField, FormRoot, InputTextModule, MessageModule],
 })
 export class ChangePasswordPage {
   private readonly api = inject(AuthApi);
