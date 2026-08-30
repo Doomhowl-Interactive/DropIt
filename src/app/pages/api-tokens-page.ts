@@ -66,6 +66,7 @@ export class ApiTokensPage {
             }
             this.issuedSecret.set(created.secret);
             this.tokenModel.set({ name: '' });
+            this.tokenForm.name().reset();
           } catch (err) {
             this.actionError.set(this.messageFor(err, 'Could not create the token.'));
           }
