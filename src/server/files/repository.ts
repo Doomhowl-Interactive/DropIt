@@ -104,6 +104,12 @@ export class FileRepository {
     await this.db.update(fileRecords).set({ deleted: true }).where(eq(fileRecords.id, file.id));
   }
 
+  /** Restores a soft-deleted row so the file can be served again. */
+  async markActive(file: FileRecord): Promise<void> {
+    file.deleted = false;
+    await this.db.update(fileRecords).set({ deleted: false }).where(eq(fileRecords.id, file.id));
+  }
+
   /** Hard delete: the row is removed from the database. */
   async delete(file: FileRecord): Promise<void> {
     await this.db.delete(fileRecords).where(eq(fileRecords.id, file.id));

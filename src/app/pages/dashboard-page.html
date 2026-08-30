@@ -109,31 +109,30 @@
           </td>
 
           <td>
-            <div class="flex gap-2">
-              <button
-                pButton
-                type="button"
-                severity="secondary"
-                [outlined]="true"
-                [disabled]="file.deleted || busy()"
-                size="small"
-                (click)="
-                  openConfirm(
-                    { id: file.id, mode: 'soft-delete' },
-                    'Deactivate file',
-                    'Deactivate this file and remove it from active storage?'
-                  )
-                "
-              >
-                <span pButtonLabel>Deactivate</span>
-              </button>
+            <div class="flex items-center gap-2">
+              <label class="relative inline-flex cursor-pointer items-center">
+                <input
+                  type="checkbox"
+                  class="peer sr-only"
+                  [checked]="!file.deleted"
+                  [disabled]="busy()"
+                  [attr.aria-label]="(file.deleted ? 'Enable ' : 'Disable ') + file.filename"
+                  (change)="setFileActive(file.id, $any($event.target).checked)"
+                />
+                <span
+                  class="h-6 w-11 rounded-full bg-surface-600 transition-colors after:absolute after:left-1 after:top-1 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform after:content-[''] peer-checked:bg-green-500 peer-checked:after:translate-x-5 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+                ></span>
+              </label>
               <button
                 pButton
                 type="button"
                 severity="danger"
                 [outlined]="true"
+                [rounded]="true"
                 [disabled]="busy()"
                 size="small"
+                icon="pi pi-trash"
+                [attr.aria-label]="'Permanently delete ' + file.filename"
                 (click)="
                   openConfirm(
                     { id: file.id, mode: 'force-delete' },
@@ -141,9 +140,7 @@
                     'Permanently delete this file? This action cannot be undone.'
                   )
                 "
-              >
-                <span pButtonLabel>Delete</span>
-              </button>
+              ></button>
             </div>
           </td>
         </tr>

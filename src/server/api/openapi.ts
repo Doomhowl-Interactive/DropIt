@@ -308,6 +308,29 @@ export const openapiSpec = {
         },
       },
     },
+    '/files/dashboard/restore/{id}': {
+      post: {
+        tags: ['files-dashboard'],
+        summary: 'Restore a soft-deleted file',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': {
+            description: 'The file was restored',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: { id: { type: 'string' }, deleted: { type: 'boolean' } },
+                },
+              },
+            },
+          },
+          '401': { description: 'Unauthorized' },
+          '403': { description: 'Forbidden' },
+          '404': { description: 'File not found' },
+        },
+      },
+    },
     '/tokens': {
       get: {
         tags: ['tokens'],

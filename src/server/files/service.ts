@@ -125,6 +125,13 @@ export class FileService {
     return file;
   }
 
+  async restoreFileById(id: string): Promise<FileRecord> {
+    const file = await this.repo.getById(id);
+
+    await this.repo.markActive(file);
+    return file;
+  }
+
   /** Removes the bytes from storage *and* the row from the database. */
   async forceDelete(id: string): Promise<FileRecord> {
     const file = await this.repo.getById(id);

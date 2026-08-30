@@ -19,6 +19,12 @@ export class FileDashboardApi {
     );
   }
 
+  async restore(id: string): Promise<void> {
+    FileDeleteResponseSchema.parse(
+      await firstValueFrom(this.http.post(`${BASE}/restore/${encodeURIComponent(id)}`, null)),
+    );
+  }
+
   async forceDelete(id: string): Promise<void> {
     FileDeleteResponseSchema.parse(
       await firstValueFrom(this.http.post(`${BASE}/delete/fr/${encodeURIComponent(id)}`, null)),
