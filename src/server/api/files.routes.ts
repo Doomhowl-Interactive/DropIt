@@ -66,6 +66,29 @@ const PREVIEWABLE_MIME_PREFIXES = [
   'text/xml',
 ] as const;
 
+/** Archive suffixes are authoritative even when storage has stale or incorrect MIME metadata. */
+const ARCHIVE_SUFFIXES = [
+  '.7z',
+  '.apk',
+  '.bz2',
+  '.cab',
+  '.gz',
+  '.iso',
+  '.jar',
+  '.rar',
+  '.tar',
+  '.tgz',
+  '.war',
+  '.xz',
+  '.zip',
+  '.zst',
+] as const;
+
+function isArchive(filename: string): boolean {
+  const normalized = filename.trim().toLowerCase();
+  return ARCHIVE_SUFFIXES.some((suffix) => normalized.endsWith(suffix));
+}
+
 function isPreviewable(contentType: string): boolean {
   const essence = contentType.split(';')[0].trim().toLowerCase();
   if (ACTIVE_TYPES.has(essence)) return false;
@@ -77,7 +100,8 @@ function isPreviewable(contentType: string): boolean {
 
 /** Names the response and decides whether the browser may render it in place. */
 function setContentHeaders(res: Response, record: FileRecord, contentType: string): void {
-  const disposition = isPreviewable(contentType) ? 'inline' : 'attachment';
+  const disposition =
+    !isArchive(record.filename) && isPreviewable(contentType) ? 'inline' : 'attachment';
 
   res.setHeader(
     'Content-Disposition',
