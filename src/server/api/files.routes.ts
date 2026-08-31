@@ -202,9 +202,16 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
       return;
     }
 
-    // Prefer the content type the store recorded for the object; fall back to
-    // the stored filename when the backend doesn't track one (local files).
-    setContentHeaders(res, record, object.contentType ?? guessMimeType(record.filename));
+    // A recognized filename is more reliable than legacy object metadata:
+    // older uploads may claim `text/plain` even when their gzip signature and
+    // `.tar.gz` suffix identify an archive. Unknown names still get to use
+    // metadata supplied by the storage backend.
+    const inferredContentType = guessMimeType(record.filename);
+    const contentType =
+      inferredContentType === 'application/octet-stream'
+        ? (object.contentType ?? inferredContentType)
+        : inferredContentType;
+    setContentHeaders(res, record, contentType);
     res.setHeader('Accept-Ranges', 'bytes');
     res.setHeader('Content-Length', String(object.size));
     if (object.modifiedAt) res.setHeader('Last-Modified', object.modifiedAt.toUTCString());
