@@ -373,8 +373,8 @@ export const openapiSpec = {
         },
       },
     },
-    '/tokens/{id}/revoke': {
-      post: {
+    '/tokens/{id}': {
+      delete: {
         tags: ['tokens'],
         summary: 'Revoke an API token (admin)',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
