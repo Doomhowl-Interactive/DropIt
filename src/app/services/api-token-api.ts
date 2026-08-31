@@ -29,7 +29,7 @@ export class ApiTokenApi {
   }
 
   async revoke(id: string): Promise<ApiTokenRow> {
-    const body = await firstValueFrom(this.http.post(`${BASE}/${id}/revoke`, {}));
+    const body = await firstValueFrom(this.http.delete(`${BASE}/${encodeURIComponent(id)}`));
     return ApiTokenRowSchema.parse(body);
   }
 }

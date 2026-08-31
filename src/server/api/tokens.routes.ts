@@ -41,7 +41,7 @@ export function tokenRoutes(tokens: ApiTokenService, auth: AuthDeps = {}): Route
     }
   });
 
-  router.post('/:id/revoke', async (req: Request, res: Response) => {
+  router.delete('/:id', async (req: Request, res: Response) => {
     try {
       const token = await tokens.revoke(param(req, 'id'));
       res.json(ApiTokenRowSchema.parse(toApiTokenRow(token)));
