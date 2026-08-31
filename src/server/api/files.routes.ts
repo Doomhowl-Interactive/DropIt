@@ -48,11 +48,36 @@ const ACTIVE_TYPES = new Set([
   'application/xml',
 ]);
 
+/** MIME types supported by the preview policy adapted from `isPreviewableMime()`. */
+const PREVIEWABLE_MIME_PREFIXES = [
+  'image/',
+  'application/pdf',
+  'video/mp4',
+  'video/webm',
+  'video/ogg',
+  'audio/mpeg',
+  'audio/wav',
+  'audio/ogg',
+  'audio/webm',
+  'text/plain',
+  'text/csv',
+  'application/json',
+  'application/xml',
+  'text/xml',
+] as const;
+
+function isPreviewable(contentType: string): boolean {
+  const essence = contentType.split(';')[0].trim().toLowerCase();
+  if (ACTIVE_TYPES.has(essence)) return false;
+
+  return PREVIEWABLE_MIME_PREFIXES.some((entry) =>
+    entry.endsWith('/') ? essence.startsWith(entry) : essence === entry,
+  );
+}
+
 /** Names the response and decides whether the browser may render it in place. */
 function setContentHeaders(res: Response, record: FileRecord, contentType: string): void {
-  // Stored types can carry parameters, as in `text/html; charset=utf-8`.
-  const essence = contentType.split(';')[0].trim().toLowerCase();
-  const disposition = ACTIVE_TYPES.has(essence) ? 'attachment' : 'inline';
+  const disposition = isPreviewable(contentType) ? 'inline' : 'attachment';
 
   res.setHeader(
     'Content-Disposition',
@@ -112,7 +137,7 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
   const upload = multer({ storage, defParamCharset: 'utf8' });
 
   /**
-   * Streams a stored file inline, or shows the "file not found" page.
+   * Streams a stored file for preview or download, or shows the "file not found" page.
    *
    * Local files go through `res.sendFile`, which brings conditional requests
    * and range handling with it; remote objects are streamed, with the client's
