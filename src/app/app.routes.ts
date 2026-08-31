@@ -6,7 +6,7 @@ import { LoginPage } from './pages/login-page/login.page';
 import { ApiTokensPage } from './pages/api-tokens-page';
 
 /**
- * Only the pages Express renders directly. Anything else — `/api/files/view/:id`
+ * Only the pages Express renders directly. Anything else — `/api/files/:id`
  * answering with "file not found", say — falls through to the wildcard, which
  * renders the same not-found page the server did.
  */
