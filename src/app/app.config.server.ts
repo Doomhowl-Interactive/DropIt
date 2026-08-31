@@ -12,7 +12,7 @@ const forwardDashboardCookie: HttpInterceptorFn = (request, next) => {
 
   const origin = new URL(browserRequest.url).origin;
   const target = new URL(request.url, browserRequest.url);
-  if (target.origin !== origin || target.pathname !== '/api/files/dashboard') return next(request);
+  if (target.origin !== origin || target.pathname !== '/api/files') return next(request);
 
   return next(request.clone({ setHeaders: { Cookie: cookie } }));
 };

@@ -165,7 +165,24 @@ export const openapiSpec = {
         },
       },
     },
-    '/files/upload': {
+    '/files': {
+      get: {
+        tags: ['files'],
+        summary: 'List all file records (admin)',
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: { type: 'array', items: { $ref: '#/components/schemas/FileRecord' } },
+              },
+            },
+          },
+          '401': { description: 'Unauthorized' },
+          '403': { description: 'Forbidden' },
+          '500': { description: 'Server error' },
+        },
+      },
       post: {
         tags: ['files'],
         summary: 'Multipart upload (admin)',
@@ -206,44 +223,10 @@ export const openapiSpec = {
         },
       },
     },
-    '/files/view/{id}': {
-      get: {
-        tags: ['files'],
-        summary:
-          'Stream a previewable file inline or download other files; admins may view disabled files',
-        security: [{}, { bearerAuth: [] }, { cookieAuth: [] }],
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-        responses: {
-          '200': { description: 'File stream' },
-          '206': { description: 'Partial file stream, in answer to a Range request' },
-          '404': { description: 'Rendered "file not found" page' },
-          '502': { description: 'Storage backend unavailable' },
-        },
-      },
-    },
-    '/files/dashboard': {
-      get: {
-        tags: ['files-dashboard'],
-        summary: 'List all file records (admin)',
-        responses: {
-          '200': {
-            description: 'OK',
-            content: {
-              'application/json': {
-                schema: { type: 'array', items: { $ref: '#/components/schemas/FileRecord' } },
-              },
-            },
-          },
-          '401': { description: 'Unauthorized' },
-          '403': { description: 'Forbidden' },
-          '500': { description: 'Server error' },
-        },
-      },
-    },
-    '/files/dashboard/orphans': {
+    '/files/orphans': {
       post: {
-        tags: ['files-dashboard'],
-        summary: 'Register loose files on disk that are missing from the database',
+        tags: ['files'],
+        summary: 'Register loose files on disk that are missing from the database (admin)',
         responses: {
           '200': {
             description: 'How many loose files were registered',
@@ -262,10 +245,23 @@ export const openapiSpec = {
         },
       },
     },
-    '/files/dashboard/{id}': {
+    '/files/{id}': {
+      get: {
+        tags: ['files'],
+        summary:
+          'Stream a previewable file inline or download other files; admins may view disabled files',
+        security: [{}, { bearerAuth: [] }, { cookieAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': { description: 'File stream' },
+          '206': { description: 'Partial file stream, in answer to a Range request' },
+          '404': { description: 'Rendered "file not found" page' },
+          '502': { description: 'Storage backend unavailable' },
+        },
+      },
       patch: {
-        tags: ['files-dashboard'],
-        summary: 'Enable or disable a file',
+        tags: ['files'],
+        summary: 'Enable or disable a file (admin)',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         requestBody: {
           required: true,
@@ -297,11 +293,9 @@ export const openapiSpec = {
           '404': { description: 'File not found' },
         },
       },
-    },
-    '/files/dashboard/delete/fr/{id}': {
-      post: {
-        tags: ['files-dashboard'],
-        summary: 'Permanently delete a file',
+      delete: {
+        tags: ['files'],
+        summary: 'Permanently delete a file (admin)',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           '200': {

@@ -20,7 +20,7 @@ export const getFileTool = defineMcpTool({
       .string()
       .min(1)
       .describe(
-        'The file id from list_files or upload_file, or the id from a /api/files/view/<id> share link.',
+        'The file id from list_files or upload_file, or the id from a /api/files/<id> share link.',
       ),
   },
 

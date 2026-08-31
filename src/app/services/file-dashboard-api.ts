@@ -7,7 +7,7 @@ import {
   OrphansResponseSchema,
 } from '../../shared/types';
 
-const BASE = '/api/files/dashboard';
+const BASE = '/api/files';
 
 @Injectable({ providedIn: 'root' })
 export class FileDashboardApi {
@@ -27,7 +27,7 @@ export class FileDashboardApi {
 
   async forceDelete(id: string): Promise<void> {
     FileDeleteResponseSchema.parse(
-      await firstValueFrom(this.http.post(`${BASE}/delete/fr/${encodeURIComponent(id)}`, null)),
+      await firstValueFrom(this.http.delete(`${BASE}/${encodeURIComponent(id)}`)),
     );
   }
 }
