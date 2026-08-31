@@ -37,7 +37,7 @@ type PendingFileAction = { id: string; mode: 'force-delete' };
 export class DashboardPage {
   private readonly api = inject(FileDashboardApi);
 
-  protected readonly files = httpResource(() => ({ url: '/api/files/dashboard' }), {
+  protected readonly files = httpResource(() => ({ url: '/api/files' }), {
     parse: (value) => FileExportResponseSchema.parse(value),
     defaultValue: [],
   });

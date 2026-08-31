@@ -90,7 +90,7 @@ export class UploadZone {
 
       try {
         const data = UploadResponseSchema.parse(JSON.parse(request.responseText));
-        this.downloadUrl.set(`${this.document.location.origin}/api/files/view/${data.id}`);
+        this.downloadUrl.set(`${this.document.location.origin}/api/files/${data.id}`);
       } catch {
         console.error('Invalid response:', request.responseText);
         alert('Server error');
@@ -104,7 +104,7 @@ export class UploadZone {
       }
     };
 
-    request.open('POST', '/api/files/upload');
+    request.open('POST', '/api/files');
     request.send(form);
   }
 

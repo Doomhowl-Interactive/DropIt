@@ -236,10 +236,8 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
     }
   };
 
-  router.get('/view/:id', optionalAuthMiddleware(auth), download);
-
   router.post(
-    '/upload',
+    '/',
     authMiddleware(auth),
     requireRole('admin'),
     upload.single('file'),
@@ -273,10 +271,7 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
     },
   );
 
-  const dashboard = Router();
-  dashboard.use(authMiddleware(auth), requireRole('admin'));
-
-  dashboard.get('/', async (_req, res) => {
+  router.get('/', authMiddleware(auth), requireRole('admin'), async (_req, res) => {
     try {
       const records = await files.getAllFiles();
       res.json(FileExportResponseSchema.parse(records.map(toExportRecord)));
@@ -285,7 +280,7 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
     }
   });
 
-  dashboard.post('/orphans', async (_req, res) => {
+  router.post('/orphans', authMiddleware(auth), requireRole('admin'), async (_req, res) => {
     try {
       const added = await files.addOrphans();
       res.json(OrphansResponseSchema.parse({ added }));
@@ -294,7 +289,7 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
     }
   });
 
-  dashboard.post('/delete/fr/:id', async (req, res) => {
+  router.delete('/:id', authMiddleware(auth), requireRole('admin'), async (req, res) => {
     const id = param(req, 'id');
 
     try {
@@ -312,7 +307,7 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
     }
   });
 
-  dashboard.patch('/:id', async (req, res) => {
+  router.patch('/:id', authMiddleware(auth), requireRole('admin'), async (req, res) => {
     const id = param(req, 'id');
     const parsed = FileActiveRequestSchema.safeParse(req.body);
 
@@ -329,6 +324,6 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
     }
   });
 
-  router.use('/dashboard', dashboard);
+  router.get('/:id', optionalAuthMiddleware(auth), download);
   return router;
 }
