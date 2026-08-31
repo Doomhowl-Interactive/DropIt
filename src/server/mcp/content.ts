@@ -1,34 +1,8 @@
-import { extname } from 'node:path';
+import mime from 'mime';
 import { FileNotFoundError, type FileRecord, type FileService } from '../files/service';
 
-const MIME_TYPES: Record<string, string> = {
-  '.txt': 'text/plain',
-  '.md': 'text/markdown',
-  '.csv': 'text/csv',
-  '.html': 'text/html',
-  '.css': 'text/css',
-  '.js': 'text/javascript',
-  '.ts': 'text/plain',
-  '.json': 'application/json',
-  '.xml': 'application/xml',
-  '.yaml': 'application/yaml',
-  '.yml': 'application/yaml',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.webp': 'image/webp',
-  '.pdf': 'application/pdf',
-  '.zip': 'application/zip',
-  '.gz': 'application/gzip',
-  '.tar': 'application/x-tar',
-  '.mp3': 'audio/mpeg',
-  '.mp4': 'video/mp4',
-};
-
 export function guessMimeType(filename: string): string {
-  return MIME_TYPES[extname(filename).toLowerCase()] ?? 'application/octet-stream';
+  return mime.getType(filename) ?? 'application/octet-stream';
 }
 
 /**
