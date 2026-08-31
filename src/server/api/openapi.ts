@@ -209,7 +209,8 @@ export const openapiSpec = {
     '/files/view/{id}': {
       get: {
         tags: ['files'],
-        summary: 'Stream a file inline; admins may also view disabled files',
+        summary:
+          'Stream a previewable file inline or download other files; admins may view disabled files',
         security: [{}, { bearerAuth: [] }, { cookieAuth: [] }],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
