@@ -10,6 +10,7 @@ import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { MessageModule } from 'primeng/message';
 import { UploadZone } from '../components/upload-zone/upload-zone';
+import { PasteZone } from '../components/paste-zone/paste-zone';
 import { FileDashboardApi } from '../services/file-dashboard-api';
 import { FormatBytesPipe } from '../utils/format-bytes.pipe';
 import { FileExportResponseSchema } from '../../shared/types';
@@ -32,6 +33,7 @@ type PendingFileAction = { id: string; mode: 'force-delete' };
     DialogModule,
     MessageModule,
     UploadZone,
+    PasteZone,
   ],
 })
 export class DashboardPage {

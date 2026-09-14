@@ -69,6 +69,14 @@
 
   <p-divider />
 
+  <p-card header="Paste text">
+    <div class="w-1/2">
+      <app-paste-zone />
+    </div>
+  </p-card>
+
+  <p-divider />
+
   <p-card header="{{ files.value().length }} files">
     @if (files.error()) {
       <p>Error: Could not load the file list.</p>
