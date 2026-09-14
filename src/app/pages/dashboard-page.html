@@ -45,27 +45,31 @@
     <p-message severity="error" styleClass="w-full mb-4">{{ error() }}</p-message>
   }
 
-  <p-card header="Upload">
-    <div class="w-1/2">
+  <div class="grid gap-4 md:grid-cols-2">
+    <p-card header="Upload">
       <app-upload-zone />
-    </div>
-    <div class="mt-4 flex items-center gap-3">
-      <button
-        type="button"
-        pButton
-        severity="secondary"
-        size="small"
-        [outlined]="true"
-        [disabled]="busy()"
-        (click)="addOrphans()"
-      >
-        <span pButtonLabel>Add orphans</span>
-      </button>
-      <span class="text-xs italic text-surface-500">
-        Scans storage for loose files that missed the database and registers them.
-      </span>
-    </div>
-  </p-card>
+      <div class="mt-4 flex items-center gap-3">
+        <button
+          type="button"
+          pButton
+          severity="secondary"
+          size="small"
+          [outlined]="true"
+          [disabled]="busy()"
+          (click)="addOrphans()"
+        >
+          <span pButtonLabel>Add orphans</span>
+        </button>
+        <span class="text-xs italic text-surface-500">
+          Scans storage for loose files that missed the database and registers them.
+        </span>
+      </div>
+    </p-card>
+
+    <p-card header="Paste text">
+      <app-paste-zone />
+    </p-card>
+  </div>
 
   <p-divider />
 

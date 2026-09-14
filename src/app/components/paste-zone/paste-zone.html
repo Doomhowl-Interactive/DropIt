@@ -1,0 +1,49 @@
+@if (downloadUrl()) {
+  <div class="space-y-4">
+    <p-message severity="success" styleClass="w-full font-bold">UPLOAD COMPLETE</p-message>
+
+    <div>
+      <label class="text-[10px] font-bold block mb-1">DOWNLOAD LINK</label>
+      <p-inputgroup>
+        <input id="paste-url" pInputText readonly class="text-sm" [value]="downloadUrl()" #pasteUrl />
+        <button pButton severity="secondary" (click)="copy(pasteUrl)">
+          <span pButtonLabel>COPY</span>
+        </button>
+      </p-inputgroup>
+    </div>
+
+    <button id="newPasteBtn" pButton class="w-full justify-center" (click)="newPaste()">
+      <span pButtonLabel>NEW PASTE</span>
+    </button>
+  </div>
+} @else {
+  <div class="space-y-4">
+    @if (error()) {
+      <p-message severity="error" styleClass="w-full">{{ error() }}</p-message>
+    }
+
+    <div>
+      <textarea
+        id="pasteInput"
+        class="w-full min-h-40 rounded-md border border-surface-300 bg-surface-0 p-3 text-sm"
+        placeholder="Paste text here..."
+        [value]="textContent()"
+        [disabled]="uploading()"
+        (input)="onTextInput($event)"
+      ></textarea>
+      <div class="mt-1 text-[10px] font-bold uppercase text-surface-500">
+        {{ textContent().length }} characters · saved as .txt
+      </div>
+    </div>
+
+    <button
+      id="pasteUploadBtn"
+      pButton
+      class="w-full justify-center"
+      [disabled]="!canUploadText()"
+      (click)="uploadText()"
+    >
+      <span pButtonLabel>{{ uploading() ? 'UPLOADING...' : 'UPLOAD TEXT' }}</span>
+    </button>
+  </div>
+}
