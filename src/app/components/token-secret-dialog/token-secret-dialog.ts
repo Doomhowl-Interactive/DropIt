@@ -29,8 +29,8 @@ export class TokenSecretDialog {
   /** Ready to paste into a terminal, which is how most clients are set up. */
   protected readonly command = computed(
     () =>
-      `claude mcp add --transport http dropit ${this.endpoint()} \\\n` +
-      `  --header "Authorization: Bearer ${this.secret()}"`,
+      `claude mcp add --transport http dropit ${this.endpoint()} ` +
+      `--header "Authorization: Bearer ${this.secret()}"`,
   );
 
   protected async copy(text: string): Promise<void> {

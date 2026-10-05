@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DOCUMENT, computed, inject, signal } from '@angular/core';
 import { FormField, FormRoot, form, validate } from '@angular/forms/signals';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -34,9 +34,15 @@ export class ApiTokensPage {
   private readonly api = inject(ApiTokenApi);
   private readonly context = inject(PageDataService).context;
 
-  /** Absolute MCP endpoint URL — only the SSR layer knows the request origin. */
+  /**
+   * Absolute MCP endpoint URL. The SSR layer supplies it on a full page load;
+   * after client-side navigation the context belongs to another page, so fall
+   * back to the browser's own origin.
+   */
   protected readonly endpoint =
-    this.context?.page === 'api-tokens' ? this.context.data.endpoint : '';
+    this.context?.page === 'api-tokens'
+      ? this.context.data.endpoint
+      : `${inject(DOCUMENT).location.origin}/mcp`;
 
   protected readonly tokens = httpResource(() => ({ url: '/api/tokens' }), {
     parse: (value) => ApiTokensListResponseSchema.parse(value),
