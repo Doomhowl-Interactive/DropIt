@@ -38,7 +38,9 @@ function toExportRecord(file: FileRecord): FileExportRecord {
 /**
  * Content types a browser executes in the origin it loaded them from. Uploads
  * are served back from this application's own origin, and `/view/:id` needs no
- * token, so these are handed over as downloads rather than rendered in place.
+ * token, so these are only rendered in place inside a CSP sandbox: the document
+ * gets an opaque origin, which keeps its scripts away from the app's storage and
+ * its requests from carrying the (SameSite=strict) auth cookie.
  */
 const ACTIVE_TYPES = new Set([
   'text/html',
@@ -89,9 +91,16 @@ function isArchive(filename: string): boolean {
   return ARCHIVE_SUFFIXES.some((suffix) => normalized.endsWith(suffix));
 }
 
+/** Locks an active document into an opaque origin; scripts may run, but not as us. */
+const SANDBOX_POLICY = 'sandbox allow-scripts';
+
+function mimeEssence(contentType: string): string {
+  return contentType.split(';')[0].trim().toLowerCase();
+}
+
 function isPreviewable(contentType: string): boolean {
-  const essence = contentType.split(';')[0].trim().toLowerCase();
-  if (ACTIVE_TYPES.has(essence)) return false;
+  const essence = mimeEssence(contentType);
+  if (ACTIVE_TYPES.has(essence)) return true;
 
   return PREVIEWABLE_MIME_PREFIXES.some((entry) =>
     entry.endsWith('/') ? essence.startsWith(entry) : essence === entry,
@@ -107,6 +116,11 @@ function setContentHeaders(res: Response, record: FileRecord, contentType: strin
     'Content-Disposition',
     `${disposition}; filename="${safeFilename(record.filename)}"`,
   );
+  // Sandbox active types whatever the disposition: an `attachment` header is
+  // only advice, and the browser may still end up rendering the document.
+  if (ACTIVE_TYPES.has(mimeEssence(contentType))) {
+    res.setHeader('Content-Security-Policy', SANDBOX_POLICY);
+  }
   res.type(contentType);
 }
 
@@ -174,12 +188,13 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
     if (localPath) {
       // Type the response before handing it over: left to itself `sendFile`
       // consults a far broader mime table than `guessMimeType`, and would
-      // resolve names such as `.htm` to a type we just decided not to inline.
+      // resolve names such as `.htm` to a type we would serve unsandboxed.
       setContentHeaders(res, record, guessMimeType(record.filename));
       res.sendFile(localPath, (err) => {
         if (err && !res.headersSent) {
-          // The disposition above described the file, not this page.
+          // The disposition and sandbox above described the file, not this page.
           res.removeHeader('Content-Disposition');
+          res.removeHeader('Content-Security-Policy');
           void render(req, res, { page: 'file-not-found' }, 404);
         }
       });
