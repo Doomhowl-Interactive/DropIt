@@ -76,6 +76,8 @@ export const fileRecords = mysqlTable(
     size: int('size'),
     downloadCount: int('download_count'),
     deleted: boolean('deleted'),
+    /** Zip archives only: whether its contents are served at the file's own site host. */
+    hosted: boolean('hosted').notNull().default(false),
     createdAt: text('created_at'),
   },
   (table) => [uniqueIndex('idx_file_records_path_hash').on(table.pathHash)],

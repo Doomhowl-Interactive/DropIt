@@ -26,7 +26,8 @@ export const openapiSpec = {
         type: 'apiKey',
         in: 'cookie',
         name: 'auth_token',
-        description: 'Cookie set by POST /auth/login.',
+        description:
+          "Cookie set by POST /auth/login. Requests that change something are only accepted with it from Drop.it's own pages (Sec-Fetch-Site: same-origin).",
       },
     },
     schemas: {
@@ -44,6 +45,25 @@ export const openapiSpec = {
           createdAt: { type: 'string', format: 'date-time' },
           downloadCount: { type: 'integer' },
           deleted: { type: 'boolean' },
+          archive: {
+            type: 'boolean',
+            description: 'A zip archive, whose entries GET /files/{id}/entries lists',
+          },
+          hosted: { type: 'boolean' },
+          siteUrl: {
+            type: 'string',
+            nullable: true,
+            description: "Where a hosted archive's contents are served; null when they are not",
+          },
+        },
+      },
+      FileUpdate: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          active: { type: 'boolean' },
+          hosted: { type: 'boolean' },
+          siteUrl: { type: 'string', nullable: true },
         },
       },
       ApiTokenRow: {
@@ -194,6 +214,12 @@ export const openapiSpec = {
                 type: 'object',
                 properties: {
                   file: { type: 'string', format: 'binary' },
+                  hosted: {
+                    type: 'boolean',
+                    default: false,
+                    description:
+                      "Serve a zip archive's contents at <id>.<SITES_HOST>. Accepts true/false, 1/0 or on/off.",
+                  },
                 },
                 required: ['file'],
               },
@@ -211,12 +237,17 @@ export const openapiSpec = {
                     id: { type: 'string' },
                     filename: { type: 'string' },
                     size: { type: 'integer' },
+                    hosted: { type: 'boolean' },
+                    siteUrl: { type: 'string', nullable: true },
                   },
                 },
               },
             },
           },
-          '400': { description: 'Missing file' },
+          '400': {
+            description:
+              'Missing file, or hosting asked for on a non-zip file or with SITES_HOST unset',
+          },
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
           '500': { description: 'Server error' },
@@ -261,7 +292,7 @@ export const openapiSpec = {
       },
       patch: {
         tags: ['files'],
-        summary: 'Enable or disable a file (admin)',
+        summary: "Enable or disable a file, or start or stop hosting a zip's contents (admin)",
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         requestBody: {
           required: true,
@@ -269,8 +300,8 @@ export const openapiSpec = {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['active'],
-                properties: { active: { type: 'boolean' } },
+                description: 'At least one of the two.',
+                properties: { active: { type: 'boolean' }, hosted: { type: 'boolean' } },
               },
             },
           },
@@ -280,14 +311,14 @@ export const openapiSpec = {
             description: 'The file state was updated',
             content: {
               'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: { id: { type: 'string' }, active: { type: 'boolean' } },
-                },
+                schema: { $ref: '#/components/schemas/FileUpdate' },
               },
             },
           },
-          '400': { description: 'Invalid active value' },
+          '400': {
+            description:
+              'Invalid body, or hosting asked for on a non-zip file or with SITES_HOST unset',
+          },
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
           '404': { description: 'File not found' },
@@ -313,6 +344,45 @@ export const openapiSpec = {
           '403': { description: 'Forbidden' },
           '404': { description: 'File not found' },
           '500': { description: 'Server error' },
+        },
+      },
+    },
+    '/files/{id}/entries': {
+      get: {
+        tags: ['files'],
+        summary: 'List the files inside a zip archive (admin)',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': {
+            description: 'The files in the archive',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    root: {
+                      type: 'string',
+                      description:
+                        "Folder served as the hosted site's root, e.g. dist/; empty for the archive root",
+                    },
+                    entries: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: { path: { type: 'string' }, size: { type: 'integer' } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '400': { description: 'Not a zip archive' },
+          '401': { description: 'Unauthorized' },
+          '403': { description: 'Forbidden' },
+          '404': { description: 'File not found' },
+          '422': { description: 'The archive cannot be read' },
+          '502': { description: 'Storage backend unavailable' },
         },
       },
     },

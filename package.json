@@ -38,6 +38,7 @@
     "swagger-ui-express": "^5.0.1",
     "tailwindcss-primeui": "^0.6.1",
     "tslib": "^2.3.0",
+    "yauzl": "^3.4.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -51,6 +52,7 @@
     "@types/multer": "^2.2.0",
     "@types/node": "^24.13.3",
     "@types/swagger-ui-express": "^4.1.8",
+    "@types/yauzl": "^3.4.0",
     "autoprefixer": "^10.5.4",
     "drizzle-kit": "^0.31.10",
     "postcss": "^8.5.26",

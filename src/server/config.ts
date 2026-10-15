@@ -62,6 +62,17 @@ export const config = {
   },
 
   /**
+   * Host that hosted zip archives are served under, with `*` standing in for
+   * the file id: `*.sites.example.com` serves an archive at
+   * `https://<id>.sites.example.com/`. Each site gets an origin of its own, so
+   * its scripts cannot act on the dashboard's session. Needs wildcard DNS and
+   * a wildcard certificate; empty turns hosting off.
+   */
+  get sitesHost(): string {
+    return (process.env['SITES_HOST'] || '').trim().toLowerCase();
+  },
+
+  /**
    * Host header allow-list, shared by the Angular SSR engine and the MCP
    * transport's DNS-rebinding check. `*` — the default — accepts any Host,
    * matching how the Go server behaved.

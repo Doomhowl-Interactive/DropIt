@@ -1,11 +1,20 @@
-import { Component, DOCUMENT, inject, signal, viewChild, type ElementRef } from '@angular/core';
+import {
+  Component,
+  DOCUMENT,
+  computed,
+  inject,
+  signal,
+  viewChild,
+  type ElementRef,
+} from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { MessageModule } from 'primeng/message';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { formatBytes, formatTime } from '../../utils/format';
-import { UploadResponseSchema } from '../../../shared/types';
+import { isZipArchive } from '../../../shared/archive';
+import { ErrorResponseSchema, UploadResponseSchema } from '../../../shared/types';
 
 @Component({
   selector: 'app-upload-zone',
@@ -18,6 +27,9 @@ export class UploadZone {
   private readonly fileInput = viewChild.required<ElementRef<HTMLInputElement>>('fileInput');
 
   protected readonly selectedFile = signal<File | null>(null);
+  /** Zip archives can have their contents served as a site. */
+  protected readonly isArchive = computed(() => isZipArchive(this.selectedFile()?.name ?? ''));
+  protected readonly hosted = signal(false);
   protected readonly dragging = signal(false);
   protected readonly uploading = signal(false);
   protected readonly percent = signal(0);
@@ -25,6 +37,8 @@ export class UploadZone {
   protected readonly eta = signal('--:--');
   /** Absolute link to the finished upload, shown in place of the picker. */
   protected readonly downloadUrl = signal('');
+  /** Where a hosted archive's contents are served. */
+  protected readonly siteUrl = signal('');
 
   private request: XMLHttpRequest | null = null;
 
@@ -61,6 +75,7 @@ export class UploadZone {
     this.percent.set(0);
 
     const form = new FormData();
+    if (this.hosted() && this.isArchive()) form.append('hosted', 'true');
     form.append('file', file);
 
     const request = new XMLHttpRequest();
@@ -84,13 +99,14 @@ export class UploadZone {
       this.uploading.set(false);
 
       if (request.status < 200 || request.status >= 300) {
-        alert('Upload failed');
+        alert(`Upload failed: ${errorMessage(request.responseText)}`);
         return;
       }
 
       try {
         const data = UploadResponseSchema.parse(JSON.parse(request.responseText));
         this.downloadUrl.set(`${this.document.location.origin}/api/files/${data.id}`);
+        this.siteUrl.set(data.siteUrl ?? '');
       } catch {
         console.error('Invalid response:', request.responseText);
         alert('Server error');
@@ -125,5 +141,14 @@ export class UploadZone {
     input.select();
     input.setSelectionRange(0, 99999); // mobile support
     this.document.execCommand('copy');
+  }
+}
+
+/** The server's `{ error }` message, or a generic one when it sent none. */
+function errorMessage(responseText: string): string {
+  try {
+    return ErrorResponseSchema.parse(JSON.parse(responseText)).error;
+  } catch {
+    return 'server error';
   }
 }

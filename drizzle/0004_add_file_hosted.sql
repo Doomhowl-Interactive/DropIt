@@ -1,0 +1,1 @@
+ALTER TABLE `file_records` ADD `hosted` boolean DEFAULT false NOT NULL;

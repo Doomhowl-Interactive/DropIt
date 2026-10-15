@@ -1,0 +1,30 @@
+@if (archive.isLoading()) {
+  <p class="text-sm italic text-surface-500">Reading archive…</p>
+} @else if (errorMessage()) {
+  <p-message severity="error" styleClass="w-full">{{ errorMessage() }}</p-message>
+} @else if (archive.hasValue()) {
+  <p class="text-xs text-surface-500 mb-2">
+    {{ archive.value().entries.length }} files
+    @if (archive.value().root) {
+      · served from <code>{{ archive.value().root }}</code>
+    }
+  </p>
+
+  <p-tree [value]="nodes()" scrollHeight="24rem" styleClass="w-full">
+    <!-- p-tree only consults pTemplate for node content, never a #node template. -->
+    <ng-template pTemplate="default" let-node>
+      <span class="flex w-full items-center justify-between gap-6">
+        @if (node.data.url) {
+          <a [href]="node.data.url" target="_blank" rel="noopener" class="underline">{{
+            node.label
+          }}</a>
+        } @else {
+          <span>{{ node.label }}</span>
+        }
+        <span class="text-xs text-surface-500 whitespace-nowrap">{{
+          node.data.size | formatBytes
+        }}</span>
+      </span>
+    </ng-template>
+  </p-tree>
+}

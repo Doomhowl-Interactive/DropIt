@@ -12,6 +12,25 @@
       </p-inputgroup>
     </div>
 
+    @if (siteUrl()) {
+      <div>
+        <label class="text-[10px] font-bold block mb-1">SITE LINK</label>
+        <p-inputgroup>
+          <input
+            id="site-url"
+            pInputText
+            readonly
+            class="text-sm"
+            [value]="siteUrl()"
+            #siteUrlInput
+          />
+          <button pButton severity="secondary" (click)="copy(siteUrlInput)">
+            <span pButtonLabel>COPY</span>
+          </button>
+        </p-inputgroup>
+      </div>
+    }
+
     <button id="newUploadBtn" pButton class="w-full justify-center" (click)="reload()">
       <span pButtonLabel>NEW UPLOAD</span>
     </button>
@@ -48,6 +67,24 @@
       </div>
     }
   </div>
+
+  @if (isArchive()) {
+    <label class="mb-4 flex cursor-pointer items-start gap-2 text-sm">
+      <input
+        type="checkbox"
+        class="mt-1"
+        [checked]="hosted()"
+        [disabled]="uploading()"
+        (change)="hosted.set($any($event.target).checked)"
+      />
+      <span>
+        <span class="font-bold">Host contents as a site</span>
+        <span class="block text-xs text-surface-500">
+          Serves the files in this zip at a subdomain of their own, e.g. to preview a built website.
+        </span>
+      </span>
+    </label>
+  }
 
   <div class="space-y-4">
     <button

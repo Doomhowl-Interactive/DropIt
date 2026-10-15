@@ -63,13 +63,31 @@ async function authenticate(req: Request, deps: AuthDeps): Promise<boolean> {
     if (await tryApiToken(req, bearer, deps)) return true;
   }
 
-  const cookieClaims = verify(req.cookies?.['auth_token']);
+  const cookieClaims = cookieUsable(req) ? verify(req.cookies?.['auth_token']) : null;
   if (cookieClaims) {
     setAuthFromClaims(req, cookieClaims);
     return true;
   }
 
   return false;
+}
+
+/** Methods that must not change anything, and so may arrive from anywhere. */
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+/**
+ * A browser attaches the cookie to requests other pages start, too, and
+ * `SameSite=strict` only keeps out other *sites*: a hosted archive on a
+ * sibling subdomain counts as the same site, and could otherwise post forms
+ * to the API with the admin's session. Changes authorised by the cookie must
+ * come from our own pages (or be typed into the address bar). Requests without
+ * `Sec-Fetch-Site` — scripts, and browsers older than 2023 — are let through.
+ */
+function cookieUsable(req: Request): boolean {
+  if (SAFE_METHODS.has(req.method)) return true;
+
+  const site = req.get('sec-fetch-site');
+  return !site || site === 'same-origin' || site === 'none';
 }
 
 async function tryApiToken(req: Request, secret: string, deps: AuthDeps): Promise<boolean> {
