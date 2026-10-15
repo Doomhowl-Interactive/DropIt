@@ -42,6 +42,9 @@ export const UploadResponseSchema = z.object({
   id: z.string(),
   filename: z.string(),
   size: z.number(),
+  hosted: z.boolean(),
+  /** Where a hosted archive's contents are served; `null` when they are not. */
+  siteUrl: z.string().nullable(),
 });
 export type UploadResponse = z.infer<typeof UploadResponseSchema>;
 
@@ -53,6 +56,11 @@ export const FileExportRecordSchema = z.object({
   downloadCount: z.number(),
   deleted: z.boolean(),
   createdAt: z.string(),
+  /** A zip archive, whose entries `/api/files/:id/entries` can list. */
+  archive: z.boolean(),
+  hosted: z.boolean(),
+  /** Where a hosted archive's contents are served; `null` when they are not. */
+  siteUrl: z.string().nullable(),
 });
 export type FileExportRecord = z.infer<typeof FileExportRecordSchema>;
 
@@ -67,11 +75,34 @@ export type OrphansResponse = z.infer<typeof OrphansResponseSchema>;
 export const FileDeleteResponseSchema = z.object({ id: z.string(), deleted: z.boolean() });
 export type FileDeleteResponse = z.infer<typeof FileDeleteResponseSchema>;
 
-export const FileActiveRequestSchema = z.object({ active: z.boolean() });
-export type FileActiveRequest = z.infer<typeof FileActiveRequestSchema>;
+/** Enables or disables a file, and/or starts or stops hosting a zip's contents. */
+export const FileUpdateRequestSchema = z
+  .object({ active: z.boolean().optional(), hosted: z.boolean().optional() })
+  .refine((body) => body.active !== undefined || body.hosted !== undefined);
+export type FileUpdateRequest = z.infer<typeof FileUpdateRequestSchema>;
 
-export const FileActiveResponseSchema = z.object({ id: z.string(), active: z.boolean() });
-export type FileActiveResponse = z.infer<typeof FileActiveResponseSchema>;
+export const FileUpdateResponseSchema = z.object({
+  id: z.string(),
+  active: z.boolean(),
+  hosted: z.boolean(),
+  siteUrl: z.string().nullable(),
+});
+export type FileUpdateResponse = z.infer<typeof FileUpdateResponseSchema>;
+
+export const ArchiveEntrySchema = z.object({
+  /** Full path inside the archive, `/`-separated. */
+  path: z.string(),
+  size: z.number(),
+});
+export type ArchiveEntry = z.infer<typeof ArchiveEntrySchema>;
+
+/** The files in a zip archive, and the folder its hosted site is served from. */
+export const ArchiveEntriesResponseSchema = z.object({
+  /** Folder served as the site root, e.g. `dist/`; `''` for the archive root. */
+  root: z.string(),
+  entries: z.array(ArchiveEntrySchema),
+});
+export type ArchiveEntriesResponse = z.infer<typeof ArchiveEntriesResponseSchema>;
 
 // ---------------------------------------------------------------------------
 // API tokens

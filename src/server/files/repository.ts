@@ -24,6 +24,8 @@ export interface FileRecord {
   size: number;
   downloadCount: number;
   deleted: boolean;
+  /** Serve the zip's contents at the file's own site host; see `src/server/sites`. */
+  hosted: boolean;
   createdAt: Date;
 }
 
@@ -37,6 +39,7 @@ function mapRow(row: Row): FileRecord {
     size: row.size ?? 0,
     downloadCount: row.downloadCount ?? 0,
     deleted: row.deleted ?? false,
+    hosted: row.hosted,
     createdAt: fromDbDate(row.createdAt) ?? new Date(0),
   };
 }
@@ -53,6 +56,7 @@ export class FileRepository {
         size: file.size,
         downloadCount: file.downloadCount,
         deleted: file.deleted,
+        hosted: file.hosted,
         createdAt: toDbDate(file.createdAt),
       });
     } catch (error) {
@@ -105,6 +109,12 @@ export class FileRepository {
       .update(fileRecords)
       .set({ deleted: !active })
       .where(eq(fileRecords.id, file.id));
+  }
+
+  /** Controls whether a zip's contents are served at its site host. */
+  async setHosted(file: FileRecord, hosted: boolean): Promise<void> {
+    file.hosted = hosted;
+    await this.db.update(fileRecords).set({ hosted }).where(eq(fileRecords.id, file.id));
   }
 
   /** Hard delete: the row is removed from the database. */

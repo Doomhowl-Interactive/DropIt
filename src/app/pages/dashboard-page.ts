@@ -9,11 +9,12 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { MessageModule } from 'primeng/message';
+import { ArchiveTree } from '../components/archive-tree/archive-tree';
 import { UploadZone } from '../components/upload-zone/upload-zone';
 import { PasteZone } from '../components/paste-zone/paste-zone';
 import { FileDashboardApi } from '../services/file-dashboard-api';
 import { FormatBytesPipe } from '../utils/format-bytes.pipe';
-import { FileExportResponseSchema } from '../../shared/types';
+import { FileExportResponseSchema, type FileExportRecord } from '../../shared/types';
 
 type PendingFileAction = { id: string; mode: 'force-delete' };
 
@@ -32,6 +33,7 @@ type PendingFileAction = { id: string; mode: 'force-delete' };
     TagModule,
     DialogModule,
     MessageModule,
+    ArchiveTree,
     UploadZone,
     PasteZone,
   ],
@@ -52,6 +54,9 @@ export class DashboardPage {
   protected readonly error = signal('');
   private readonly pendingAction = signal<PendingFileAction | null>(null);
 
+  /** Keeps rows (and an open archive tree) in place when the list reloads. */
+  protected readonly trackById = (_index: number, file: FileExportRecord) => file.id;
+
   protected openConfirm(action: PendingFileAction, title: string, message: string): void {
     this.pendingAction.set(action);
     this.modalTitle.set(title);
@@ -71,6 +76,10 @@ export class DashboardPage {
 
   protected async setFileActive(id: string, active: boolean): Promise<void> {
     await this.run(() => this.api.setActive(id, active));
+  }
+
+  protected async setFileHosted(id: string, hosted: boolean): Promise<void> {
+    await this.run(() => this.api.setHosted(id, hosted));
   }
 
   protected async confirm(): Promise<void> {

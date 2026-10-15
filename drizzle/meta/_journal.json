@@ -29,6 +29,13 @@
       "when": 1788113253807,
       "tag": "0003_add_file_path_uniqueness",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1792055948558,
+      "tag": "0004_add_file_hosted",
+      "breakpoints": true
     }
   ]
 }

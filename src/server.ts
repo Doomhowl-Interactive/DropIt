@@ -20,6 +20,8 @@ import { FileRepository } from './server/files/repository';
 import { FileService } from './server/files/service';
 import { mcpRoutes } from './server/mcp/routes';
 import { createRenderer } from './server/render';
+import { sitesHostPattern } from './server/sites/host';
+import { siteRoutes } from './server/sites/routes';
 import { ApiTokenRepository } from './server/tokens/repository';
 import { ApiTokenService } from './server/tokens/service';
 import { UserRepository } from './server/users/repository';
@@ -52,6 +54,8 @@ async function createApp(): Promise<Express> {
   }
 
   validateProductionSecrets();
+  // A malformed SITES_HOST should stop the boot, not every later request.
+  sitesHostPattern();
 
   const app = express();
   const angularApp = new AngularNodeAppEngine({
@@ -72,8 +76,17 @@ async function createApp(): Promise<Express> {
   await createAdminUser(users);
 
   console.log(`Uploads are stored in ${storageSummary()}`);
+  console.log(
+    config.sitesHost
+      ? `Hosted archives are served at ${config.sitesHost}`
+      : 'Archive hosting is off; set SITES_HOST to turn it on',
+  );
 
   app.disable('x-powered-by');
+
+  // First of all: a site host is answered from its archive and nothing else.
+  app.use(siteRoutes(files));
+
   app.use(cookieParser());
 
   app.use('/mcp', mcpRoutes({ files, tokens: apiTokens }));

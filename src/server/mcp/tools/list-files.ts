@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { siteUrl } from '../../sites/host';
 import { formatTimestamp, humanSize } from '../../util';
 import { fileUrl } from '../links';
 import { defineMcpTool } from '../types';
@@ -12,7 +13,8 @@ export const listFilesTool = defineMcpTool({
 
   description:
     'Lists the files held by Drop.it, newest first, with their share links and sizes. ' +
-    'Deleted files are included and flagged so their ids can still be recognised.',
+    'Deleted files are included and flagged so their ids can still be recognised. ' +
+    'Hosted zip archives also carry the site_url their contents are served at.',
 
   inputSchema: {
     page: z.number().int().positive().default(1).describe('1-based page number.'),
@@ -38,6 +40,7 @@ export const listFilesTool = defineMcpTool({
         download_count: z.number(),
         deleted: z.boolean(),
         share_url: z.string(),
+        site_url: z.string().nullable(),
       }),
     ),
   },
@@ -58,6 +61,7 @@ export const listFilesTool = defineMcpTool({
       download_count: record.downloadCount,
       deleted: record.deleted,
       share_url: fileUrl(record, ctx.origin),
+      site_url: siteUrl(record, ctx.origin),
     }));
 
     const lines = records.map((record) => {
@@ -69,6 +73,9 @@ export const listFilesTool = defineMcpTool({
         `created ${formatTimestamp(record.createdAt)}`,
       ];
       if (record.deleted) parts.push('DELETED');
+
+      const site = siteUrl(record, ctx.origin);
+      if (site) parts.push(`site ${site}`);
       return `- ${parts.join(' | ')}`;
     });
 

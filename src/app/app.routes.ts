@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { DashboardPage } from './pages/dashboard-page';
 import { NotFoundPage } from './pages/not-found-page/not-found.page';
 import { IndexPage } from './pages/index-page/index.page';
 import { LoginPage } from './pages/login-page/login.page';
@@ -13,7 +12,10 @@ import { ApiTokensPage } from './pages/api-tokens-page';
 export const routes: Routes = [
   { path: '', component: IndexPage },
   { path: 'login', component: LoginPage },
-  { path: 'dashboard', component: DashboardPage },
+  {
+    path: 'dashboard',
+    loadComponent: () => import('./pages/dashboard-page').then((m) => m.DashboardPage),
+  },
   { path: 'dashboard/tokens', component: ApiTokensPage },
   {
     path: 'dashboard/password',

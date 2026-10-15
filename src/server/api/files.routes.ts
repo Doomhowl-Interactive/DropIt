@@ -7,24 +7,27 @@ import {
   requireRole,
   type AuthDeps,
 } from '../middleware/auth';
-import { param, safeFilename } from '../util';
-import type { FileService } from '../files/service';
-import type { FileRecord } from '../files/repository';
+import { param, parseBody, requestOrigin, safeFilename } from '../util';
+import { NotHostableError, type FileService } from '../files/service';
+import { FileNotFoundError, type FileRecord } from '../files/repository';
+import { ArchiveError, isZipArchive } from '../files/archive';
 import type { RenderPage } from '../render';
 import { guessMimeType } from '../mcp/content';
 import { isNotFoundError } from '../files/storage';
+import { siteUrl } from '../sites/host';
 import {
-  FileActiveRequestSchema,
-  FileActiveResponseSchema,
+  ArchiveEntriesResponseSchema,
   FileDeleteResponseSchema,
   FileExportResponseSchema,
+  FileUpdateRequestSchema,
+  FileUpdateResponseSchema,
   OrphansResponseSchema,
   UploadResponseSchema,
   type FileExportRecord,
 } from '../../shared/types';
 
 /** Maps a stored record to the shape the JSON API is willing to expose — the on-disk `path` never leaves the server. */
-function toExportRecord(file: FileRecord): FileExportRecord {
+function toExportRecord(file: FileRecord, origin: string): FileExportRecord {
   return {
     id: file.id,
     filename: file.filename,
@@ -32,7 +35,24 @@ function toExportRecord(file: FileRecord): FileExportRecord {
     downloadCount: file.downloadCount,
     deleted: file.deleted,
     createdAt: file.createdAt.toISOString(),
+    archive: isZipArchive(file.filename),
+    hosted: file.hosted,
+    siteUrl: siteUrl(file, origin),
   };
+}
+
+/**
+ * Reads a multipart checkbox: absent or `false`/`0`/`off` is false, and
+ * `true`/`1`/`on` (what an HTML checkbox sends) is true. Anything else is
+ * `undefined`, a malformed request.
+ */
+function parseFlag(value: unknown): boolean | undefined {
+  if (value === undefined) return false;
+
+  const normalized = String(value).trim().toLowerCase();
+  if (['true', '1', 'on'].includes(normalized)) return true;
+  if (['false', '0', 'off', ''].includes(normalized)) return false;
+  return undefined;
 }
 
 /**
@@ -250,12 +270,20 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
         return;
       }
 
+      const hosted = parseFlag(req.body?.hosted);
+      if (hosted === undefined) {
+        await files.removeUpload(file.path).catch(() => undefined);
+        res.status(400).json({ error: 'hosted must be true or false' });
+        return;
+      }
+
       try {
         const record = await files.registerUpload({
           id,
           originalName: file.originalname,
           path: file.path,
           size: file.size,
+          hosted,
         });
 
         res.json(
@@ -263,18 +291,28 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
             id: record.id,
             filename: record.filename,
             size: record.size,
+            hosted: record.hosted,
+            siteUrl: siteUrl(record, requestOrigin(req)),
           }),
         );
       } catch (err) {
+        if (err instanceof NotHostableError) {
+          await files.removeUpload(file.path).catch(() => undefined);
+          res.status(400).json({ error: err.message });
+          return;
+        }
         res.status(500).json({ error: (err as Error).message });
       }
     },
   );
 
-  router.get('/', authMiddleware(auth), requireRole('admin'), async (_req, res) => {
+  router.get('/', authMiddleware(auth), requireRole('admin'), async (req, res) => {
     try {
+      const origin = requestOrigin(req);
       const records = await files.getAllFiles();
-      res.json(FileExportResponseSchema.parse(records.map(toExportRecord)));
+      res.json(
+        FileExportResponseSchema.parse(records.map((record) => toExportRecord(record, origin))),
+      );
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }
@@ -309,18 +347,60 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
 
   router.patch('/:id', authMiddleware(auth), requireRole('admin'), async (req, res) => {
     const id = param(req, 'id');
-    const parsed = FileActiveRequestSchema.safeParse(req.body);
+    const body = parseBody(
+      res,
+      FileUpdateRequestSchema,
+      req.body,
+      'expected a boolean active and/or hosted',
+    );
+    if (!body) return;
 
-    if (!parsed.success) {
-      res.status(400).json({ error: 'active must be a boolean' });
+    try {
+      const record = await files.updateFile(id, body);
+      res.json(
+        FileUpdateResponseSchema.parse({
+          id,
+          active: !record.deleted,
+          hosted: record.hosted,
+          siteUrl: siteUrl(record, requestOrigin(req)),
+        }),
+      );
+    } catch (err) {
+      if (err instanceof FileNotFoundError) {
+        res.status(404).json({ error: 'file not found' });
+      } else if (err instanceof NotHostableError) {
+        res.status(400).json({ error: err.message });
+      } else {
+        res.status(500).json({ error: (err as Error).message });
+      }
+    }
+  });
+
+  router.get('/:id/entries', authMiddleware(auth), requireRole('admin'), async (req, res) => {
+    let record: FileRecord;
+    try {
+      record = await files.getFileById(param(req, 'id'));
+    } catch {
+      res.status(404).json({ error: 'file not found' });
+      return;
+    }
+
+    if (!isZipArchive(record.filename)) {
+      res.status(400).json({ error: 'not a zip archive' });
       return;
     }
 
     try {
-      await files.setFileActive(id, parsed.data.active);
-      res.json(FileActiveResponseSchema.parse({ id, active: parsed.data.active }));
-    } catch {
-      res.status(404).json({ error: 'file not found' });
+      const index = await files.archive(record);
+      res.json(ArchiveEntriesResponseSchema.parse({ root: index.root, entries: index.files }));
+    } catch (err) {
+      if (err instanceof ArchiveError) {
+        res.status(422).json({ error: err.message });
+      } else if (isNotFoundError(err)) {
+        res.status(404).json({ error: 'file missing from storage' });
+      } else {
+        res.status(502).json({ error: 'storage unavailable' });
+      }
     }
   });
 

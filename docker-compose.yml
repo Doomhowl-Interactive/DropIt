@@ -52,6 +52,8 @@ services:
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
       S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-}
       STATIC_DIR: ./static
+      # e.g. *.sites.example.com — hosted zip archives are served at <file id>.sites.example.com.
+      SITES_HOST: ${SITES_HOST:-}
       MCP_MAX_BODY: 35mb
       MCP_MAX_UPLOAD_BYTES: 26214400
       TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-false}

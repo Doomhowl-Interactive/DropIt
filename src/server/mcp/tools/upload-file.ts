@@ -2,6 +2,8 @@ import { basename } from 'node:path';
 import { z } from 'zod';
 
 import { config } from '../../config';
+import { NotHostableError } from '../../files/service';
+import { siteUrl } from '../../sites/host';
 import { humanSize, safeFilename } from '../../util';
 import { guessMimeType } from '../content';
 import { fileUrl } from '../links';
@@ -16,6 +18,8 @@ export const uploadFileTool = defineMcpTool({
     'Stores a file and returns a shareable link for it.',
     'Text content can be sent as-is with encoding="utf8"; anything else must be base64.',
     'The returned share link is public — anyone holding it can download the file.',
+    'Set hosted=true on a .zip (a built website, a dist folder) to also serve its contents',
+    'as a site on a subdomain of its own; the returned site_url is public too.',
   ].join(' '),
 
   inputSchema: {
@@ -25,6 +29,14 @@ export const uploadFileTool = defineMcpTool({
       .enum(['base64', 'utf8'])
       .default('base64')
       .describe('How `content` is encoded. Use "utf8" only for plain text.'),
+    hosted: z
+      .boolean()
+      .default(false)
+      .describe(
+        'Serve the contents of a .zip at a subdomain of its own, e.g. to preview a built ' +
+          'website. A single top-level folder in the zip becomes the site root, directories ' +
+          'serve their index.html, and the site is served from "/", so either base path works.',
+      ),
   },
 
   outputSchema: {
@@ -32,6 +44,7 @@ export const uploadFileTool = defineMcpTool({
     filename: z.string(),
     size: z.number(),
     share_url: z.string(),
+    site_url: z.string().nullable(),
   },
 
   async handler(args, ctx) {
@@ -58,9 +71,15 @@ export const uploadFileTool = defineMcpTool({
     try {
       // Storage cleans up after itself when the record cannot be written, so
       // a failed upload never leaves stray bytes behind.
-      const record = await ctx.files.storeUpload(filename, bytes, guessMimeType(filename));
+      const record = await ctx.files.storeUpload(
+        filename,
+        bytes,
+        guessMimeType(filename),
+        args.hosted,
+      );
 
       const url = fileUrl(record, ctx.origin);
+      const site = siteUrl(record, ctx.origin);
 
       return {
         content: [
@@ -69,6 +88,7 @@ export const uploadFileTool = defineMcpTool({
             text: [
               `Uploaded ${record.filename} (${humanSize(record.size)}).`,
               `Share link: ${url}`,
+              ...(site ? [`Site: ${site}`] : []),
             ].join('\n'),
           },
         ],
@@ -77,9 +97,13 @@ export const uploadFileTool = defineMcpTool({
           filename: record.filename,
           size: record.size,
           share_url: url,
+          site_url: site,
         },
       };
     } catch (err) {
+      if (err instanceof NotHostableError) {
+        return toolError(`Cannot host ${filename}: ${err.message}.`);
+      }
       return toolError(`Upload failed: ${(err as Error).message}`);
     }
   },
