@@ -73,12 +73,30 @@
 
   <p-divider />
 
-  <p-card header="{{ files.value().length }} files">
+  <p-card
+    [header]="
+      search().trim()
+        ? visibleFiles().length + ' of ' + files.value().length + ' files'
+        : files.value().length + ' files'
+    "
+  >
     @if (files.error()) {
       <p>Error: Could not load the file list.</p>
     }
+    <p-iconfield class="mb-4 block">
+      <p-inputicon class="pi pi-search" />
+      <input
+        type="search"
+        pInputText
+        class="w-full"
+        placeholder="Search files by name or id"
+        aria-label="Search files"
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+      />
+    </p-iconfield>
     <p-table
-      [value]="files.value()"
+      [value]="visibleFiles()"
       [loading]="files.isLoading()"
       [tableStyle]="{ 'min-width': '60rem' }"
       dataKey="id"
@@ -203,7 +221,9 @@
       </ng-template>
       <ng-template #emptymessage>
         <tr>
-          <td colspan="7" class="text-center py-10 font-bold uppercase italic">No files yet.</td>
+          <td colspan="7" class="text-center py-10 font-bold uppercase italic">
+            {{ files.value().length ? 'No files match your search.' : 'No files yet.' }}
+          </td>
         </tr>
       </ng-template>
     </p-table>

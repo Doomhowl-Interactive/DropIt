@@ -9,6 +9,9 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { MessageModule } from 'primeng/message';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { InputTextModule } from 'primeng/inputtext';
 import { ArchiveTree } from '../components/archive-tree/archive-tree';
 import { UploadZone } from '../components/upload-zone/upload-zone';
 import { PasteZone } from '../components/paste-zone/paste-zone';
@@ -33,6 +36,9 @@ type PendingFileAction = { id: string; mode: 'force-delete' };
     TagModule,
     DialogModule,
     MessageModule,
+    IconFieldModule,
+    InputIconModule,
+    InputTextModule,
     ArchiveTree,
     UploadZone,
     PasteZone,
@@ -44,6 +50,18 @@ export class DashboardPage {
   protected readonly files = httpResource(() => ({ url: '/api/files' }), {
     parse: (value) => FileExportResponseSchema.parse(value),
     defaultValue: [],
+  });
+
+  protected readonly search = signal('');
+  /** Files whose name or id contains the search text, ignoring case. */
+  protected readonly visibleFiles = computed(() => {
+    const query = this.search().trim().toLowerCase();
+    const files = this.files.value();
+    if (!query) return files;
+    return files.filter(
+      (file) =>
+        file.filename.toLowerCase().includes(query) || file.id.toLowerCase().includes(query),
+    );
   });
 
   protected readonly modalOpen = signal(false);
