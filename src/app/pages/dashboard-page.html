@@ -73,25 +73,110 @@
 
   <p-divider />
 
-  <p-card header="{{ files.value().length }} files">
+  <p-card
+    [header]="
+      shownCount() === null
+        ? files.value().length + ' files'
+        : shownCount() + ' of ' + files.value().length + ' files'
+    "
+  >
     @if (files.error()) {
       <p>Error: Could not load the file list.</p>
     }
+    <div class="mb-4 flex items-center gap-2">
+      <p-iconfield class="flex-1">
+        <p-inputicon class="pi pi-search" />
+        <input
+          type="search"
+          pInputText
+          class="w-full"
+          placeholder="Search files by name or id"
+          aria-label="Search files"
+          [value]="search()"
+          (input)="search.set($any($event.target).value); dt.filterGlobal(search(), 'contains')"
+        />
+      </p-iconfield>
+      <button
+        type="button"
+        pButton
+        severity="secondary"
+        [outlined]="true"
+        icon="pi pi-filter-slash"
+        (click)="resetTable(dt)"
+      >
+        <span pButtonLabel>Reset</span>
+      </button>
+    </div>
     <p-table
-      [value]="files.value()"
+      #dt
+      [value]="rows()"
       [loading]="files.isLoading()"
       [tableStyle]="{ 'min-width': '60rem' }"
       dataKey="id"
       [rowTrackBy]="trackById"
+      sortMode="multiple"
+      [multiSortMeta]="initialSort"
+      [globalFilterFields]="['filename', 'id']"
+      [paginator]="true"
+      [rows]="25"
+      [rowsPerPageOptions]="[10, 25, 50, 100]"
+      (onFilter)="shownCount.set(dt.filteredValue?.length ?? null)"
     >
       <ng-template #header>
         <tr>
           <th class="w-0"><span class="sr-only">Contents</span></th>
-          <th>File identifier</th>
-          <th>Size</th>
-          <th>Timeline (In/Out)</th>
-          <th>Downloads</th>
-          <th>Status</th>
+          <th pSortableColumn="filename">
+            <div class="flex items-center gap-1">
+              File identifier
+              <p-sortIcon field="filename" />
+              <p-columnFilter type="text" field="filename" display="menu" />
+            </div>
+          </th>
+          <th pSortableColumn="size">
+            <div class="flex items-center gap-1">
+              Size
+              <p-sortIcon field="size" />
+              <p-columnFilter type="numeric" field="size" display="menu" placeholder="Bytes" />
+            </div>
+          </th>
+          <th pSortableColumn="created">
+            <div class="flex items-center gap-1">
+              Timeline (In/Out)
+              <p-sortIcon field="created" />
+              <p-columnFilter type="date" field="created" display="menu" />
+            </div>
+          </th>
+          <th pSortableColumn="downloadCount">
+            <div class="flex items-center gap-1">
+              Downloads
+              <p-sortIcon field="downloadCount" />
+              <p-columnFilter type="numeric" field="downloadCount" display="menu" />
+            </div>
+          </th>
+          <th pSortableColumn="online">
+            <div class="flex items-center gap-1">
+              Status
+              <p-sortIcon field="online" />
+              <p-columnFilter
+                field="online"
+                matchMode="equals"
+                display="menu"
+                [showMatchModes]="false"
+                [showOperator]="false"
+                [showAddButton]="false"
+              >
+                <ng-template #filter let-value let-filter="filterCallback">
+                  <p-select
+                    [options]="statusOptions"
+                    [ngModel]="value"
+                    (onChange)="filter($event.value)"
+                    placeholder="Any status"
+                    ariaLabel="Status"
+                  />
+                </ng-template>
+              </p-columnFilter>
+            </div>
+          </th>
           <th>System actions</th>
         </tr>
       </ng-template>
@@ -118,7 +203,7 @@
           </td>
 
           <td>{{ file.size | formatBytes }}</td>
-          <td>CRT: {{ file.createdAt | date: 'yyyy-MM-dd HH:mm' }}</td>
+          <td>CRT: {{ file.created | date: 'yyyy-MM-dd HH:mm' }}</td>
           <td>{{ file.downloadCount }}</td>
 
           <td>
@@ -203,7 +288,9 @@
       </ng-template>
       <ng-template #emptymessage>
         <tr>
-          <td colspan="7" class="text-center py-10 font-bold uppercase italic">No files yet.</td>
+          <td colspan="7" class="text-center py-10 font-bold uppercase italic">
+            {{ dt.hasFilter() ? 'No files match the filters.' : 'No files yet.' }}
+          </td>
         </tr>
       </ng-template>
     </p-table>

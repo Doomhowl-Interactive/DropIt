@@ -2,7 +2,6 @@ import { Routes } from '@angular/router';
 import { NotFoundPage } from './pages/not-found-page/not-found.page';
 import { IndexPage } from './pages/index-page/index.page';
 import { LoginPage } from './pages/login-page/login.page';
-import { ApiTokensPage } from './pages/api-tokens-page';
 
 /**
  * Only the pages Express renders directly. Anything else — `/api/files/:id`
@@ -16,7 +15,10 @@ export const routes: Routes = [
     path: 'dashboard',
     loadComponent: () => import('./pages/dashboard-page').then((m) => m.DashboardPage),
   },
-  { path: 'dashboard/tokens', component: ApiTokensPage },
+  {
+    path: 'dashboard/tokens',
+    loadComponent: () => import('./pages/api-tokens-page').then((m) => m.ApiTokensPage),
+  },
   {
     path: 'dashboard/password',
     loadComponent: () => import('./pages/change-password-page').then((m) => m.ChangePasswordPage),
