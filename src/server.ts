@@ -2,7 +2,7 @@ import { AngularNodeAppEngine, createNodeRequestHandler, isMainModule } from '@a
 import cookieParser from 'cookie-parser';
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
 import { existsSync } from 'node:fs';
-import type { IncomingMessage, ServerResponse } from 'node:http';
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { join, resolve } from 'node:path';
 import swaggerUi from 'swagger-ui-express';
 
@@ -149,8 +149,16 @@ function getApp(): Promise<Express> {
 if (isMainModule(import.meta.url) || process.env['pm_id']) {
   const app = await getApp();
   const port = config.port;
-  app.listen(port, (error?: Error) => {
-    if (error) throw error;
+  // Node gives every request 5 minutes (`requestTimeout`) to arrive in full and
+  // then answers 408, which cuts off any upload slower than that. Uploads are
+  // streamed, so their length is bounded by the connection, not by a clock;
+  // `headersTimeout` still drops clients that never finish sending headers.
+  // It only takes effect when passed here, not when set on the server later.
+  const server = createServer({ requestTimeout: 0 }, app);
+  server.once('error', (error) => {
+    throw error;
+  });
+  server.listen(port, () => {
     console.log(`Node Express server listening on http://localhost:${port}`);
   });
 }
