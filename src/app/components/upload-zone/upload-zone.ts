@@ -113,11 +113,11 @@ export class UploadZone {
       }
     };
 
+    // A network error carries no response to report; cancelling fires
+    // `onabort` instead, so this is always a connection that dropped.
     request.onerror = () => {
-      if (request.statusText !== 'abort') {
-        alert(`Upload failed: ${request.responseText}`);
-        this.reload();
-      }
+      alert('Upload failed: the connection to the server was lost.');
+      this.reload();
     };
 
     request.open('POST', '/api/files');
