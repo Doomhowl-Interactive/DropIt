@@ -1,17 +1,20 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse, httpResource } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
-import { TableModule } from 'primeng/table';
+import type { SortMeta } from 'primeng/api';
+import { Table, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { MessageModule } from 'primeng/message';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
 import { ArchiveTree } from '../components/archive-tree/archive-tree';
 import { UploadZone } from '../components/upload-zone/upload-zone';
 import { PasteZone } from '../components/paste-zone/paste-zone';
@@ -21,12 +24,22 @@ import { FileExportResponseSchema, type FileExportRecord } from '../../shared/ty
 
 type PendingFileAction = { id: string; mode: 'force-delete' };
 
+/** A file as the table sorts and filters it: dates as `Date`, status as a boolean. */
+type FileRow = FileExportRecord & { created: Date; online: boolean };
+
+/**
+ * Newest first, matching the order the API returns. A fresh array each time,
+ * since the table edits its sort metadata in place.
+ */
+const newestFirst = (): SortMeta[] => [{ field: 'created', order: -1 }];
+
 @Component({
   selector: 'app-dashboard-page',
   templateUrl: './dashboard-page.html',
   host: { style: 'display: contents' },
   imports: [
     RouterLink,
+    FormsModule,
     DatePipe,
     FormatBytesPipe,
     CardModule,
@@ -39,6 +52,7 @@ type PendingFileAction = { id: string; mode: 'force-delete' };
     IconFieldModule,
     InputIconModule,
     InputTextModule,
+    SelectModule,
     ArchiveTree,
     UploadZone,
     PasteZone,
@@ -52,17 +66,22 @@ export class DashboardPage {
     defaultValue: [],
   });
 
+  protected readonly rows = computed<FileRow[]>(() =>
+    this.files.value().map((file) => ({
+      ...file,
+      created: new Date(file.createdAt),
+      online: !file.deleted,
+    })),
+  );
+
+  protected readonly initialSort = newestFirst();
+  protected readonly statusOptions = [
+    { label: 'Online', value: true },
+    { label: 'Offline', value: false },
+  ];
   protected readonly search = signal('');
-  /** Files whose name or id contains the search text, ignoring case. */
-  protected readonly visibleFiles = computed(() => {
-    const query = this.search().trim().toLowerCase();
-    const files = this.files.value();
-    if (!query) return files;
-    return files.filter(
-      (file) =>
-        file.filename.toLowerCase().includes(query) || file.id.toLowerCase().includes(query),
-    );
-  });
+  /** How many files the search and column filters leave; `null` when nothing is hidden. */
+  protected readonly shownCount = signal<number | null>(null);
 
   protected readonly modalOpen = signal(false);
   protected readonly modalTitle = signal('Confirm action');
@@ -73,7 +92,16 @@ export class DashboardPage {
   private readonly pendingAction = signal<PendingFileAction | null>(null);
 
   /** Keeps rows (and an open archive tree) in place when the list reloads. */
-  protected readonly trackById = (_index: number, file: FileExportRecord) => file.id;
+  protected readonly trackById = (_index: number, file: FileRow) => file.id;
+
+  /** Clears the search and column filters and goes back to newest first. */
+  protected resetTable(table: Table): void {
+    table.clear();
+    table.multiSortMeta = newestFirst();
+    table.sortMultiple();
+    this.search.set('');
+    this.shownCount.set(null);
+  }
 
   protected openConfirm(action: PendingFileAction, title: string, message: string): void {
     this.pendingAction.set(action);
