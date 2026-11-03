@@ -78,7 +78,13 @@ export const fileRecords = mysqlTable(
     deleted: boolean('deleted'),
     /** Zip archives only: whether its contents are served at the file's own site host. */
     hosted: boolean('hosted').notNull().default(false),
+    /** When a temporary upload stops being served and is swept; null means permanent. */
+    expiresAt: text('expires_at'),
     createdAt: text('created_at'),
   },
-  (table) => [uniqueIndex('idx_file_records_path_hash').on(table.pathHash)],
+  (table) => [
+    uniqueIndex('idx_file_records_path_hash').on(table.pathHash),
+    // The expiry sweep looks up the few rows that have passed, not the table.
+    index('idx_file_records_expires_at').on(table.expiresAt),
+  ],
 );

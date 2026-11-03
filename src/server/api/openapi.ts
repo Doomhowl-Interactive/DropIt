@@ -55,6 +55,12 @@ export const openapiSpec = {
             nullable: true,
             description: "Where a hosted archive's contents are served; null when they are not",
           },
+          expiresAt: {
+            type: 'string',
+            format: 'date-time',
+            nullable: true,
+            description: 'When a temporary upload stops being served; null when it is permanent',
+          },
         },
       },
       FileUpdate: {
@@ -64,6 +70,12 @@ export const openapiSpec = {
           active: { type: 'boolean' },
           hosted: { type: 'boolean' },
           siteUrl: { type: 'string', nullable: true },
+          expiresAt: {
+            type: 'string',
+            format: 'date-time',
+            nullable: true,
+            description: 'When a temporary upload stops being served; null when it is permanent',
+          },
         },
       },
       ApiTokenRow: {
@@ -220,6 +232,13 @@ export const openapiSpec = {
                     description:
                       "Serve a zip archive's contents at <id>.<SITES_HOST>. Accepts true/false, 1/0 or on/off.",
                   },
+                  expires: {
+                    type: 'boolean',
+                    default: false,
+                    description:
+                      'Make the file temporary: it stops being served and is deleted once it ' +
+                      'expires (FILE_EXPIRY_DAYS, a week by default). Accepts true/false, 1/0 or on/off.',
+                  },
                 },
                 required: ['file'],
               },
@@ -239,6 +258,7 @@ export const openapiSpec = {
                     size: { type: 'integer' },
                     hosted: { type: 'boolean' },
                     siteUrl: { type: 'string', nullable: true },
+                    expiresAt: { type: 'string', format: 'date-time', nullable: true },
                   },
                 },
               },
@@ -246,7 +266,7 @@ export const openapiSpec = {
           },
           '400': {
             description:
-              'Missing file, or hosting asked for on a non-zip file or with SITES_HOST unset',
+              'Missing file, a malformed flag, or hosting asked for on a non-zip file or with SITES_HOST unset',
           },
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
@@ -286,13 +306,17 @@ export const openapiSpec = {
         responses: {
           '200': { description: 'File stream' },
           '206': { description: 'Partial file stream, in answer to a Range request' },
-          '404': { description: 'Rendered "file not found" page' },
+          '404': {
+            description:
+              'Rendered "file not found" page — unknown, disabled or expired, for admins too',
+          },
           '502': { description: 'Storage backend unavailable' },
         },
       },
       patch: {
         tags: ['files'],
-        summary: "Enable or disable a file, or start or stop hosting a zip's contents (admin)",
+        summary:
+          "Enable or disable a file, start or stop hosting a zip's contents, or make a file temporary or permanent (admin)",
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         requestBody: {
           required: true,
@@ -300,8 +324,16 @@ export const openapiSpec = {
             'application/json': {
               schema: {
                 type: 'object',
-                description: 'At least one of the two.',
-                properties: { active: { type: 'boolean' }, hosted: { type: 'boolean' } },
+                description: 'At least one of the three.',
+                properties: {
+                  active: { type: 'boolean' },
+                  hosted: { type: 'boolean' },
+                  expires: {
+                    type: 'boolean',
+                    description:
+                      'true starts a fresh expiry window; false makes the file permanent',
+                  },
+                },
               },
             },
           },
@@ -321,7 +353,7 @@ export const openapiSpec = {
           },
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
-          '404': { description: 'File not found' },
+          '404': { description: 'File not found, or already expired' },
         },
       },
       delete: {

@@ -1,0 +1,1 @@
+CREATE INDEX `idx_file_records_expires_at` ON `file_records` (`expires_at`);

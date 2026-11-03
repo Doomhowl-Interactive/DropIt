@@ -30,7 +30,7 @@ export async function resolveLiveFile(files: FileService, id: string): Promise<F
   const record = await files.getFileById(id).catch(() => null);
 
   if (!record) throw new FileNotFoundError();
-  if (record.deleted) throw new FileNotFoundError();
+  if (record.deleted || files.isExpired(record)) throw new FileNotFoundError();
 
   return record;
 }

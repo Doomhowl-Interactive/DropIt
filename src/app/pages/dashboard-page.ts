@@ -25,7 +25,7 @@ import { FileExportResponseSchema, type FileExportRecord } from '../../shared/ty
 type PendingFileAction = { id: string; mode: 'force-delete' };
 
 /** A file as the table sorts and filters it: dates as `Date`, status as a boolean. */
-type FileRow = FileExportRecord & { created: Date; online: boolean };
+type FileRow = FileExportRecord & { created: Date; expires: Date | null; online: boolean };
 
 /**
  * Newest first, matching the order the API returns. A fresh array each time,
@@ -70,6 +70,7 @@ export class DashboardPage {
     this.files.value().map((file) => ({
       ...file,
       created: new Date(file.createdAt),
+      expires: file.expiresAt ? new Date(file.expiresAt) : null,
       online: !file.deleted,
     })),
   );
@@ -126,6 +127,10 @@ export class DashboardPage {
 
   protected async setFileHosted(id: string, hosted: boolean): Promise<void> {
     await this.run(() => this.api.setHosted(id, hosted));
+  }
+
+  protected async setFileExpires(id: string, expires: boolean): Promise<void> {
+    await this.run(() => this.api.setExpires(id, expires));
   }
 
   protected async confirm(): Promise<void> {

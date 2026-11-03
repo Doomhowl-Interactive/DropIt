@@ -13,8 +13,9 @@ export const listFilesTool = defineMcpTool({
 
   description:
     'Lists the files held by Drop.it, newest first, with their share links and sizes. ' +
-    'Deleted files are included and flagged so their ids can still be recognised. ' +
-    'Hosted zip archives also carry the site_url their contents are served at.',
+    'Deleted and expired files are included and flagged so their ids can still be recognised. ' +
+    'Hosted zip archives also carry the site_url their contents are served at; ' +
+    'temporary files carry the expires_at they are deleted at.',
 
   inputSchema: {
     page: z.number().int().positive().default(1).describe('1-based page number.'),
@@ -39,8 +40,11 @@ export const listFilesTool = defineMcpTool({
         created_at: z.string(),
         download_count: z.number(),
         deleted: z.boolean(),
+        /** Past its expiry; the sweep has not reclaimed it yet. */
+        expired: z.boolean(),
         share_url: z.string(),
         site_url: z.string().nullable(),
+        expires_at: z.string().nullable(),
       }),
     ),
   },
@@ -53,6 +57,8 @@ export const listFilesTool = defineMcpTool({
       (args.page - 1) * args.page_size,
     );
 
+    const now = new Date();
+
     const files = records.map((record) => ({
       id: record.id,
       filename: record.filename,
@@ -60,8 +66,10 @@ export const listFilesTool = defineMcpTool({
       created_at: record.createdAt.toISOString(),
       download_count: record.downloadCount,
       deleted: record.deleted,
+      expired: ctx.files.isExpired(record, now),
       share_url: fileUrl(record, ctx.origin),
       site_url: siteUrl(record, ctx.origin),
+      expires_at: record.expiresAt?.toISOString() ?? null,
     }));
 
     const lines = records.map((record) => {
@@ -73,6 +81,8 @@ export const listFilesTool = defineMcpTool({
         `created ${formatTimestamp(record.createdAt)}`,
       ];
       if (record.deleted) parts.push('DELETED');
+      if (ctx.files.isExpired(record, now)) parts.push('EXPIRED');
+      if (record.expiresAt) parts.push(`expires ${formatTimestamp(record.expiresAt)}`);
 
       const site = siteUrl(record, ctx.origin);
       if (site) parts.push(`site ${site}`);

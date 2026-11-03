@@ -45,7 +45,7 @@ async function serveSite(files: FileService, id: string, req: Request, res: Resp
   }
 
   const record = await files.getFileById(id).catch(() => null);
-  if (!record || record.deleted || !record.hosted) {
+  if (!record || record.deleted || files.isExpired(record) || !record.hosted) {
     fail(res, 404, 'Not found');
     return;
   }

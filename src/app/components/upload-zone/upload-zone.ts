@@ -30,6 +30,8 @@ export class UploadZone {
   /** Zip archives can have their contents served as a site. */
   protected readonly isArchive = computed(() => isZipArchive(this.selectedFile()?.name ?? ''));
   protected readonly hosted = signal(false);
+  /** Temporary upload: the file and its link disappear once it expires. */
+  protected readonly expires = signal(false);
   protected readonly dragging = signal(false);
   protected readonly uploading = signal(false);
   protected readonly percent = signal(0);
@@ -76,6 +78,7 @@ export class UploadZone {
 
     const form = new FormData();
     if (this.hosted() && this.isArchive()) form.append('hosted', 'true');
+    if (this.expires()) form.append('expires', 'true');
     form.append('file', file);
 
     const request = new XMLHttpRequest();

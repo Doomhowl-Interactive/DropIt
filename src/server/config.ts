@@ -91,6 +91,15 @@ export const config = {
   get mcpMaxBody(): string {
     return process.env['MCP_MAX_BODY'] || '35mb';
   },
+  /**
+   * How long a temporary upload lives. The `expires` flag on an upload turns
+   * this into an absolute expiry; once it passes the file is no longer served
+   * and is deleted by the hourly sweep.
+   */
+  get fileExpiryDays(): number {
+    const days = Number(process.env['FILE_EXPIRY_DAYS'] ?? 7);
+    return Number.isFinite(days) && days > 0 ? days : 7;
+  },
   /** Largest file `upload_file` will accept, and `get_file` will return. */
   get mcpMaxUploadBytes(): number {
     return Number(process.env['MCP_MAX_UPLOAD_BYTES'] ?? 25 * 1024 * 1024);

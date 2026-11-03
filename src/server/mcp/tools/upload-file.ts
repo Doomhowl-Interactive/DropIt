@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { config } from '../../config';
 import { NotHostableError } from '../../files/service';
 import { siteUrl } from '../../sites/host';
-import { humanSize, safeFilename } from '../../util';
+import { formatTimestamp, humanSize, safeFilename } from '../../util';
 import { guessMimeType } from '../content';
 import { fileUrl } from '../links';
 import { toolError } from '../result';
@@ -20,6 +20,8 @@ export const uploadFileTool = defineMcpTool({
     'The returned share link is public — anyone holding it can download the file.',
     'Set hosted=true on a .zip (a built website, a dist folder) to also serve its contents',
     'as a site on a subdomain of its own; the returned site_url is public too.',
+    'Set expires=true for a temporary file: its link stops working and the file is deleted',
+    'once it expires (a week by default); expires_at says exactly when.',
   ].join(' '),
 
   inputSchema: {
@@ -37,6 +39,13 @@ export const uploadFileTool = defineMcpTool({
           'website. A single top-level folder in the zip becomes the site root, directories ' +
           'serve their index.html, and the site is served from "/", so either base path works.',
       ),
+    expires: z
+      .boolean()
+      .default(false)
+      .describe(
+        'Make the file temporary: once it expires its link stops working and the file is ' +
+          "deleted. The lifetime is the server's FILE_EXPIRY_DAYS setting (a week by default).",
+      ),
   },
 
   outputSchema: {
@@ -45,6 +54,7 @@ export const uploadFileTool = defineMcpTool({
     size: z.number(),
     share_url: z.string(),
     site_url: z.string().nullable(),
+    expires_at: z.string().nullable(),
   },
 
   async handler(args, ctx) {
@@ -76,10 +86,13 @@ export const uploadFileTool = defineMcpTool({
         bytes,
         guessMimeType(filename),
         args.hosted,
+        args.expires,
       );
 
       const url = fileUrl(record, ctx.origin);
       const site = siteUrl(record, ctx.origin);
+      const expiry = record.expiresAt;
+      const expiresAt = expiry?.toISOString() ?? null;
 
       return {
         content: [
@@ -89,6 +102,7 @@ export const uploadFileTool = defineMcpTool({
               `Uploaded ${record.filename} (${humanSize(record.size)}).`,
               `Share link: ${url}`,
               ...(site ? [`Site: ${site}`] : []),
+              ...(expiry ? [`Temporary: expires ${formatTimestamp(expiry)}.`] : []),
             ].join('\n'),
           },
         ],
@@ -98,6 +112,7 @@ export const uploadFileTool = defineMcpTool({
           size: record.size,
           share_url: url,
           site_url: site,
+          expires_at: expiresAt,
         },
       };
     } catch (err) {

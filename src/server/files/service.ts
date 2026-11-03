@@ -7,7 +7,12 @@ import {
   FileRepository,
   type FileRecord,
 } from './repository';
-import { LocalFileStorage, type FileStorage, type StoredObjectBody } from './storage';
+import {
+  isNotFoundError,
+  LocalFileStorage,
+  type FileStorage,
+  type StoredObjectBody,
+} from './storage';
 import { ArchiveError, isZipArchive, ZipIndex } from './archive';
 
 /** How many zip indexes stay in memory; each costs roughly its central directory. */
@@ -30,6 +35,8 @@ export interface UploadedFile {
   size: number;
   /** Serve the archive's contents at its site host; zip archives only. */
   hosted?: boolean;
+  /** Temporary upload: stop serving it and delete it once it expires. */
+  expires?: boolean;
 }
 
 export class FileService {
@@ -83,6 +90,7 @@ export class FileService {
       downloadCount: 0,
       deleted: false,
       hosted: upload.hosted ?? false,
+      expiresAt: upload.expires ? this.expiryFromNow() : null,
       createdAt: new Date(),
     };
 
@@ -99,13 +107,21 @@ export class FileService {
     bytes: Buffer,
     contentType?: string,
     hosted = false,
+    expires = false,
   ): Promise<FileRecord> {
     assertHostable(originalName, hosted);
     const { id, path } = this.createUploadTarget(originalName);
 
     try {
       await this.storage.write(path, bytes, contentType);
-      return await this.registerUpload({ id, originalName, path, size: bytes.length, hosted });
+      return await this.registerUpload({
+        id,
+        originalName,
+        path,
+        size: bytes.length,
+        hosted,
+        expires,
+      });
     } catch (err) {
       await this.storage.remove(path).catch(() => undefined);
       throw err;
@@ -129,11 +145,24 @@ export class FileService {
     return this.storage.filePath?.(record.path);
   }
 
+  /** The moment a temporary upload made now stops being served. */
+  expiryFromNow(now = new Date()): Date {
+    return new Date(now.getTime() + config.fileExpiryDays * 24 * 60 * 60 * 1000);
+  }
+
+  /**
+   * Whether the file's expiry has passed. Checked on every read as well as by
+   * the sweep, so a link dies on time even when the sweep is late.
+   */
+  isExpired(record: FileRecord, now = new Date()): boolean {
+    return record.expiresAt !== null && record.expiresAt.getTime() <= now.getTime();
+  }
+
   /** Resolves a downloadable file and books the hit, or throws. */
   async downloadFile(id: string): Promise<FileRecord> {
     const file = await this.repo.getById(id);
 
-    if (file.deleted) throw new FileNotFoundError();
+    if (file.deleted || this.isExpired(file)) throw new FileNotFoundError();
 
     await this.repo.incrementDownload(file);
 
@@ -141,18 +170,23 @@ export class FileService {
   }
 
   /**
-   * Enables or disables a file, and starts or stops hosting a zip's contents.
-   * Whether the file can be hosted is settled before anything is written.
+   * Enables or disables a file, starts or stops hosting a zip's contents, and
+   * makes a file temporary or permanent. Whether the file can be hosted is
+   * settled before anything is written.
    */
   async updateFile(
     id: string,
-    changes: { active?: boolean; hosted?: boolean },
+    changes: { active?: boolean; hosted?: boolean; expires?: boolean },
   ): Promise<FileRecord> {
     const file = await this.repo.getById(id);
     assertHostable(file.filename, changes.hosted);
 
     if (changes.hosted !== undefined) await this.repo.setHosted(file, changes.hosted);
     if (changes.active !== undefined) await this.repo.setActive(file, changes.active);
+    // Turning expiry on starts a fresh window; turning it off makes the file permanent.
+    if (changes.expires !== undefined) {
+      await this.repo.setExpires(file, changes.expires ? this.expiryFromNow() : null);
+    }
     return file;
   }
 
@@ -208,6 +242,31 @@ export class FileService {
     return file;
   }
 
+  /**
+   * Hard-deletes every file whose expiry has passed. Bytes go before the row,
+   * so a storage failure leaves the record for the next sweep instead of
+   * orphaning the object; an object that is already gone is not a failure.
+   */
+  async purgeExpired(now = new Date()): Promise<number> {
+    const expired = await this.repo.getExpired(now);
+    let purged = 0;
+
+    for (const file of expired) {
+      try {
+        this.archives.delete(file.path);
+        await this.storage.remove(file.path).catch((err: unknown) => {
+          if (!isNotFoundError(err)) throw err;
+        });
+        await this.repo.delete(file);
+        purged += 1;
+      } catch (err) {
+        console.error(`Could not purge expired file ${file.id}:`, err);
+      }
+    }
+
+    return purged;
+  }
+
   getPaginatedFiles(limit: number, offset: number) {
     return this.repo.getPaginated(limit, offset);
   }
@@ -250,6 +309,7 @@ export class FileService {
           downloadCount: 0,
           deleted: false,
           hosted: false,
+          expiresAt: null,
           createdAt: object.modifiedAt,
         });
       } catch (error) {

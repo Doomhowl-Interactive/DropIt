@@ -20,7 +20,7 @@ export const fileResource = defineMcpResource({
     const records = await ctx.files.getAllFiles();
 
     return records
-      .filter((record) => !record.deleted)
+      .filter((record) => !record.deleted && !ctx.files.isExpired(record))
       .map((record) => ({
         uri: `${FILE_URI_SCHEME}${record.id}`,
         name: record.filename,

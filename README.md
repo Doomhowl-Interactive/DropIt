@@ -21,7 +21,7 @@ and rewritten in Angular. Does not have all features!
 | GET    | `/api/files`                | Lists all file records (admin)                   |
 | POST   | `/api/files/orphans`        | Registers loose files on disk (admin)            |
 | GET    | `/api/files/:id`            | Streams a file; admins may view disabled files   |
-| PATCH  | `/api/files/:id`            | Enables/disables a file, toggles hosting (admin) |
+| PATCH  | `/api/files/:id`            | Toggles active, hosting and expiry (admin)       |
 | DELETE | `/api/files/:id`            | Permanently deletes a file (admin)               |
 | GET    | `/api/files/:id/entries`    | Lists the files inside a zip archive (admin)     |
 | GET    | `/dashboard/tokens`         | API token console (admin)                        |
