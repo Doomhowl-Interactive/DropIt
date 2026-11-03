@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "d961ecaa-b2cf-48e6-9f9d-4c52471c2a25",
+  "id": "e022e6bb-f660-4bac-a2db-e4ac6cf47031",
   "prevId": "ce3a77b5-1703-4202-b87f-6c6f072a32bd",
   "tables": {
     "api_tokens": {
@@ -158,7 +158,7 @@
         },
         "expires_at": {
           "name": "expires_at",
-          "type": "text",
+          "type": "varchar(64)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
