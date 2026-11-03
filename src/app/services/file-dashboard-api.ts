@@ -26,6 +26,10 @@ export class FileDashboardApi {
     await this.update(id, { hosted });
   }
 
+  async setExpires(id: string, expires: boolean): Promise<void> {
+    await this.update(id, { expires });
+  }
+
   async forceDelete(id: string): Promise<void> {
     FileDeleteResponseSchema.parse(
       await firstValueFrom(this.http.delete(`${BASE}/${encodeURIComponent(id)}`)),

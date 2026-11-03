@@ -14,7 +14,8 @@ export const listFilesTool = defineMcpTool({
   description:
     'Lists the files held by Drop.it, newest first, with their share links and sizes. ' +
     'Deleted files are included and flagged so their ids can still be recognised. ' +
-    'Hosted zip archives also carry the site_url their contents are served at.',
+    'Hosted zip archives also carry the site_url their contents are served at; ' +
+    'temporary files carry the expires_at they are deleted at.',
 
   inputSchema: {
     page: z.number().int().positive().default(1).describe('1-based page number.'),
@@ -41,6 +42,7 @@ export const listFilesTool = defineMcpTool({
         deleted: z.boolean(),
         share_url: z.string(),
         site_url: z.string().nullable(),
+        expires_at: z.string().nullable(),
       }),
     ),
   },
@@ -62,6 +64,7 @@ export const listFilesTool = defineMcpTool({
       deleted: record.deleted,
       share_url: fileUrl(record, ctx.origin),
       site_url: siteUrl(record, ctx.origin),
+      expires_at: record.expiresAt?.toISOString() ?? null,
     }));
 
     const lines = records.map((record) => {
@@ -73,6 +76,7 @@ export const listFilesTool = defineMcpTool({
         `created ${formatTimestamp(record.createdAt)}`,
       ];
       if (record.deleted) parts.push('DELETED');
+      if (record.expiresAt) parts.push(`expires ${formatTimestamp(record.expiresAt)}`);
 
       const site = siteUrl(record, ctx.origin);
       if (site) parts.push(`site ${site}`);

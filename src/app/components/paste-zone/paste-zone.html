@@ -36,6 +36,22 @@
       </div>
     </div>
 
+    <label class="flex cursor-pointer items-start gap-2 text-sm">
+      <input
+        type="checkbox"
+        class="mt-1"
+        [checked]="expires()"
+        [disabled]="uploading()"
+        (change)="expires.set($any($event.target).checked)"
+      />
+      <span>
+        <span class="font-bold">Temporary</span>
+        <span class="block text-xs text-surface-500">
+          The paste and its link are deleted automatically once it expires (a week by default).
+        </span>
+      </span>
+    </label>
+
     <button
       id="pasteUploadBtn"
       pButton

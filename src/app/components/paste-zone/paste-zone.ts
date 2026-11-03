@@ -18,6 +18,8 @@ export class PasteZone {
   private readonly http = inject(HttpClient);
 
   protected readonly textContent = signal('');
+  /** Temporary upload: the paste and its link disappear once it expires. */
+  protected readonly expires = signal(false);
   protected readonly uploading = signal(false);
   protected readonly error = signal('');
   /** Absolute link to the finished upload, shown in place of the editor. */
@@ -40,6 +42,7 @@ export class PasteZone {
 
     const filename = `paste-${new Date().toISOString().replace(/[:.]/g, '-')}.txt`;
     const form = new FormData();
+    if (this.expires()) form.append('expires', 'true');
     form.append('file', new File([text], filename, { type: 'text/plain' }));
 
     try {

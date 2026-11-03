@@ -36,6 +36,13 @@
       "when": 1792055948558,
       "tag": "0004_add_file_hosted",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1793707282078,
+      "tag": "0005_add_file_expires_at",
+      "breakpoints": true
     }
   ]
 }

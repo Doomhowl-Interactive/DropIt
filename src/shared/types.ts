@@ -45,6 +45,8 @@ export const UploadResponseSchema = z.object({
   hosted: z.boolean(),
   /** Where a hosted archive's contents are served; `null` when they are not. */
   siteUrl: z.string().nullable(),
+  /** When a temporary upload stops being served; `null` when it is permanent. */
+  expiresAt: z.string().nullable(),
 });
 export type UploadResponse = z.infer<typeof UploadResponseSchema>;
 
@@ -61,6 +63,8 @@ export const FileExportRecordSchema = z.object({
   hosted: z.boolean(),
   /** Where a hosted archive's contents are served; `null` when they are not. */
   siteUrl: z.string().nullable(),
+  /** When a temporary upload stops being served; `null` when it is permanent. */
+  expiresAt: z.string().nullable(),
 });
 export type FileExportRecord = z.infer<typeof FileExportRecordSchema>;
 
@@ -75,10 +79,19 @@ export type OrphansResponse = z.infer<typeof OrphansResponseSchema>;
 export const FileDeleteResponseSchema = z.object({ id: z.string(), deleted: z.boolean() });
 export type FileDeleteResponse = z.infer<typeof FileDeleteResponseSchema>;
 
-/** Enables or disables a file, and/or starts or stops hosting a zip's contents. */
+/**
+ * Enables or disables a file, starts or stops hosting a zip's contents, and/or
+ * makes a file temporary or permanent.
+ */
 export const FileUpdateRequestSchema = z
-  .object({ active: z.boolean().optional(), hosted: z.boolean().optional() })
-  .refine((body) => body.active !== undefined || body.hosted !== undefined);
+  .object({
+    active: z.boolean().optional(),
+    hosted: z.boolean().optional(),
+    expires: z.boolean().optional(),
+  })
+  .refine(
+    (body) => body.active !== undefined || body.hosted !== undefined || body.expires !== undefined,
+  );
 export type FileUpdateRequest = z.infer<typeof FileUpdateRequestSchema>;
 
 export const FileUpdateResponseSchema = z.object({
@@ -86,6 +99,8 @@ export const FileUpdateResponseSchema = z.object({
   active: z.boolean(),
   hosted: z.boolean(),
   siteUrl: z.string().nullable(),
+  /** When the file stops being served; `null` when it is permanent. */
+  expiresAt: z.string().nullable(),
 });
 export type FileUpdateResponse = z.infer<typeof FileUpdateResponseSchema>;
 

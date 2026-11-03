@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, lte } from 'drizzle-orm';
 import { fromDbDate, toDbDate, type Db } from '../db/db';
 import { fileRecords } from '../db/schema';
 
@@ -26,6 +26,8 @@ export interface FileRecord {
   deleted: boolean;
   /** Serve the zip's contents at the file's own site host; see `src/server/sites`. */
   hosted: boolean;
+  /** When a temporary upload stops being served; `null` means permanent. */
+  expiresAt: Date | null;
   createdAt: Date;
 }
 
@@ -40,6 +42,7 @@ function mapRow(row: Row): FileRecord {
     downloadCount: row.downloadCount ?? 0,
     deleted: row.deleted ?? false,
     hosted: row.hosted,
+    expiresAt: fromDbDate(row.expiresAt),
     createdAt: fromDbDate(row.createdAt) ?? new Date(0),
   };
 }
@@ -57,6 +60,7 @@ export class FileRepository {
         downloadCount: file.downloadCount,
         deleted: file.deleted,
         hosted: file.hosted,
+        expiresAt: file.expiresAt ? toDbDate(file.expiresAt) : null,
         createdAt: toDbDate(file.createdAt),
       });
     } catch (error) {
@@ -115,6 +119,24 @@ export class FileRepository {
   async setHosted(file: FileRecord, hosted: boolean): Promise<void> {
     file.hosted = hosted;
     await this.db.update(fileRecords).set({ hosted }).where(eq(fileRecords.id, file.id));
+  }
+
+  /** Sets or clears when the file stops being served. */
+  async setExpires(file: FileRecord, expiresAt: Date | null): Promise<void> {
+    file.expiresAt = expiresAt;
+    await this.db
+      .update(fileRecords)
+      .set({ expiresAt: expiresAt ? toDbDate(expiresAt) : null })
+      .where(eq(fileRecords.id, file.id));
+  }
+
+  /** Every file whose expiry has passed, for the sweep to hard-delete. */
+  async getExpired(now: Date): Promise<FileRecord[]> {
+    const rows = await this.db
+      .select()
+      .from(fileRecords)
+      .where(and(isNotNull(fileRecords.expiresAt), lte(fileRecords.expiresAt, toDbDate(now))));
+    return rows.map(mapRow);
   }
 
   /** Hard delete: the row is removed from the database. */

@@ -38,6 +38,7 @@ function toExportRecord(file: FileRecord, origin: string): FileExportRecord {
     archive: isZipArchive(file.filename),
     hosted: file.hosted,
     siteUrl: siteUrl(file, origin),
+    expiresAt: file.expiresAt?.toISOString() ?? null,
   };
 }
 
@@ -265,6 +266,13 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
       const id = param(req, 'id');
       const record =
         req.auth?.role === 'admin' ? await files.getFileById(id) : await files.downloadFile(id);
+
+      // An expired file is gone for everyone, including the admin who uploaded it.
+      if (files.isExpired(record)) {
+        await render(req, res, { page: 'file-not-found' }, 404);
+        return;
+      }
+
       await serve(record, req, res);
     } catch {
       await render(req, res, { page: 'file-not-found' }, 404);
@@ -292,6 +300,13 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
         return;
       }
 
+      const expires = parseFlag(req.body?.expires);
+      if (expires === undefined) {
+        await files.removeUpload(file.path).catch(() => undefined);
+        res.status(400).json({ error: 'expires must be true or false' });
+        return;
+      }
+
       try {
         const record = await files.registerUpload({
           id,
@@ -299,6 +314,7 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
           path: file.path,
           size: file.size,
           hosted,
+          expires,
         });
 
         res.json(
@@ -308,6 +324,7 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
             size: record.size,
             hosted: record.hosted,
             siteUrl: siteUrl(record, requestOrigin(req)),
+            expiresAt: record.expiresAt?.toISOString() ?? null,
           }),
         );
       } catch (err) {
@@ -366,7 +383,7 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
       res,
       FileUpdateRequestSchema,
       req.body,
-      'expected a boolean active and/or hosted',
+      'expected a boolean active, hosted and/or expires',
     );
     if (!body) return;
 
@@ -378,6 +395,7 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
           active: !record.deleted,
           hosted: record.hosted,
           siteUrl: siteUrl(record, requestOrigin(req)),
+          expiresAt: record.expiresAt?.toISOString() ?? null,
         }),
       );
     } catch (err) {
@@ -396,6 +414,11 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
     try {
       record = await files.getFileById(param(req, 'id'));
     } catch {
+      res.status(404).json({ error: 'file not found' });
+      return;
+    }
+
+    if (files.isExpired(record)) {
       res.status(404).json({ error: 'file not found' });
       return;
     }

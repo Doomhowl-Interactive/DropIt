@@ -78,6 +78,8 @@ export const fileRecords = mysqlTable(
     deleted: boolean('deleted'),
     /** Zip archives only: whether its contents are served at the file's own site host. */
     hosted: boolean('hosted').notNull().default(false),
+    /** When a temporary upload stops being served and is swept; null means permanent. */
+    expiresAt: text('expires_at'),
     createdAt: text('created_at'),
   },
   (table) => [uniqueIndex('idx_file_records_path_hash').on(table.pathHash)],

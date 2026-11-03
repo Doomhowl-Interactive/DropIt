@@ -68,6 +68,22 @@
     }
   </div>
 
+  <label class="mb-4 flex cursor-pointer items-start gap-2 text-sm">
+    <input
+      type="checkbox"
+      class="mt-1"
+      [checked]="expires()"
+      [disabled]="uploading()"
+      (change)="expires.set($any($event.target).checked)"
+    />
+    <span>
+      <span class="font-bold">Temporary</span>
+      <span class="block text-xs text-surface-500">
+        The file and its link are deleted automatically once it expires (a week by default).
+      </span>
+    </span>
+  </label>
+
   @if (isArchive()) {
     <label class="mb-4 flex cursor-pointer items-start gap-2 text-sm">
       <input

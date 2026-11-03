@@ -30,6 +30,9 @@ import { webRoutes } from './server/web.routes';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
+/** How often expired uploads are reclaimed; reads already refuse them on time. */
+const EXPIRY_SWEEP_INTERVAL_MS = 60 * 60 * 1000;
+
 /**
  * Hosts are validated by @angular/ssr to block host-header spoofing. The app is
  * self-hosted under whatever domain the operator picks, so the list comes from
@@ -74,6 +77,12 @@ async function createApp(): Promise<Express> {
   const authDeps = { tokens: apiTokens, users };
 
   await createAdminUser(users);
+
+  // Temporary uploads stop being served the moment they expire; the sweep only
+  // reclaims their bytes and rows. `unref` keeps the timer out of shutdown.
+  const sweep = setInterval(() => void sweepExpired(files), EXPIRY_SWEEP_INTERVAL_MS);
+  sweep.unref();
+  void sweepExpired(files);
 
   console.log(`Uploads are stored in ${storageSummary()}`);
   console.log(
@@ -127,6 +136,16 @@ async function createApp(): Promise<Express> {
   });
 
   return app;
+}
+
+/** Deletes expired uploads, logging how many were reclaimed. */
+function sweepExpired(files: FileService): Promise<void> {
+  return files.purgeExpired().then(
+    (purged) => {
+      if (purged > 0) console.log(`Purged ${purged} expired file(s)`);
+    },
+    (err: unknown) => console.error('Expiry sweep failed:', err),
+  );
 }
 
 /** One line describing where uploads land, for the boot log. */

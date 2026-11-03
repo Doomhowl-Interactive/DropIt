@@ -111,7 +111,7 @@
       #dt
       [value]="rows()"
       [loading]="files.isLoading()"
-      [tableStyle]="{ 'min-width': '60rem' }"
+      [tableStyle]="{ 'min-width': '72rem' }"
       dataKey="id"
       [rowTrackBy]="trackById"
       sortMode="multiple"
@@ -146,6 +146,7 @@
               <p-columnFilter type="date" field="created" display="menu" />
             </div>
           </th>
+          <th>Expires</th>
           <th pSortableColumn="downloadCount">
             <div class="flex items-center gap-1">
               Downloads
@@ -204,6 +205,14 @@
 
           <td>{{ file.size | formatBytes }}</td>
           <td>CRT: {{ file.created | date: 'yyyy-MM-dd HH:mm' }}</td>
+          <td>
+            @if (file.expires) {
+              <p-tag value="TEMP" severity="warn" />
+              {{ file.expires | date: 'yyyy-MM-dd HH:mm' }}
+            } @else {
+              <span class="text-surface-500">Permanent</span>
+            }
+          </td>
           <td>{{ file.downloadCount }}</td>
 
           <td>
@@ -234,6 +243,24 @@
                   class="h-6 w-11 rounded-full bg-surface-600 transition-colors after:absolute after:left-1 after:top-1 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform after:content-[''] peer-checked:bg-green-500 peer-checked:after:translate-x-5 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
                 ></span>
               </label>
+              <button
+                pButton
+                type="button"
+                [severity]="file.expires ? 'warn' : 'secondary'"
+                [outlined]="!file.expires"
+                [rounded]="true"
+                [disabled]="busy()"
+                size="small"
+                icon="pi pi-clock"
+                [attr.aria-pressed]="!!file.expires"
+                [attr.aria-label]="
+                  (file.expires ? 'Make permanent ' : 'Make temporary ') + file.filename
+                "
+                [attr.title]="
+                  file.expires ? 'Make permanent' : 'Make temporary (deleted once it expires)'
+                "
+                (click)="setFileExpires(file.id, !file.expires)"
+              ></button>
               @if (file.archive) {
                 <button
                   pButton
@@ -276,7 +303,7 @@
       </ng-template>
       <ng-template #expandedrow let-file>
         <tr>
-          <td colspan="7">
+          <td colspan="8">
             <!-- The tree widget is only needed once a row is opened; keep it out of the initial bundle. -->
             @defer {
               <app-archive-tree [fileId]="file.id" [siteUrl]="file.siteUrl" />
@@ -288,7 +315,7 @@
       </ng-template>
       <ng-template #emptymessage>
         <tr>
-          <td colspan="7" class="text-center py-10 font-bold uppercase italic">
+          <td colspan="8" class="text-center py-10 font-bold uppercase italic">
             {{ dt.hasFilter() ? 'No files match the filters.' : 'No files yet.' }}
           </td>
         </tr>
