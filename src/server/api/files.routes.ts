@@ -264,16 +264,21 @@ export function fileRoutes(files: FileService, render: RenderPage, auth: AuthDep
   const download = async (req: Request, res: Response): Promise<void> => {
     try {
       const id = param(req, 'id');
-      const record =
-        req.auth?.role === 'admin' ? await files.getFileById(id) : await files.downloadFile(id);
 
-      // An expired file is gone for everyone, including the admin who uploaded it.
-      if (files.isExpired(record)) {
-        await render(req, res, { page: 'file-not-found' }, 404);
+      // Admins may fetch a disabled file, but not an expired one. Only the
+      // public path books the download, and `downloadFile` checks expiry before
+      // counting, so a request that ends in a 404 is never counted.
+      if (req.auth?.role === 'admin') {
+        const record = await files.getFileById(id);
+        if (files.isExpired(record)) {
+          await render(req, res, { page: 'file-not-found' }, 404);
+          return;
+        }
+        await serve(record, req, res);
         return;
       }
 
-      await serve(record, req, res);
+      await serve(await files.downloadFile(id), req, res);
     } catch {
       await render(req, res, { page: 'file-not-found' }, 404);
     }

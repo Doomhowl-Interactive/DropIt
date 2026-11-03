@@ -306,7 +306,10 @@ export const openapiSpec = {
         responses: {
           '200': { description: 'File stream' },
           '206': { description: 'Partial file stream, in answer to a Range request' },
-          '404': { description: 'Rendered "file not found" page' },
+          '404': {
+            description:
+              'Rendered "file not found" page — unknown, disabled or expired, for admins too',
+          },
           '502': { description: 'Storage backend unavailable' },
         },
       },
@@ -350,7 +353,7 @@ export const openapiSpec = {
           },
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
-          '404': { description: 'File not found' },
+          '404': { description: 'File not found, or already expired' },
         },
       },
       delete: {

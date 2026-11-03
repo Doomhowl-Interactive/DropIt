@@ -130,7 +130,14 @@ export class FileRepository {
       .where(eq(fileRecords.id, file.id));
   }
 
-  /** Every file whose expiry has passed, for the sweep to hard-delete. */
+  /**
+   * Every file whose expiry has passed, for the sweep to hard-delete.
+   *
+   * `expires_at` is text like the table's other dates, but only `toDbDate`
+   * ever writes it, so every value is a fixed-width ISO-8601 UTC string and
+   * lexicographic order is chronological order. The index on the column keeps
+   * this a lookup rather than a scan.
+   */
   async getExpired(now: Date): Promise<FileRecord[]> {
     const rows = await this.db
       .select()

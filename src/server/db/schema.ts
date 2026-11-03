@@ -82,5 +82,9 @@ export const fileRecords = mysqlTable(
     expiresAt: text('expires_at'),
     createdAt: text('created_at'),
   },
-  (table) => [uniqueIndex('idx_file_records_path_hash').on(table.pathHash)],
+  (table) => [
+    uniqueIndex('idx_file_records_path_hash').on(table.pathHash),
+    // The expiry sweep looks up the few rows that have passed, not the table.
+    index('idx_file_records_expires_at').on(table.expiresAt),
+  ],
 );

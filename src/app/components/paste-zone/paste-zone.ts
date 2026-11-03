@@ -62,6 +62,7 @@ export class PasteZone {
     this.textContent.set('');
     this.error.set('');
     this.downloadUrl.set('');
+    this.expires.set(false);
   }
 
   protected copy(input: HTMLInputElement): void {

@@ -170,8 +170,9 @@ export class FileService {
   }
 
   /**
-   * Enables or disables a file, and starts or stops hosting a zip's contents.
-   * Whether the file can be hosted is settled before anything is written.
+   * Enables or disables a file, starts or stops hosting a zip's contents, and
+   * makes a file temporary or permanent. Whether the file can be hosted is
+   * settled before anything is written.
    */
   async updateFile(
     id: string,
